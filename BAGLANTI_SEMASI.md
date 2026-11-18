@@ -1,5 +1,7 @@
 # 🔌 Mini Retro TV — Tam Pin Bağlantı Şeması (Sesli + MicroSD Sürümü)
 
+![Mini Retro TV Bağlantı Şeması](docs/baglanti_semasi.png)
+
 **Tam Donanım Seti (7 Parça):**
 1. **Voltaj 1.69" 240×280 SPI IPS TFT Ekran (ST7789)**
 2. **TLS Robotik ESP32-C3 SuperMini (Lehimsiz)**

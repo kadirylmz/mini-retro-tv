@@ -29,6 +29,12 @@ Figür ve diorama rafları için **55.9 × 36.2 × 28.3 mm** (gerçek derin tüp
 
 ---
 
+## 🔌 Görsel Bağlantı Şeması
+
+![Mini Retro TV Bağlantı Şeması](docs/baglanti_semasi.png)
+
+---
+
 ## 2. Proje Dosyaları
 
 * **3D Kasa (`enclosure/`):**
