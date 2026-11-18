@@ -93,7 +93,7 @@ Müşteriniz bilgisayara bağlamadan, hiçbir kod veya `config.h` dosyasına dok
 
 * **3D Kasa (`enclosure/`):**
   * [mini_retro_tv.scad](enclosure/mini_retro_tv.scad) — Parametrik OpenSCAD tasarımı
-  * **Baskıya Hazır STL'ler (`enclosure/stl/`):** [body.stl](enclosure/stl/body.stl), [back.stl](enclosure/stl/back.stl), [knobs.stl](enclosure/stl/knobs.stl), [legs.stl](enclosure/stl/legs.stl), [antenna.stl](enclosure/stl/antenna.stl), [plate.stl](enclosure/stl/plate.stl)
+  * **Baskıya Hazır STL'ler (`enclosure/stl/`):** [body.stl](enclosure/stl/body.stl), [back.stl](enclosure/stl/back.stl), [knobs.stl](enclosure/stl/knobs.stl), [legs.stl](enclosure/stl/legs.stl), [antenna.stl](enclosure/stl/antenna.stl), [antenna_solid.stl](enclosure/stl/antenna_solid.stl) *(Yekpare V anten)*, [plate.stl](enclosure/stl/plate.stl) *(K1 ve tüm tablalara tam ortalı)*
 * **Yazılım (`firmware/MiniRetroTV/`):** [MiniRetroTV.ino](firmware/MiniRetroTV/MiniRetroTV.ino), [config.h](firmware/MiniRetroTV/config.h), [web_page.h](firmware/MiniRetroTV/web_page.h)
 * **Görseller & Dokümanlar:** [baglanti_semasi.png](docs/baglanti_semasi.png), [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md), [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md)
 * **PC Video+Ses Dönüştürücü (`tools/`):** [convert_to_mjpeg.bat](tools/convert_to_mjpeg.bat)
