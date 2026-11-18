@@ -23,7 +23,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-set "FPS=15"
+set "FPS=12"
 set "IN=%~1"
 set "OUT_V=%~dpn1_f%FPS%.mjpeg"
 set "OUT_A=%~dpn1_f%FPS%.pcm"

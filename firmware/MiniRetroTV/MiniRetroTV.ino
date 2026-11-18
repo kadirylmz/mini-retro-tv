@@ -56,8 +56,7 @@ File     af;                     // eşleşen .pcm ses dosyası (varsa)
 uint8_t *rb = nullptr;           // JPEG kare tamponu
 size_t   rbLen = 0, scanPos = 2;
 uint16_t *noiseBuf = nullptr;    // karlanma efekti (şerit tamponu)
-int16_t  audioBuf[1024];         // ses çıkış tamponu
-
+int16_t  audioBuf[512];          // ses okuma / karlanma tamponu
 bool     wifiOn = false, apMode = false, tvOff = false;
 bool     uploading = false, uploadFailed = false;
 bool     pendingWifiReconnect = false;
@@ -66,8 +65,47 @@ File     upFile;
 String   upName, ipText, savedSsid, savedPass;
 uint32_t lastWeb = 0, nextFrameAt = 0, osdUntil = 0, staticUntil = 0, infoUntil = 0;
 uint8_t  brightness = DEFAULT_BRIGHTNESS;
-uint8_t  volume = DEFAULT_VOLUME;
+volatile uint8_t volume = DEFAULT_VOLUME;
 uint8_t  defFps = DEFAULT_FPS;
+
+// ---- Takılmasız ses için 16 KB RAM halka tampon (512 ms) + FreeRTOS görevi ----
+#if USE_AUDIO
+static const size_t ARING_SIZE = 16384; // 2'nin katı (16 KB = ~0.5 sn kesintisiz ses)
+uint8_t *aRing = nullptr;
+volatile size_t aHead = 0, aTail = 0;
+static inline size_t aRingUsed() { return (aHead - aTail) & (ARING_SIZE - 1); }
+static inline size_t aRingFree() { return (ARING_SIZE - 1) - aRingUsed(); }
+static void aRingClear() { aTail = aHead; }
+static void aRingPush(const uint8_t *src, size_t len) {
+  if (!aRing) return;
+  size_t can = std::min(len, aRingFree());
+  size_t h = aHead;
+  size_t first = std::min(can, ARING_SIZE - h);
+  memcpy(aRing + h, src, first);
+  if (can > first) memcpy(aRing, src + first, can - first);
+  aHead = (h + can) & (ARING_SIZE - 1);
+}
+static void audioTask(void *) {
+  int16_t out[256];
+  for (;;) {
+    size_t avail = aRingUsed() & ~1U;
+    if (audioReady && avail >= 2) {
+      size_t nBytes = std::min(avail, sizeof(out));
+      size_t t = aTail;
+      size_t first = std::min(nBytes, ARING_SIZE - t);
+      memcpy(out, aRing + t, first);
+      if (nBytes > first) memcpy(((uint8_t *)out) + first, aRing, nBytes - first);
+      aTail = (t + nBytes) & (ARING_SIZE - 1);
+      const int32_t gain = (int32_t)volume * 256 / 100;
+      size_t samples = nBytes / 2;
+      for (size_t i = 0; i < samples; i++) out[i] = (int16_t)(((int32_t)out[i] * gain) >> 8);
+      i2s.write((uint8_t *)out, nBytes);
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(5));
+    }
+  }
+}
+#endif
 
 // ---------------- Yardımcılar ----------------
 static String vpath(const String &n) { return String(VIDEO_DIR) + "/" + n; }
@@ -97,45 +135,37 @@ static void initAudio() {
 #if USE_AUDIO
   i2s.setPins(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DIN);
   audioReady = i2s.begin(I2S_MODE_STD, AUDIO_RATE, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO);
-#endif
-}
-
-static void writeAudioScaled(int16_t *samples, size_t count) {
-#if USE_AUDIO
-  if (!audioReady || count == 0) return;
-  const int32_t gain = (int32_t)volume * 256 / 100;
-  for (size_t i = 0; i < count; i++) {
-    samples[i] = (int16_t)(((int32_t)samples[i] * gain) >> 8);
+  aRing = (uint8_t *)malloc(ARING_SIZE);
+  if (audioReady && aRing) {
+    xTaskCreate(audioTask, "audio", 2048, nullptr, 2, nullptr);
   }
-  i2s.write((uint8_t *)samples, count * sizeof(int16_t));
 #endif
 }
 
 static void playStaticNoiseChunk(size_t samples) {
 #if USE_AUDIO
-  if (!audioReady || volume == 0) return;
+  if (!audioReady || !aRing || volume == 0) return;
   size_t left = samples;
-  while (left > 0) {
-    size_t n = std::min(left, (size_t)512);
+  while (left > 0 && aRingFree() >= 64) {
+    size_t n = std::min(left, (size_t)256);
     for (size_t i = 0; i < n; i++) {
       audioBuf[i] = (int16_t)(((int32_t)(esp_random() & 0xFFFF) - 32768) / 5);
     }
-    writeAudioScaled(audioBuf, n);
+    aRingPush((const uint8_t *)audioBuf, n * 2);
     left -= n;
   }
 #endif
 }
 
-static void feedAudioForFrame() {
+static void refillAudioRing() {
 #if USE_AUDIO
-  if (!audioReady || !af) return;
-  size_t samplesNeeded = AUDIO_RATE / chFps;
-  while (samplesNeeded > 0) {
-    size_t chunk = std::min(samplesNeeded, (size_t)1024);
-    int got = af.read((uint8_t *)audioBuf, chunk * 2);
+  if (!audioReady || !aRing || !af) return;
+  // Ekran çizilirken ses hiç kesilmesin diye tamponda en az ~250 ms ses tut
+  const size_t target = 8192;
+  while (aRingUsed() < target && aRingFree() >= 1024) {
+    int got = af.read((uint8_t *)audioBuf, sizeof(audioBuf));
     if (got <= 0) break;
-    writeAudioScaled(audioBuf, got / 2);
-    samplesNeeded -= (got / 2);
+    aRingPush((const uint8_t *)audioBuf, (size_t)got);
   }
 #endif
 }
@@ -253,6 +283,9 @@ static uint8_t fpsFromName(const String &n) {
 static void closeActiveMedia() {
   if (vf) vf.close();
   if (af) af.close();
+#if USE_AUDIO
+  aRingClear();
+#endif
 }
 
 static bool openChannel(int i) {
@@ -318,6 +351,8 @@ static void playStep() {
     len = readFrame();
     if (!len) return;
   }
+  // Önce ses tamponunu SD'den doldur, sonra ekranı çiz (sıfır ses takılması!)
+  refillAudioRing();
   if (jpeg.openRAM(rb, len, jpegDraw)) {
     jpeg.setPixelType(RGB565_BIG_ENDIAN);
     int x = std::max(0, (SCREEN_W - jpeg.getWidth()) / 2);
@@ -326,7 +361,6 @@ static void playStep() {
     jpeg.close();
   }
   consumeFrame(len);
-  feedAudioForFrame();
   if ((int32_t)(osdUntil - now) > 0) drawOSD();
 }
 
