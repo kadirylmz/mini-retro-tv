@@ -55,21 +55,22 @@ USB-C soketi **yukarı**, çipli yüz **size** bakacak şekilde:
 
 ---
 
-## 3. 📱 Web Arayüzü Kullanımı (`http://192.168.4.1` / `http://minitv.local`)
+## 3. 📱 Müşteri Dostu Wi-Fi Kurulumu & Web Arayüzü (Kod/Config Gerekmez!)
 
-ESP32 içinde gömülü çalışan web paneli sayesinde **telefondan veya bilgisayardan ekstra uygulama kurmadan** TV'yi yönetip video+ses yükleyebilirsiniz:
+Müşteriniz bilgisayara bağlamadan, hiçbir kod veya `config.h` dosyasına dokunmadan **doğrudan telefonundan** TV'yi kendi ev Wi-Fi'ına bağlayabilir:
 
-### İki Farklı Bağlanma Yöntemi
-* **A) Kendi Ağı Üzerinden (`http://192.168.4.1`) — Varsayılan, Ayar Gerektirmez:**
-  1. Telefondan **`MiniTV`** Wi-Fi ağına bağlanın *(Şifre: **`retro1234`**)*.
-  2. Tarayıcıdan **`http://192.168.4.1`** adresini açın *(İnternet yok uyarısında "Bağlı kal" deyin)*.
-* **B) Ev Wi-Fi'ınız Üzerinden (`http://minitv.local`) — İsteğe Bağlı:**
-  * Kodu yüklemeden önce [config.h](firmware/MiniRetroTV/config.h) içindeki `WIFI_STA_SSID` ve `WIFI_STA_PASS` alanlarına ev Wi-Fi bilgilerinizi yazarsanız TV ev modeminize bağlanır; telefon Wi-Fi'ını değiştirmeden **`http://minitv.local`** adresinden girebilirsiniz.
+### İlk Kurulum (Tıpkı Akıllı Ev Cihazı Gibi — Captive Portal)
+1. Müşteri TV'yi açtığında TV otomatik olarak **`MiniTV`** Wi-Fi ağını açar *(Şifre: **`retro1234`**)*.
+2. Telefonla **`MiniTV`** ağına bağlanıldığında kurulum sayfası **Captive Portal** sayesinde otomatik açılır *(açılmazsa tarayıcıya `http://192.168.4.1` yazılır)*.
+3. Sayfanın altındaki **📶 Ev Wi-Fi Ayarları** bölümünden **🔍 Tara** butonuna basılır, müşteri kendi ev Wi-Fi'ını listeden seçer, şifresini girip **Kaydet ve Bağlan** tuşuna basar.
+4. Wi-Fi bilgileri ESP32'nin kalıcı hafızasına (NVS) kaydedilir, TV anında müşterinin ev Wi-Fi'ına bağlanır ve ekranda yeni adresini (**`http://minitv.local`** + IP) gösterir.
+5. **Güvenli Geri Dönüş:** TV başka bir eve götürülürse veya modem şifresi değişirse 10 saniye bağlanamayınca otomatik olarak tekrar **`MiniTV`** kurulum ağına döner — cihaz asla kilitlenmez!
 
 ### Web Panelinde Neler Var?
 * **Hafıza, Parlaklık ve 🔊 Ses Seviyesi (%0–100):** MicroSD kart (veya dahili hafıza) doluluğunu canlı gösterir; ekran parlaklığını ve hoparlör sesini anında ayarlayıp kaydeder.
 * **Program Gerektirmeyen Kablosuz MP4 Yükleme:** Telefon galerisinden seçtiğiniz MP4 / MOV / WebM videosunu tarayıcı içinde otomatik olarak **280×240 `.mjpeg`** + **16 kHz mono `.pcm` ses** dosyasına çevirip kablosuz olarak TV'ye gönderir; biter bitmez karlanma efektiyle oynatmaya başlar.
 * **Kanallar (Uzaktan Kumanda):** Yüklü tüm videoları `CH1`, `CH2`, `CH3` şeklinde listeler; tek tıkla kanal değiştirebilir veya silebilirsiniz.
+* **📶 Ev Wi-Fi Ayarları:** Yakındaki ağları tarama, ev Wi-Fi'ına bağlanma veya tek tuşla **Ağı Unut** ile sıfırlama.
 * **Otomatik Wi-Fi Pil Tasarrufu:** 10 dakika işlem yapılmazsa Wi-Fi pil için otomatik kapanır (videolar oynamaya devam eder). Tekrar açmak için üstteki `BOOT` butonuna **1.5 saniye** basılı tutmanız yeterlidir.
 
 > 💡 **Uzun Çizgi Film / Dizi Bölümleri İçin:** 5–45 saniyelik klipleri telefondan kablosuz yüklemek çok pratiktir. 15–20 dakikalık uzun bölümler için MicroSD kartı PC'ye takıp MP4 dosyasını [convert_to_mjpeg.bat](tools/convert_to_mjpeg.bat) üzerine sürükleyip çıkan `.mjpeg` + `.pcm` dosyalarını doğrudan SD karttaki **`/v/`** klasörüne atın.

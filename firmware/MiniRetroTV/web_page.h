@@ -1,9 +1,9 @@
 #pragma once
 // =============================================================
-//  MiniRetroTV - Gömülü Web Arayüzü (Sesli + MicroSD Destekli)
-//  Telefondan/PC'den seçilen MP4/WebM/MOV dosyalarının HEM görüntüsünü
-//  (280x240 MJPEG) HEM sesini (16 kHz mono PCM) tarayıcı içinde otomatik
-//  dönüştürüp Wi-Fi üzerinden TV'ye yükler. Harici program gerekmez!
+//  MiniRetroTV - Gömülü Web Arayüzü (Müşteri Dostu Wi-Fi Kurulumu + Sesli)
+//  - Telefondan yakındaki Wi-Fi ağlarını tarayıp şifre kaydeder (kod/config yok!)
+//  - MP4/WebM/MOV dosyalarının HEM görüntüsünü (280x240 MJPEG) HEM sesini
+//    (16 kHz mono PCM) tarayıcı içinde otomatik dönüştürüp Wi-Fi'dan yükler.
 // =============================================================
 
 static const char INDEX_HTML[] PROGMEM = R"rawliteral(
@@ -21,10 +21,11 @@ h1{font-size:1.35rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 .sub{color:var(--muted);font-size:.85rem;margin-bottom:14px}
 .card{background:var(--card);border:1px solid #3a312b;border-radius:14px;padding:14px;margin-bottom:14px}
 label{display:block;font-size:.82rem;color:var(--muted);margin:8px 0 4px}
-input[type=text],input[type=number],select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #473c35;background:#151210;color:var(--cream)}
+input[type=text],input[type=password],input[type=number],select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #473c35;background:#151210;color:var(--cream)}
 input[type=range]{width:100%;accent-color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.flex{display:flex;gap:8px;align-items:center}
 button,.btn{background:var(--acc);color:#fff;border:0;padding:10px 14px;border-radius:9px;font-weight:600;cursor:pointer;font-size:.9rem}
 button:disabled{opacity:.45;cursor:not-allowed}
 .btn-sec{background:#3a312b;color:var(--cream)}
@@ -41,7 +42,8 @@ canvas{width:180px;height:154px;background:#000;border-radius:12px;border:3px so
 .badge{background:var(--acc);color:#fff;font-size:.7rem;padding:2px 6px;border-radius:6px;margin-left:6px}
 .chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.86rem;color:var(--cream);cursor:pointer}
 .chk input{width:auto;accent-color:var(--acc)}
-#status{font-size:.83rem;color:var(--muted);margin-top:6px;min-height:1.1em}
+.note{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.4}
+#status,#wStatus{font-size:.83rem;color:var(--muted);margin-top:6px;min-height:1.1em}
 </style>
 </head>
 <body>
@@ -99,6 +101,29 @@ canvas{width:180px;height:154px;background:#000;border-radius:12px;border:3px so
   <div id="chList" style="margin-top:6px;color:var(--muted);font-size:.85rem">Yükleniyor...</div>
 </div>
 
+<div class="card">
+  <div class="flex" style="justify-content:space-between">
+    <strong>📶 Ev Wi-Fi Ayarları</strong>
+    <span id="wifiBadge" class="sz">-</span>
+  </div>
+  <div class="note">TV'yi ev modeminize bağlarsanız telefonunuzun Wi-Fi'ını değiştirmeden doğrudan <b>http://minitv.local</b> üzerinden yönetebilirsiniz.</div>
+  <label>Wi-Fi Ağı</label>
+  <div class="flex">
+    <select id="wList" onchange="if(this.value)document.getElementById('wSsid').value=this.value" style="flex:1">
+      <option value="">-- Tarayarak seçin veya aşağıya yazın --</option>
+    </select>
+    <button class="btn-sec btn-sm" id="scanBtn" onclick="scanWifi()">🔍 Tara</button>
+  </div>
+  <input type="text" id="wSsid" placeholder="Ev Wi-Fi Adı (SSID)" style="margin-top:8px">
+  <label>Wi-Fi Şifresi</label>
+  <input type="password" id="wPass" placeholder="Ev Wi-Fi Şifresi">
+  <div class="flex" style="margin-top:10px">
+    <button style="flex:1" onclick="saveWifi()">Kaydet ve Bağlan</button>
+    <button class="btn-sec" onclick="resetWifi()">Ağı Unut</button>
+  </div>
+  <div id="wStatus"></div>
+</div>
+
 <script>
 const W=280,H=240,SR=16000,cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let selFile=null;
@@ -115,6 +140,8 @@ async function refresh(){
   document.getElementById('bri').value=d.brightness;
   document.getElementById('vol').value=d.volume;
   document.getElementById('volTxt').textContent=d.volume;
+  document.getElementById('wifiBadge').textContent=d.ap?`Kurulum Ağı (${d.ssid})`:`Bağlı: ${d.ssid} (${d.ip})`;
+  if(d.savedSsid && !document.getElementById('wSsid').value) document.getElementById('wSsid').value=d.savedSsid;
   const box=document.getElementById('chList');
   if(!d.files.length){box.innerHTML='Henüz video yok. Yukarıdan bir MP4 seçin.';return;}
   box.innerHTML=d.files.map((f,i)=>`
@@ -125,6 +152,42 @@ async function refresh(){
         <button class="btn-sm btn-sec" onclick="delCh('${f.name}')">Sil</button>
       </div>
     </div>`).join('');
+}
+
+async function scanWifi(){
+  const btn=document.getElementById('scanBtn'), st=document.getElementById('wStatus');
+  btn.disabled=true; st.textContent='Yakındaki Wi-Fi ağları taranıyor...';
+  try{
+    const r=await fetch('/api/wifi/scan'); const d=await r.json();
+    const sel=document.getElementById('wList');
+    sel.innerHTML='<option value="">-- Bir Wi-Fi ağı seçin --</option>' +
+      d.nets.map(n=>`<option value="${n.ssid.replace(/"/g,'&quot;')}">${n.ssid} (${n.rssi} dBm)</option>`).join('');
+    st.textContent=d.nets.length?`${d.nets.length} ağ bulundu.`:'Ağ bulunamadı, adını elle yazabilirsiniz.';
+  }catch(e){st.textContent='Tarama başarısız.';}
+  btn.disabled=false;
+}
+
+async function saveWifi(){
+  const ssid=document.getElementById('wSsid').value.trim();
+  const pass=document.getElementById('wPass').value;
+  const st=document.getElementById('wStatus');
+  if(!ssid){st.textContent='⚠️ Lütfen Wi-Fi adını girin.';return;}
+  st.textContent='Kaydediliyor...';
+  const body=new URLSearchParams({ssid,pass});
+  const r=await fetch('/api/wifi/save',{method:'POST',body});
+  if(r.ok){
+    st.textContent='✅ Kaydedildi! TV ev Wi-Fi ağına bağlanıyor (yeni IP TV ekranında görünecek).';
+  }else{
+    st.textContent='❌ Kaydedilemedi.';
+  }
+}
+
+async function resetWifi(){
+  if(!confirm('Kayıtlı ev Wi-Fi bilgisi silinip MiniTV ağına dönülsün mü?'))return;
+  await fetch('/api/wifi/reset',{method:'POST'});
+  document.getElementById('wSsid').value='';
+  document.getElementById('wPass').value='';
+  document.getElementById('wStatus').textContent='🔄 Sıfırlandı! TV "MiniTV" ağına geçiyor.';
 }
 
 async function playCh(i){await fetch('/api/play?i='+i,{method:'POST'});refresh();}

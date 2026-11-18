@@ -3,15 +3,12 @@
 //  Donanım: ESP32-C3 SuperMini + 1.69" 240x280 ST7789 SPI IPS Ekran
 //           + MAX98357A I2S Amfi + Mini Hoparlör + MicroSD (SPI)
 //
-//  Kütüphaneler (Arduino Library Manager):
-//    - "GFX Library for Arduino"  (moononournation)
-//    - "JPEGDEC"                  (Larry Bank / bitbank2)
-//  Arduino-ESP32 çekirdeği 3.x (ESP_I2S dahili gelir).
-//
-//  Video formatı: /v/isim_f12.mjpeg (280x240) + isteğe bağlı /v/isim_f12.pcm
-//                 (16000 Hz, 16-bit signed mono PCM ses dosyası)
-//  Web arayüzü telefondaki/PC'deki MP4'ün hem görüntüsünü hem sesini
-//  tarayıcı içinde otomatik dönüştürüp Wi-Fi'dan kaydeder.
+//  Özellikler:
+//    - Müşteri dostu Captive Portal + tarayıcıdan Ev Wi-Fi tarama/kaydetme
+//      (config.h düzenlemeden telefondan ağ seçip bağlanabilir!)
+//    - Senkronize MJPEG video (280x240) + 16 kHz mono PCM ses
+//    - MicroSD + dahili LittleFS otomatik geçiş
+//    - CRT açılış/kapanış efekti, sesli karlanma paraziti, yeşil CH OSD
 // =============================================================
 #include <Arduino.h>
 #include <SPI.h>
@@ -20,6 +17,7 @@
 #include <LittleFS.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <vector>
@@ -44,6 +42,7 @@ Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, LCD_ROTATION, true, 240,
 
 JPEGDEC jpeg;
 WebServer server(80);
+DNSServer dnsServer;
 Preferences prefs;
 fs::FS *store = &LittleFS;       // MicroSD takılıysa &SD, yoksa &LittleFS
 bool usingSD = false;
@@ -61,20 +60,33 @@ int16_t  audioBuf[1024];         // ses çıkış tamponu
 
 bool     wifiOn = false, apMode = false, tvOff = false;
 bool     uploading = false, uploadFailed = false;
+bool     pendingWifiReconnect = false;
+uint32_t reconnectAt = 0;
 File     upFile;
-String   upName, ipText;
+String   upName, ipText, savedSsid, savedPass;
 uint32_t lastWeb = 0, nextFrameAt = 0, osdUntil = 0, staticUntil = 0, infoUntil = 0;
 uint8_t  brightness = DEFAULT_BRIGHTNESS;
 uint8_t  volume = DEFAULT_VOLUME;
 uint8_t  defFps = DEFAULT_FPS;
 
-// ---------------- Depolama yardımcıları ----------------
+// ---------------- Yardımcılar ----------------
 static String vpath(const String &n) { return String(VIDEO_DIR) + "/" + n; }
 
 static String pcmPathFor(const String &mjpegName) {
   if (mjpegName.endsWith(".mjpeg"))
     return vpath(mjpegName.substring(0, mjpegName.length() - 6) + ".pcm");
   return "";
+}
+
+static String jsonEsc(const String &s) {
+  String o;
+  o.reserve(s.length() + 4);
+  for (unsigned i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (c == '"' || c == '\\') { o += '\\'; o += c; }
+    else if ((uint8_t)c >= 0x20) o += c;
+  }
+  return o;
 }
 
 static uint64_t storageTotal() { return usingSD ? SD.totalBytes() : LittleFS.totalBytes(); }
@@ -106,7 +118,6 @@ static void playStaticNoiseChunk(size_t samples) {
   while (left > 0) {
     size_t n = std::min(left, (size_t)512);
     for (size_t i = 0; i < n; i++) {
-      // Yumuşak retro TV karlanma cızırtısı
       audioBuf[i] = (int16_t)(((int32_t)(esp_random() & 0xFFFF) - 32768) / 5);
     }
     writeAudioScaled(audioBuf, n);
@@ -143,7 +154,6 @@ static int jpegDraw(JPEGDRAW *d) {
   return 1;
 }
 
-// SMPTE renk çubukları + bilgi satırları
 static void colorBars(const char *l1, const char *l2, const char *l3) {
   static const uint16_t c[7] = {0xFFFF, 0xFFE0, 0x07FF, 0x07E0, 0xF81F, 0xF800, 0x001F};
   const int bw = SCREEN_W / 7 + 1, bandY = SCREEN_H - 78;
@@ -168,7 +178,6 @@ static void showInfo(uint32_t ms) {
   infoUntil = millis() + ms;
 }
 
-// Tüplü TV açılış efekti
 static void crtOn() {
   gfx->fillScreen(0x0000);
   const int cy = SCREEN_H / 2;
@@ -177,7 +186,6 @@ static void crtOn() {
   gfx->fillScreen(0x0000);
 }
 
-// Tüplü TV kapanış efekti
 static void crtOff() {
   const int cy = SCREEN_H / 2;
   for (int h = SCREEN_H; h >= 4; h -= 28) {
@@ -194,7 +202,6 @@ static void crtOff() {
   delay(80);
 }
 
-// Kanal değişiminde "karlanma" + cızırtı sesi (PSRAM gerektirmez)
 static const int NOISE_STRIP_H = 16;
 static void drawStatic() {
   playStaticNoiseChunk(480);
@@ -234,7 +241,6 @@ static void scanChannels() {
   std::sort(channels.begin(), channels.end());
 }
 
-// "isim_f12.mjpeg" -> 12 FPS ; yoksa varsayılan
 static uint8_t fpsFromName(const String &n) {
   int k = n.lastIndexOf("_f");
   if (k > 0) {
@@ -306,7 +312,7 @@ static void playStep() {
 
   if (!vf && !openChannel(curCh)) return;
   size_t len = readFrame();
-  if (!len) {                                // döngü: video ve sesi birlikte başa sar
+  if (!len) {
     vf.seek(0); rbLen = 0; scanPos = 2;
     if (af) af.seek(0);
     len = readFrame();
@@ -324,26 +330,40 @@ static void playStep() {
   if ((int32_t)(osdUntil - now) > 0) drawOSD();
 }
 
-// ---------------- Wi-Fi ----------------
+// ---------------- Wi-Fi & Captive Portal ----------------
+static void loadSavedWifi() {
+  savedSsid = prefs.getString("ssid", "");
+  savedPass = prefs.getString("pass", "");
+  if (savedSsid.isEmpty() && strlen(WIFI_STA_SSID) > 0) {
+    savedSsid = WIFI_STA_SSID;
+    savedPass = WIFI_STA_PASS;
+  }
+}
+
 static void wifiStart() {
-  colorBars("MINI TV", "Wi-Fi aciliyor...", "");
+  loadSavedWifi();
   bool sta = false;
-  if (strlen(WIFI_STA_SSID) > 0) {
+  if (!savedSsid.isEmpty()) {
+    colorBars("WI-FI BAGLANIYOR", savedSsid.c_str(), "Lutfen bekleyin...");
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_STA_SSID, WIFI_STA_PASS);
+    WiFi.begin(savedSsid.c_str(), savedPass.c_str());
     uint32_t t = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - t < 10000) delay(200);
     sta = WiFi.status() == WL_CONNECTED;
+  } else {
+    colorBars("MINI TV", "Wi-Fi aciliyor...", "");
   }
   if (sta) {
     apMode = false;
     ipText = WiFi.localIP().toString();
     WiFi.setSleep(true);
   } else {
+    // Ev ağı yoksa veya bağlanamazsa otomatik kendi kurulum ağına (AP + Captive Portal) geçer
     apMode = true;
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP_STA); // STA aktif kalır ki tarayıcıdan yakındaki ağları tarayabilelim!
     WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASS);
     ipText = WiFi.softAPIP().toString();
+    dnsServer.start(53, "*", WiFi.softAPIP());
   }
   if (MDNS.begin(MDNS_NAME)) MDNS.addService("http", "tcp", 80);
   server.begin();
@@ -353,11 +373,13 @@ static void wifiStart() {
 
 static void wifiStop() {
   server.stop();
+  dnsServer.stop();
   MDNS.end();
   if (apMode) WiFi.softAPdisconnect(true);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   wifiOn = false;
+  apMode = false;
 }
 
 // ---------------- Web API ----------------
@@ -400,16 +422,68 @@ static void hList() {
       if (fa) { sz += fa.size(); fa.close(); }
     }
     if (i) j += ',';
-    j += "{\"name\":\"" + channels[i] + "\",\"size\":" + String(sz) + ",\"audio\":" + (hasAud ? "true" : "false") + "}";
+    j += "{\"name\":\"" + jsonEsc(channels[i]) + "\",\"size\":" + String(sz) + ",\"audio\":" + (hasAud ? "true" : "false") + "}";
   }
   j += "],\"current\":" + String(curCh);
   j += ",\"total\":" + String((unsigned long)(storageTotal() / 1024ULL));
   j += ",\"used\":" + String((unsigned long)(storageUsed() / 1024ULL));
   j += ",\"sd\":" + String(usingSD ? "true" : "false");
+  j += ",\"ap\":" + String(apMode ? "true" : "false");
+  j += ",\"ssid\":\"" + jsonEsc(apMode ? String(WIFI_AP_SSID) : WiFi.SSID()) + "\"";
+  j += ",\"savedSsid\":\"" + jsonEsc(savedSsid) + "\"";
+  j += ",\"ip\":\"" + jsonEsc(ipText) + "\"";
   j += ",\"brightness\":" + String(brightness);
   j += ",\"volume\":" + String(volume);
   j += ",\"fps\":" + String(defFps) + "}";
   server.send(200, "application/json", j);
+}
+
+// Yakındaki Wi-Fi ağlarını tara (Müşteri listeden seçsin!)
+static void hWifiScan() {
+  touch();
+  int n = WiFi.scanNetworks(false, false);
+  String j = "{\"nets\":[";
+  int added = 0;
+  for (int i = 0; i < n && added < 20; i++) {
+    String s = WiFi.SSID(i);
+    if (s.isEmpty()) continue;
+    if (added++) j += ',';
+    j += "{\"ssid\":\"" + jsonEsc(s) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
+  }
+  WiFi.scanDelete();
+  j += "]}";
+  server.send(200, "application/json", j);
+}
+
+// Ev Wi-Fi bilgisini NVS hafızaya kalıcı kaydet ve bağlan
+static void hWifiSave() {
+  touch();
+  String s = server.arg("ssid");
+  String p = server.arg("pass");
+  s.trim();
+  if (s.isEmpty()) {
+    server.send(400, "application/json", "{\"ok\":false,\"error\":\"Wi-Fi adi bos olamaz\"}");
+    return;
+  }
+  prefs.putString("ssid", s);
+  prefs.putString("pass", p);
+  savedSsid = s;
+  savedPass = p;
+  server.send(200, "application/json", "{\"ok\":true}");
+  pendingWifiReconnect = true;
+  reconnectAt = millis() + 800;
+}
+
+// Kayıtlı ev Wi-Fi'ını sil ve MiniTV kurulum moduna dön
+static void hWifiReset() {
+  touch();
+  prefs.remove("ssid");
+  prefs.remove("pass");
+  savedSsid = "";
+  savedPass = "";
+  server.send(200, "application/json", "{\"ok\":true}");
+  pendingWifiReconnect = true;
+  reconnectAt = millis() + 800;
 }
 
 static void hUploadData() {
@@ -493,11 +567,22 @@ static void hSettings() {
 static void setupRoutes() {
   server.on("/", HTTP_GET, hRoot);
   server.on("/api/list", HTTP_GET, hList);
+  server.on("/api/wifi/scan", HTTP_GET, hWifiScan);
+  server.on("/api/wifi/save", HTTP_POST, hWifiSave);
+  server.on("/api/wifi/reset", HTTP_POST, hWifiReset);
   server.on("/api/upload", HTTP_POST, hUploadDone, hUploadData);
   server.on("/api/delete", HTTP_POST, hDelete);
   server.on("/api/play", HTTP_POST, hPlay);
   server.on("/api/settings", HTTP_POST, hSettings);
-  server.onNotFound([]() { server.send(404, "text/plain", "Bulunamadi"); });
+  // Captive Portal: iOS/Android bağlanınca ayar sayfası otomatik açılır
+  server.onNotFound([]() {
+    if (apMode && !server.uri().startsWith("/api/")) {
+      server.sendHeader("Location", String("http://") + ipText + "/", true);
+      server.send(302, "text/plain", "");
+      return;
+    }
+    server.send(404, "text/plain", "Bulunamadi");
+  });
 }
 
 // ---------------- Buton & Uyku Modu ----------------
@@ -526,18 +611,18 @@ static void handleButton() {
   if (s != last) {
     if (s == LOW) { downAt = now; longDone = false; sleepDone = false; }
     else if (!longDone && !sleepDone && now - downAt > 40) {
-      if (tvOff) exitStandby();            // uykudaysa uyandır
-      else switchChannel(curCh + 1);       // kısa bas: sonraki kanal
+      if (tvOff) exitStandby();
+      else switchChannel(curCh + 1);
     }
     last = s;
   }
   if (!tvOff && s == LOW && !longDone && now - downAt > 1500) {
-    longDone = true;                       // 1.5 sn: Wi-Fi aç/kapat
+    longDone = true;
     if (wifiOn) wifiStop(); else wifiStart();
     showInfo(3000);
   }
   if (!tvOff && s == LOW && !sleepDone && now - downAt > 4000) {
-    sleepDone = true;                      // 4 sn: CRT kapanış + uyku modu
+    sleepDone = true;
     enterStandby();
   }
 }
@@ -551,7 +636,6 @@ void setup() {
   Serial.begin(115200);
   pinMode(PIN_BUTTON, INPUT_PULLUP);
 
-  // Paylaşımlı SPI: iki CS pinini de HIGH başlat (çakışma önleme)
   pinMode(PIN_LCD_CS, OUTPUT); digitalWrite(PIN_LCD_CS, HIGH);
 #if USE_SD_CARD
   pinMode(PIN_SD_CS, OUTPUT);  digitalWrite(PIN_SD_CS, HIGH);
@@ -582,7 +666,6 @@ void setup() {
   if (!rb) rb = (uint8_t *)malloc(FRAME_BUF_SIZE);
   noiseBuf = (uint16_t *)malloc(SCREEN_W * NOISE_STRIP_H * 2);
 
-  // Önce MicroSD dene, takılı değilse dahili LittleFS kullan
 #if USE_SD_CARD
   if (SD.begin(PIN_SD_CS, SPI, SD_SPI_HZ)) {
     usingSD = true;
@@ -599,14 +682,23 @@ void setup() {
 
   crtOn();
   if (WIFI_ON_BOOT) wifiStart();
-  showInfo(channels.empty() ? 0 : 3000);
+  showInfo(channels.empty() ? 0 : 4000);
   if (!channels.empty()) openChannel(curCh);
 }
 
 void loop() {
   handleButton();
   if (tvOff) { delay(50); return; }
-  if (wifiOn) server.handleClient();
+  if (pendingWifiReconnect && (int32_t)(millis() - reconnectAt) >= 0) {
+    pendingWifiReconnect = false;
+    wifiStop();
+    wifiStart();
+    showInfo(channels.empty() ? 0 : 5000);
+  }
+  if (wifiOn) {
+    if (apMode) dnsServer.processNextRequest();
+    server.handleClient();
+  }
 #if WIFI_AUTO_OFF_MIN > 0
   if (wifiOn && !uploading && millis() - lastWeb > (uint32_t)WIFI_AUTO_OFF_MIN * 60000UL) {
     wifiStop();
