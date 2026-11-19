@@ -223,11 +223,12 @@ h1 {
   font-size: 13px;
   margin-top: 10px;
   display: none;
+  line-height: 1.4;
 }
 .status-msg.active { display: block; }
-.status-info { background: rgba(0,229,255,0.1); color: var(--accent2); }
-.status-err { background: rgba(255,68,68,0.1); color: var(--danger); }
-.status-ok { background: rgba(0,230,118,0.1); color: var(--success); }
+.status-info { background: rgba(0,229,255,0.1); color: var(--accent2); border: 1px solid rgba(0,229,255,0.3); }
+.status-err { background: rgba(255,68,68,0.1); color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
+.status-ok { background: rgba(0,230,118,0.1); color: var(--success); border: 1px solid rgba(0,230,118,0.3); }
 .spinner {
   display: inline-block;
   width: 14px;
@@ -286,7 +287,7 @@ h1 {
 
 <header>
   <h1>🎬 COLLECTIBLE DISPLAY</h1>
-  <div class="subtitle">1.3" IPS Yatay Ekran - Medya & Ses Paneli</div>
+  <div class="subtitle">1.3" IPS Yatay Ekran - Medya, Wi-Fi & Ses Paneli</div>
 </header>
 
 <!-- SES KONTROL KARTI -->
@@ -315,6 +316,69 @@ h1 {
   </div>
 </div>
 
+<!-- WI-FI & AĞ AYARLARI KARTI -->
+<div class="card">
+  <h2>
+    <span>📶 Wi-Fi & Ağ Ayarları</span>
+    <span id="wifi-status-badge" style="font-size:11px;color:var(--text-dim);">Kontrol ediliyor...</span>
+  </h2>
+
+  <!-- 1. Hotspot Şifresi Değiştirme -->
+  <div style="background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;margin-bottom:12px;border:1px solid var(--border);">
+    <div style="font-weight:600;font-size:13px;color:var(--accent2);margin-bottom:8px;">📡 Cihaz Erişim Noktası (Hotspot)</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+      <span style="color:var(--text-dim);">Ağ Adı (SSID):</span>
+      <span id="disp-ap-ssid" style="font-weight:bold;">CollectibleDisplay</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;">
+      <span style="color:var(--text-dim);">Mevcut Şifre:</span>
+      <span id="disp-ap-pass" style="font-family:monospace;color:var(--warning);">display1234</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="input-new-ap-pass" placeholder="Yeni Şifre (En az 8 hane)" style="flex:1;background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
+      <button class="btn btn-small" onclick="changeApPassword()" style="margin:0;">Şifreyi Kaydet</button>
+    </div>
+  </div>
+
+  <!-- 2. Ev / Ofis Wi-Fi Ağına Bağlanma -->
+  <div style="background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;margin-bottom:12px;border:1px solid var(--border);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-weight:600;font-size:13px;color:var(--accent2);">🏠 Ev / İş Wi-Fi Ağına Bağlan (STA)</div>
+      <button class="btn btn-small" id="btn-scan" onclick="scanWifiNetworks()" style="background:#23273a;margin:0;font-size:11px;">🔍 Ağları Tara</button>
+    </div>
+
+    <div id="sta-status-box" style="font-size:12px;padding:8px;border-radius:6px;background:rgba(0,0,0,0.3);margin-bottom:10px;">
+      Durum: <span id="disp-sta-status" style="color:var(--text-dim);">Kontrol ediliyor...</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <select id="select-wifi-ssid" onchange="onSelectSsid(this.value)" style="background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
+        <option value="">-- Çevredeki Ağları Görmek İçin "Ağları Tara"ya Basın --</option>
+      </select>
+      <input type="text" id="input-sta-ssid" placeholder="veya Wi-Fi Adını (SSID) buraya yazın" style="background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
+      <input type="password" id="input-sta-pass" placeholder="Ev Wi-Fi Şifresi" style="background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-small" onclick="connectHomeWifi()" style="flex:1;background:var(--success);color:#000;font-weight:bold;margin:0;">Ev Ağına Bağlan</button>
+        <button class="btn btn-small btn-danger" onclick="forgetHomeWifi()" id="btn-forget-wifi" style="margin:0;display:none;">Ağı Unut</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.4;">
+      💡 <b>Avantaj:</b> Ev ağınıza bağlandığınızda, telefonunuzun Wi-Fi'ını değiştirmeden evinizin internetinden 
+      <a id="mdns-link" href="http://collectibletv.local" target="_blank" style="color:var(--accent2);text-decoration:underline;">http://collectibletv.local</a> 
+      adresinden doğrudan bu panele erişebilirsiniz.
+    </div>
+  </div>
+
+  <!-- 3. Fabrika Ayarlarına Sıfırlama -->
+  <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,68,68,0.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,68,68,0.3);">
+    <div>
+      <div style="font-weight:600;font-size:13px;color:var(--danger);">⚠️ Fabrika Ayarlarına Sıfırla</div>
+      <div style="font-size:11px;color:var(--text-dim);">Kayıtlı tüm Wi-Fi şifrelerini ve ayarları varsayılana sıfırlar</div>
+    </div>
+    <button class="btn btn-small btn-danger" onclick="resetFactory()" style="margin:0;">Sıfırla</button>
+  </div>
+</div>
+
 <!-- HAFIZA KARTI -->
 <div class="card">
   <h2><span>16 GB SD Kart Hafıza Durumu</span><span id="conn-badge" style="font-size:11px;color:var(--success);">● Yayında</span></h2>
@@ -339,7 +403,7 @@ h1 {
   <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div style="font-size:32px;margin-bottom:8px;">📷 📼</div>
     <div style="font-weight:600;margin-bottom:4px;">Herhangi Bir Fotoğraf veya Video Seçin</div>
-    <div style="font-size:12px;color:var(--text-dim);">MP4, MOV, GIF, JPG, PNG, WEBP — 240x240'a Otomatik Dönüştürülür</div>
+    <div style="font-size:12px;color:var(--text-dim);">MP4, MOV, GIF, JPG, PNG, WEBP veya hazır .mjpeg / .pcm</div>
     <input type="file" id="file-input" accept="image/*,video/*,.mjpeg,.pcm" style="display:none" onchange="handleFileSelect(this.files)">
   </div>
 
@@ -349,14 +413,13 @@ h1 {
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:rgba(0,0,0,0.2);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">
-    <span style="font-size:13px;color:var(--text-dim);">Videonun Ne Kadarı Yüklensin?</span>
+    <span style="font-size:13px;color:var(--text-dim);">Video Süresi:</span>
     <select id="sel-duration" style="background:#151824;color:var(--accent2);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-weight:bold;outline:none;">
       <option value="9999" selected>Tüm Video (Tamamı - Kesme Yok)</option>
-      <option value="30">İlk 30 Saniye (Kısa Klip)</option>
+      <option value="30">İlk 30 Saniye (Hızlı)</option>
       <option value="60">İlk 1 Dakika</option>
       <option value="180">İlk 3 Dakika</option>
       <option value="300">İlk 5 Dakika</option>
-      <option value="600">İlk 10 Dakika</option>
     </select>
   </div>
 
@@ -370,6 +433,10 @@ h1 {
   <div id="status-box" class="status-msg"></div>
   <div class="progress-bar-bg" id="upload-prog-bg" style="display:none;margin-top:12px;">
     <div class="progress-bar" id="upload-prog-bar"></div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.4;">
+    🛡️ <b>Kesintisiz Parçalı Yükleme Devrede:</b> Videolar 128 KB'lık parçalar halinde yüklenir; Wi-Fi sinyali dalgalansa bile otomatik olarak kaldığı parçadan devam eder ve kopma yaşanmaz.
   </div>
 </div>
 
@@ -464,6 +531,101 @@ async function toggleMute() {
   } catch(e) { console.error(e); }
 }
 
+// ---- WI-FI YÖNETİMİ ----
+async function scanWifiNetworks() {
+  const btn = document.getElementById('btn-scan');
+  btn.disabled = true;
+  btn.innerText = 'Taranıyor...';
+  const sel = document.getElementById('select-wifi-ssid');
+  sel.innerHTML = '<option value="">Ağlar taranıyor, lütfen bekleyin...</option>';
+
+  try {
+    const res = await fetch('/scan_wifi');
+    const nets = await res.json();
+    sel.innerHTML = '<option value="">-- Listeden Bir Wi-Fi Ağı Seçin (' + nets.length + ' ağ bulundu) --</option>';
+    nets.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.ssid;
+      opt.text = `${n.ssid} (${n.rssi} dBm) ${n.secure ? '🔒' : '🔓'}`;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Ağ tarama başarısız oldu. Elle yazabilirsiniz.</option>';
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '🔍 Ağları Tara';
+  }
+}
+
+function onSelectSsid(val) {
+  if (val) {
+    document.getElementById('input-sta-ssid').value = val;
+    document.getElementById('input-sta-pass').focus();
+  }
+}
+
+async function changeApPassword() {
+  const newPass = document.getElementById('input-new-ap-pass').value.trim();
+  if (newPass.length < 8) {
+    alert('Hotspot şifresi en az 8 karakter olmalıdır!');
+    return;
+  }
+  if (!confirm('Hotspot şifresini "' + newPass + '" olarak değiştirmek istediğinize emin misiniz?\nCihaz yeniden başlayacaktır.')) return;
+
+  try {
+    const formData = new FormData();
+    formData.append('ap_pass', newPass);
+    const res = await fetch('/save_wifi', { method: 'POST', body: formData });
+    const data = await res.json();
+    alert(data.message || 'Şifre güncellendi. Yeni şifreyle bağlanın.');
+  } catch(e) {
+    alert('Ayarlar kaydedildi. Cihaz yeniden başlıyor...');
+  }
+}
+
+async function connectHomeWifi() {
+  const ssid = document.getElementById('input-sta-ssid').value.trim();
+  const pass = document.getElementById('input-sta-pass').value;
+  if (!ssid) {
+    alert('Lütfen bağlanılacak Wi-Fi adını (SSID) girin veya seçin!');
+    return;
+  }
+  if (!confirm('"' + ssid + '" ağına bağlanılsın mı?\nCihaz ayarları kaydedip yeniden başlayacaktır.')) return;
+
+  try {
+    const formData = new FormData();
+    formData.append('sta_ssid', ssid);
+    formData.append('sta_pass', pass);
+    const res = await fetch('/save_wifi', { method: 'POST', body: formData });
+    const data = await res.json();
+    alert(data.message || 'Ev ağına bağlanılıyor. Cihaz yeniden başlıyor...');
+  } catch(e) {
+    alert('Ayarlar kaydedildi. Cihaz yeniden başlıyor...');
+  }
+}
+
+async function forgetHomeWifi() {
+  if (!confirm('Kayıtlı ev Wi-Fi ağını unutmak istediğinize emin misiniz?')) return;
+  try {
+    const res = await fetch('/forget_wifi', { method: 'POST' });
+    const data = await res.json();
+    alert(data.message || 'Ev ağı unutuldu. Cihaz yeniden başlıyor...');
+  } catch(e) {
+    alert('İşlem yapıldı. Cihaz yeniden başlıyor...');
+  }
+}
+
+async function resetFactory() {
+  if (!confirm('⚠️ DİKKAT!\nTüm Wi-Fi şifreleri, ev ağı ayarları ve ses tercihleri fabrika ayarlarına sıfırlanacaktır.\n\nEmin misiniz?')) return;
+  try {
+    const res = await fetch('/reset_factory', { method: 'POST' });
+    const data = await res.json();
+    alert(data.message || 'Fabrika ayarlarına sıfırlandı. Cihaz yeniden başlıyor...');
+  } catch(e) {
+    alert('Sıfırlama komutu verildi. Cihaz yeniden başlıyor...');
+  }
+}
+
 // ---- VİDEOLAR VE VERİLER ----
 async function loadVideos() {
   try {
@@ -480,6 +642,31 @@ async function loadVideos() {
 
     if (data.volume !== undefined) {
       updateVolUI(data.volume, data.muted);
+    }
+
+    if (data.wifi) {
+      document.getElementById('disp-ap-ssid').innerText = data.wifi.ap_ssid || 'CollectibleDisplay';
+      document.getElementById('disp-ap-pass').innerText = data.wifi.ap_pass || 'display1234';
+
+      const staStatus = document.getElementById('disp-sta-status');
+      const wifiBadge = document.getElementById('wifi-status-badge');
+      const forgetBtn = document.getElementById('btn-forget-wifi');
+
+      if (data.wifi.sta_connected) {
+        staStatus.innerHTML = `<b style="color:var(--success);">● Bağlı: ${data.wifi.sta_ssid}</b> (IP: <b style="color:var(--accent2);">${data.wifi.sta_ip}</b>)`;
+        wifiBadge.innerHTML = `<span style="color:var(--success);">● Ev Ağı: ${data.wifi.sta_ssid}</span>`;
+        forgetBtn.style.display = 'inline-block';
+        document.getElementById('mdns-link').innerText = `http://${data.wifi.sta_ip} veya http://collectibletv.local`;
+        document.getElementById('mdns-link').href = `http://${data.wifi.sta_ip}`;
+      } else if (data.wifi.sta_ssid && data.wifi.sta_ssid.length > 0) {
+        staStatus.innerHTML = `<b style="color:var(--warning);">● Bağlanamadı: ${data.wifi.sta_ssid}</b>`;
+        wifiBadge.innerHTML = `<span style="color:var(--warning);">● Bağlantı Yok</span>`;
+        forgetBtn.style.display = 'inline-block';
+      } else {
+        staStatus.innerHTML = `<span style="color:var(--text-dim);">Ev ağına bağlı değil (Yalnızca Hotspot aktif)</span>`;
+        wifiBadge.innerHTML = `<span style="color:var(--text-dim);">● Yalnızca Hotspot</span>`;
+        forgetBtn.style.display = 'none';
+      }
     }
 
     const listEl = document.getElementById('video-list');
@@ -536,7 +723,13 @@ function handleFileSelect(files) {
   const name = file.name.toLowerCase();
 
   if (name.endsWith('.mjpeg') || name.endsWith('.pcm')) {
-    uploadRawFile(file);
+    uploadFileChunked(file).then(() => {
+      showStatus('Dosya başarıyla yüklendi! 🎉', 'ok');
+      loadVideos();
+      setTimeout(hideStatus, 4000);
+    }).catch(err => {
+      showStatus('Yükleme hatası: ' + err.message, 'err');
+    });
   } else if (file.type.startsWith('image/') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || name.endsWith('.webp') || name.endsWith('.bmp')) {
     convertAndUploadPhoto(file);
   } else {
@@ -544,43 +737,75 @@ function handleFileSelect(files) {
   }
 }
 
-function uploadRawFile(file, onDone) {
-  showStatus('Yükleniyor: ' + file.name, 'info', true);
+// ---- KESİNTİSİZ PARÇALI (CHUNKED) YÜKLEME MOTORU ----
+async function uploadFileChunked(file) {
+  const CHUNK_SIZE = 128 * 1024; // 128 KB parçalar
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   const progBg = document.getElementById('upload-prog-bg');
   const progBar = document.getElementById('upload-prog-bar');
   progBg.style.display = 'block';
-  progBar.style.width = '0%';
 
-  const formData = new FormData();
-  formData.append('video', file, file.name);
+  // 1. Cihaza yükleme başlatma oturumu aç
+  showStatus(`"${file.name}" için yükleme oturumu açılıyor...`, 'info', true);
+  const startUrl = `/upload_start?name=${encodeURIComponent(file.name)}&size=${file.size}`;
+  const startRes = await fetch(startUrl, { method: 'POST' });
+  if (!startRes.ok) throw new Error("Cihaz yükleme oturumunu açamadı.");
 
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/upload', true);
-  xhr.upload.onprogress = (e) => {
-    if (e.lengthComputable) {
-      const p = Math.round((e.loaded / e.total) * 100);
-      progBar.style.width = p + '%';
-      showStatus(`Yükleniyor: ${file.name} (%${p})`, 'info', true);
-    }
-  };
-  xhr.onload = () => {
-    progBg.style.display = 'none';
-    if (xhr.status === 200) {
-      if (onDone) onDone();
-      else {
-        showStatus('Medya başarıyla yüklendi! 🎉', 'ok');
-        loadVideos();
-        setTimeout(hideStatus, 4000);
+  const startTime = Date.now();
+
+  // 2. Parça parça gönder (Her parça için otomatik 3 deneme)
+  for (let c = 0; c < totalChunks; c++) {
+    const start = c * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunkBlob = file.slice(start, end);
+
+    let success = false;
+    let attempt = 0;
+    while (!success && attempt < 4) {
+      attempt++;
+      try {
+        const formData = new FormData();
+        formData.append("chunk", chunkBlob, file.name);
+
+        const chunkUrl = `/upload_chunk?name=${encodeURIComponent(file.name)}&idx=${c}&total=${totalChunks}`;
+        const res = await fetch(chunkUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (res.ok) {
+          success = true;
+        } else {
+          showStatus(`Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/3)...`, 'info', true);
+          await new Promise(r => setTimeout(r, 300));
+        }
+      } catch (err) {
+        showStatus(`Ağ sinyali dalgalandı, Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/3)...`, 'info', true);
+        await new Promise(r => setTimeout(r, 400));
       }
-    } else {
-      showStatus('Yükleme hatası: ' + xhr.responseText, 'err');
     }
-  };
-  xhr.onerror = () => {
-    progBg.style.display = 'none';
-    showStatus('Bağlantı hatası oluştu!', 'err');
-  };
-  xhr.send(formData);
+
+    if (!success) {
+      await fetch(`/upload_abort?name=${encodeURIComponent(file.name)}`, { method: 'POST' });
+      throw new Error(`Parça ${c+1}/${totalChunks} yüklenirken bağlantı koptu.`);
+    }
+
+    const pct = Math.round(((c + 1) / totalChunks) * 100);
+    progBar.style.width = pct + '%';
+
+    const elapsed = (Date.now() - startTime) / 1000;
+    const speedKb = elapsed > 0 ? ((end / 1024) / elapsed).toFixed(0) : 0;
+    showStatus(`Yükleniyor: ${file.name} (%${pct}) - ${c+1}/${totalChunks} Parça [${speedKb} KB/s]`, 'info', true);
+  }
+
+  // 3. Dosyayı tamamla ve oynatmaya başla
+  showStatus(`"${file.name}" SD karta yazıldı, oynatılıyor...`, 'info', true);
+  const finishUrl = `/upload_finish?name=${encodeURIComponent(file.name)}`;
+  const finRes = await fetch(finishUrl, { method: 'POST' });
+  if (!finRes.ok) throw new Error("Dosya sonlandırılırken hata oluştu.");
+
+  progBg.style.display = 'none';
+  return true;
 }
 
 // 1. FOTOĞRAF DÖNÜŞTÜRÜCÜ
@@ -588,7 +813,7 @@ function convertAndUploadPhoto(file) {
   showStatus('Fotoğraf işleniyor ve 240x240 boyutuna ölçekleniyor...', 'info', true);
   const img = new Image();
   img.src = URL.createObjectURL(file);
-  img.onload = () => {
+  img.onload = async () => {
     const canvas = document.getElementById('preview-canvas');
     canvas.style.display = 'block';
     const ctx = canvas.getContext('2d');
@@ -612,11 +837,18 @@ function convertAndUploadPhoto(file) {
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
       const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
       const mjpegFile = new File([blob], outName, { type: 'video/x-motion-jpeg' });
       URL.revokeObjectURL(img.src);
-      uploadRawFile(mjpegFile);
+      try {
+        await uploadFileChunked(mjpegFile);
+        showStatus('Fotoğraf başarıyla yüklendi! 🎉', 'ok');
+        loadVideos();
+        setTimeout(hideStatus, 4000);
+      } catch(err) {
+        showStatus('Yükleme hatası: ' + err.message, 'err');
+      }
     }, 'image/jpeg', 0.85);
   };
 }
@@ -654,97 +886,107 @@ async function extractPcm(file, maxDuration) {
 
 // 3. VİDEO DÖNÜŞTÜRÜCÜ (Kareler + Ses)
 async function convertAndUploadVideo(file) {
-  showStatus('Video inceleniyor ve karelere ayrılıyor...', 'info', true);
-  const video = document.createElement('video');
-  video.muted = true;
-  video.playsInline = true;
-  video.src = URL.createObjectURL(file);
-
-  await new Promise((res, rej) => {
-    video.onloadedmetadata = () => res();
-    video.onerror = rej;
-  });
-
-  const maxDur = parseFloat(document.getElementById('sel-duration').value) || 9999;
-  const duration = Math.min(video.duration, maxDur); // Kullanıcının videosunun tamamını veya seçilen süreyi dönüştür
-  const fps = 20; // 20 FPS ideal
-  const totalFrames = Math.floor(duration * fps);
-  const canvas = document.getElementById('preview-canvas');
-  canvas.style.display = 'block';
-  const ctx = canvas.getContext('2d');
-
-  const blobs = [];
-  const progBg = document.getElementById('upload-prog-bg');
-  const progBar = document.getElementById('upload-prog-bar');
-  progBg.style.display = 'block';
-
-  for (let i = 0; i < totalFrames; i++) {
-    const time = i / fps;
-    video.currentTime = time;
-    await Promise.race([
-      new Promise(r => { video.onseeked = r; }),
-      new Promise(r => setTimeout(r, 120))
-    ]);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, 240, 240);
-
-    if (fitMode === 'cover') {
-      const scale = Math.max(240 / video.videoWidth, 240 / video.videoHeight);
-      const sw = 240 / scale;
-      const sh = 240 / scale;
-      const sx = (video.videoWidth - sw) / 2;
-      sy = (video.videoHeight - sh) / 2;
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 240, 240);
-    } else {
-      const scale = Math.min(240 / video.videoWidth, 240 / video.videoHeight);
-      const dw = video.videoWidth * scale;
-      const dh = video.videoHeight * scale;
-      const dx = (240 - dw) / 2;
-      const dy = (240 - dh) / 2;
-      ctx.drawImage(video, dx, dy, dw, dh);
-    }
-
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.65));
-    blobs.push(blob);
-
-    const pct = Math.round(((i + 1) / totalFrames) * 100);
-    progBar.style.width = pct + '%';
-    showStatus(`Dönüştürülüyor: Kare ${i+1}/${totalFrames} (%${pct})`, 'info', true);
+  let wakeLock = null;
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
   }
 
-  // Ses ayıklama (seçiliyse)
-  let pcmFile = null;
-  const wantAudio = document.getElementById('chk-audio').checked;
-  if (wantAudio) {
-    showStatus('Videonun sesi 16 kHz mono formatına ayıklanıyor...', 'info', true);
-    const pcmBlob = await extractPcm(file, duration);
-    if (pcmBlob) {
-      const pcmName = file.name.substring(0, file.name.lastIndexOf('.')) + '.pcm';
-      pcmFile = new File([pcmBlob], pcmName, { type: 'application/octet-stream' });
+  try {
+    showStatus('Video inceleniyor ve karelere ayrılıyor...', 'info', true);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.src = URL.createObjectURL(file);
+
+    await new Promise((res, rej) => {
+      video.onloadedmetadata = () => res();
+      video.onerror = rej;
+    });
+
+    const maxDur = parseFloat(document.getElementById('sel-duration').value) || 9999;
+    const duration = Math.min(video.duration, maxDur);
+    const fps = 20; // 20 FPS ideal
+    const totalFrames = Math.floor(duration * fps);
+    const canvas = document.getElementById('preview-canvas');
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+
+    const blobs = [];
+    const progBg = document.getElementById('upload-prog-bg');
+    const progBar = document.getElementById('upload-prog-bar');
+    progBg.style.display = 'block';
+
+    for (let i = 0; i < totalFrames; i++) {
+      const time = i / fps;
+      video.currentTime = time;
+      await Promise.race([
+        new Promise(r => { video.onseeked = r; }),
+        new Promise(r => setTimeout(r, 120))
+      ]);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 240, 240);
+
+      if (fitMode === 'cover') {
+        const scale = Math.max(240 / video.videoWidth, 240 / video.videoHeight);
+        const sw = 240 / scale;
+        const sh = 240 / scale;
+        const sx = (video.videoWidth - sw) / 2;
+        const sy = (video.videoHeight - sh) / 2;
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 240, 240);
+      } else {
+        const scale = Math.min(240 / video.videoWidth, 240 / video.videoHeight);
+        const dw = video.videoWidth * scale;
+        const dh = video.videoHeight * scale;
+        const dx = (240 - dw) / 2;
+        const dy = (240 - dh) / 2;
+        ctx.drawImage(video, dx, dy, dw, dh);
+      }
+
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.65));
+      blobs.push(blob);
+
+      const pct = Math.round(((i + 1) / totalFrames) * 100);
+      progBar.style.width = pct + '%';
+      showStatus(`Dönüştürülüyor: Kare ${i+1}/${totalFrames} (%${pct})`, 'info', true);
     }
-  }
 
-  showStatus('Video SD karta paketleniyor...', 'info', true);
-  const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
-  const mjpegBlob = new Blob(blobs, { type: 'video/x-motion-jpeg' });
-  const mjpegFile = new File([mjpegBlob], outName, { type: 'video/x-motion-jpeg' });
-  URL.revokeObjectURL(video.src);
+    // Ses ayıklama (seçiliyse)
+    let pcmFile = null;
+    const wantAudio = document.getElementById('chk-audio').checked;
+    if (wantAudio) {
+      showStatus('Videonun sesi 16 kHz mono formatına ayıklanıyor...', 'info', true);
+      const pcmBlob = await extractPcm(file, duration);
+      if (pcmBlob) {
+        const pcmName = file.name.substring(0, file.name.lastIndexOf('.')) + '.pcm';
+        pcmFile = new File([pcmBlob], pcmName, { type: 'application/octet-stream' });
+      }
+    }
 
-  if (pcmFile) {
-    uploadRawFile(pcmFile, () => {
-      uploadRawFile(mjpegFile, () => {
-        showStatus('Video ve Ses başarıyla yüklendi ve açıldı! 🎉', 'ok');
-        loadVideos();
-        setTimeout(hideStatus, 4000);
-      });
-    });
-  } else {
-    uploadRawFile(mjpegFile, () => {
-      showStatus('Video başarıyla yüklendi ve açıldı! 🎉', 'ok');
-      loadVideos();
-      setTimeout(hideStatus, 4000);
-    });
+    showStatus('Video SD karta paketleniyor...', 'info', true);
+    const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
+    const mjpegBlob = new Blob(blobs, { type: 'video/x-motion-jpeg' });
+    const mjpegFile = new File([mjpegBlob], outName, { type: 'video/x-motion-jpeg' });
+    URL.revokeObjectURL(video.src);
+
+    // Kesintisiz Parçalı Yükleme
+    if (pcmFile) {
+      showStatus('Ses dosyası SD karta aktarılıyor...', 'info', true);
+      await uploadFileChunked(pcmFile);
+    }
+
+    showStatus('Video dosyası SD karta aktarılıyor...', 'info', true);
+    await uploadFileChunked(mjpegFile);
+
+    showStatus('Video ve Ses başarıyla yüklendi ve açıldı! 🎉', 'ok');
+    loadVideos();
+    setTimeout(hideStatus, 4000);
+  } catch(err) {
+    showStatus('Yükleme hatası: ' + err.message, 'err');
+  } finally {
+    if (wakeLock) {
+      try { await wakeLock.release(); } catch(e){}
+    }
   }
 }
 

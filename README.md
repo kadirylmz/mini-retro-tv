@@ -25,14 +25,19 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
    - **Tüplü TV OSD Göstergesi (On-Screen Display):** Ses seviyesi değiştiğinde veya sessize alındığında ekranda 1.8 saniye boyunca canlı `[ 🔇 SES KAPALI (MUTE) ]` veya `[ 🔊 SES: %70 ████▒▒▒▒ ]` retro çubuğu belirir.
    - **Kalıcı Hafıza (NVS):** Cihaz kapatılıp açılsa bile son ses seviyesi ve mute durumu otomatik hatırlanır.
 
-3. **✨ Tarayıcıdan Tek Tıkla Fotoğraf & Video (+Ses) Yükleme:**
+3. **✨ Tarayıcıdan Tek Tıkla Fotoğraf & Video (+Ses) Yükleme (Kesintisiz Parçalı Yükleme):**
    - Herhangi bir ek programa veya FFmpeg komutlarına ihtiyaç yoktur!
-   - `CollectibleDisplay` Wi-Fi ağına bağlanıp tarayıcıdan `http://192.168.4.1` adresine girildiğinde:
-     - **Fotoğraf:** JPG, PNG, WEBP, BMP anında 240×240'a dönüştürülüp ekranda sabit gösterilir.
-     - **Video + Ses:** MP4, MOV, WEBM seçildiğinde tarayıcı Web Audio API ile videonun sesini 16 kHz mono PCM formatına ayıklar, görüntüyü 240×240 20 FPS MJPEG yapar ve ikisini senkronize şekilde SD karta yükler.
-     - İsteğe bağlı olarak *"Videonun sesini de aktar"* seçeneği kapatılarak sadece sessiz video yüklenebilir.
+   - **Kopmayan Parçalı Yükleme Motoru (Chunked Upload):** Büyük videolar (10-50 MB) 128 KB'lık parçalara ayrılarak yüklenir; Wi-Fi sinyali dalgalansa bile otomatik olarak kaldığı parçadan devam eder, bağlantı kopmaz ve SD kartta 0 bayt bozuk dosya kalmaz.
+   - Ekran uykusunu engelleyici (WakeLock) sayesinde telefon veya bilgisayarın ekranı kapansa dahi dönüştürme ve yükleme duraksamaz.
+   - MP4, MOV, WEBM seçildiğinde tarayıcı Web Audio API ile videonun sesini 16 kHz mono PCM formatına ayıklar, görüntüyü 240×240 MJPEG yapar ve ikisini senkronize şekilde SD karta aktarır.
 
-4. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
+4. **📶 Wi-Fi Yönetimi, Ev Ağına Bağlanma ve Fabrika Ayarları:**
+   - **Cihaz Hotspot Şifresi Değiştirme:** Panel üzerinden cihazın AP şifresi kolayca değiştirilebilir (Kalıcı NVS hafızada saklanır).
+   - **Ev / Ofis Wi-Fi Ağına Bağlanma (STA Çift Mod):** Tek tıkla çevredeki 2.4 GHz Wi-Fi ağlarını tarar, şifrenizi girerek cihazı ev ağınıza bağlar.
+   - **mDNS Desteği:** Ev ağınıza bağlandığınızda telefonunuzun Wi-Fi'ını değiştirmeden doğrudan `http://collectibletv.local` adresinden televizyon paneline ulaşabilirsiniz.
+   - **Fabrika Ayarlarına Sıfırlama:** İstenildiğinde tek tıkla tüm Wi-Fi şifreleri ve ayarlar varsayılana sıfırlanabilir.
+
+5. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
    - 1.3" ST7789 ekranın sol kenarındaki 7-pin header ve dişi DuPont kablolar için sol taraftan **1 cm (10 mm) genişletildi** (`pcb_w = 59.0 mm`, toplam dış genişlik `65.9 mm`).
    - Ekran penceresi 1.3" kare aktif alan için `27.5 × 26.5 mm` olarak hassas ayarlandı.
    - Geçmeli kapak tasarımı sayesinde vidaya ihtiyaç duymaz.

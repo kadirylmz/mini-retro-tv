@@ -2,6 +2,7 @@
 //  Collectible Display - 1.3" IPS ST7789 + ESP32-S3 Mini Firmware
 //  Çift SPI (FSPI Ekran + HSPI 16GB MicroSD) + 25 FPS Akıcı Video Motoru
 //  MAX98357A I2S Ses + Ses Kısma/Açma (MUTE) + Çok Fonksiyonlu Buton + OSD
+//  Kesintisiz Parçalı Yükleme + Wi-Fi Ev Ağı (STA/AP) & Şifre Yönetimi
 // =========================================================================
 
 #include <Arduino.h>
@@ -13,6 +14,7 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ESPmDNS.h>
 #include <Preferences.h>
 #include <vector>
 #include "esp_private/brownout.h"
@@ -43,6 +45,17 @@ std::vector<String> playlist;
 int currentVideoIdx = -1;
 File videoFile;
 bool isUploading = false;
+
+// Wi-Fi Ayarları (NVS Kalıcı Hafıza)
+String currentApSsid = AP_SSID;
+String currentApPass = AP_PASS;
+String currentStaSsid = "";
+String currentStaPass = "";
+
+// Parçalı Yükleme (Chunked Resumable Upload)
+File uploadChunkFile;
+String uploadChunkFilePath = "";
+unsigned long lastUploadChunkTime = 0;
 
 // Ses Seviyesi ve MUTE Durumu (NVS Kalıcı Hafıza)
 uint8_t currentVolume = DEFAULT_VOLUME;
@@ -203,51 +216,82 @@ void drawStandbyScreen() {
   };
   int barW = SCREEN_W / 7;
   for (int i = 0; i < 7; i++) {
-    tft.fillRect(i * barW, 6, barW + 1, 60, colors[i]);
+    tft.fillRect(i * barW, 6, barW + 1, 55, colors[i]);
   }
 
-  tft.fillRect(0, 70, SCREEN_W, 42, ST77XX_BLACK);
+  tft.fillRect(0, 64, SCREEN_W, 36, ST77XX_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(20, 75);
+  tft.setCursor(20, 68);
   tft.print("COLLECTIBLE");
   tft.setTextColor(ST77XX_RED);
-  tft.setCursor(160, 75);
+  tft.setCursor(160, 68);
   tft.println("TV");
 
   tft.setTextSize(1);
   tft.setTextColor(ST77XX_GREEN);
-  tft.setCursor(22, 98);
+  tft.setCursor(22, 90);
   if (isSDActive) {
     uint64_t sizeMB = SD.cardSize() / (1024 * 1024);
-    tft.printf("[ 16GB SD KART AKTIF: %llu MB ]\n", sizeMB);
+    tft.printf("[ 16GB SD KART: %llu MB ]\n", sizeMB);
   } else {
     tft.println("[ DAHILI FLASH AKTIF ]");
   }
 
-  tft.drawFastHLine(10, 118, SCREEN_W - 20, ST77XX_RED);
+  tft.drawFastHLine(10, 104, SCREEN_W - 20, ST77XX_RED);
 
+  // Wi-Fi Bilgileri
   tft.setTextSize(1);
-  tft.setTextColor(0xFD20);
-  tft.setCursor(15, 128);
-  tft.print("Wi-Fi :");
+  tft.setTextColor(0xFD20); // Turuncu
+  tft.setCursor(12, 112);
+  tft.print("Hotspot:");
   tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(65, 128);
-  tft.println(AP_SSID);
+  tft.setCursor(68, 112);
+  tft.println(currentApSsid);
 
   tft.setTextColor(0xFD20);
-  tft.setCursor(15, 145);
-  tft.print("Sifre :");
+  tft.setCursor(12, 126);
+  tft.print("Sifre  :");
   tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(65, 145);
-  tft.println(AP_PASS);
+  tft.setCursor(68, 126);
+  tft.println(currentApPass);
 
-  tft.setTextColor(0xFD20);
-  tft.setCursor(15, 162);
-  tft.print("Web   :");
-  tft.setTextColor(ST77XX_GREEN);
-  tft.setCursor(65, 162);
-  tft.println("192.168.4.1");
+  // Ev Wi-Fi Durumu
+  if (WiFi.status() == WL_CONNECTED) {
+    tft.setTextColor(0x07E0); // Yeşil
+    tft.setCursor(12, 140);
+    tft.print("Ev Agi :");
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setCursor(68, 140);
+    tft.println(WiFi.SSID());
+
+    tft.setTextColor(0x07E0);
+    tft.setCursor(12, 154);
+    tft.print("Ev IP  :");
+    tft.setTextColor(ST77XX_CYAN);
+    tft.setCursor(68, 154);
+    tft.println(WiFi.localIP().toString());
+
+    tft.setTextColor(0xFD20);
+    tft.setCursor(12, 168);
+    tft.print("Web URL:");
+    tft.setTextColor(ST77XX_GREEN);
+    tft.setCursor(68, 168);
+    tft.println("collectibletv.local");
+  } else {
+    tft.setTextColor(ST77XX_YELLOW);
+    tft.setCursor(12, 140);
+    tft.print("Web IP :");
+    tft.setTextColor(ST77XX_GREEN);
+    tft.setCursor(68, 140);
+    tft.println("192.168.4.1");
+
+    tft.setTextColor(0x7BEF); // Gri
+    tft.setCursor(12, 156);
+    tft.println("Ev Wi-Fi: Bagli Degil");
+    tft.setCursor(12, 168);
+    tft.println("(Web panelinden baglayin)");
+  }
 
   tft.drawFastHLine(10, 182, SCREEN_W - 20, ST77XX_RED);
 
@@ -256,7 +300,7 @@ void drawStandbyScreen() {
   tft.println("VIDEO BEKLENIYOR...");
 
   tft.setTextColor(ST77XX_CYAN);
-  tft.setCursor(25, 215);
+  tft.setCursor(20, 215);
   tft.println("Web panelinden video yukleyin");
 
   tft.fillRect(0, SCREEN_H - 4, SCREEN_W, 4, ST77XX_RED);
@@ -396,12 +440,23 @@ void setupWebServer() {
     size_t total = isSDActive ? (SD.totalBytes()) : LittleFS.totalBytes();
     size_t used = isSDActive ? (SD.usedBytes()) : LittleFS.usedBytes();
 
+    bool staConn = (WiFi.status() == WL_CONNECTED);
+    String staIp = staConn ? WiFi.localIP().toString() : "";
+
     String json = "{\"total\":" + String(total) + 
                   ",\"used\":" + String(used) + 
                   ",\"volume\":" + String(currentVolume) + 
                   ",\"muted\":" + (isMuted ? "true" : "false") + 
                   ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx] : "") + "\"" +
-                  ",\"files\":[";
+                  ",\"wifi\":{" +
+                    "\"ap_ssid\":\"" + currentApSsid + "\"," +
+                    "\"ap_pass\":\"" + currentApPass + "\"," +
+                    "\"sta_ssid\":\"" + currentStaSsid + "\"," +
+                    "\"sta_connected\":" + (staConn ? "true" : "false") + "," +
+                    "\"sta_ip\":\"" + staIp + "\"," +
+                    "\"ap_ip\":\"" + WiFi.softAPIP().toString() + "\"" +
+                  "}," +
+                  "\"files\":[";
 
     bool first = true;
     for (const auto &name : playlist) {
@@ -464,6 +519,146 @@ void setupWebServer() {
     server.send(400, "text/plain", "Dosya bulunamadı");
   });
 
+  // ---- WI-FI VE SİSTEM YÖNETİM ENDPOINT'LERİ ----
+  server.on("/scan_wifi", HTTP_GET, []() {
+    int n = WiFi.scanNetworks();
+    String json = "[";
+    for (int i = 0; i < n; i++) {
+      if (i > 0) json += ",";
+      json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + ",\"secure\":" + (WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false") + "}";
+    }
+    json += "]";
+    WiFi.scanDelete();
+    server.send(200, "application/json", json);
+  });
+
+  server.on("/save_wifi", HTTP_POST, []() {
+    bool changed = false;
+    if (server.hasArg("ap_pass")) {
+      String newAp = server.arg("ap_pass");
+      if (newAp.length() >= 8) {
+        prefs.putString("ap_pass", newAp);
+        currentApPass = newAp;
+        changed = true;
+      }
+    }
+    if (server.hasArg("sta_ssid")) {
+      String newSsid = server.arg("sta_ssid");
+      String newPass = server.hasArg("sta_pass") ? server.arg("sta_pass") : "";
+      prefs.putString("sta_ssid", newSsid);
+      prefs.putString("sta_pass", newPass);
+      currentStaSsid = newSsid;
+      currentStaPass = newPass;
+      changed = true;
+    }
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Ayarlar kaydedildi. Cihaz yeniden başlatılıyor...\"}");
+    delay(1000);
+    ESP.restart();
+  });
+
+  server.on("/forget_wifi", HTTP_POST, []() {
+    prefs.putString("sta_ssid", "");
+    prefs.putString("sta_pass", "");
+    currentStaSsid = "";
+    currentStaPass = "";
+    WiFi.disconnect(true);
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Ev Wi-Fi agi unutuldu. Cihaz yeniden başlatılıyor...\"}");
+    delay(1000);
+    ESP.restart();
+  });
+
+  server.on("/reset_factory", HTTP_POST, []() {
+    prefs.clear();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Tüm ayarlar fabrika ayarlarına sıfırlandı. Cihaz yeniden başlatılıyor...\"}");
+    delay(1000);
+    ESP.restart();
+  });
+
+  // ---- KESİNTİSİZ PARÇALI (CHUNKED) YÜKLEME ENDPOINT'LERİ ----
+  server.on("/upload_start", HTTP_POST, []() {
+    if (!server.hasArg("name")) {
+      server.send(400, "application/json", "{\"error\":\"name parametresi eksik\"}");
+      return;
+    }
+    String name = server.arg("name");
+    if (name.lastIndexOf('/') >= 0) name = name.substring(name.lastIndexOf('/') + 1);
+    if (name.lastIndexOf('\\') >= 0) name = name.substring(name.lastIndexOf('\\') + 1);
+
+    uploadChunkFilePath = String(VIDEO_DIR) + "/" + name;
+    Serial.printf("Parçalı Yükleme Başlıyor: %s\n", uploadChunkFilePath.c_str());
+
+    isUploading = true;
+    if (videoFile) videoFile.close();
+#if USE_AUDIO
+    if (audioFile) audioFile.close();
+#endif
+    if (uploadChunkFile) uploadChunkFile.close();
+
+    if (storage->exists(uploadChunkFilePath)) {
+      storage->remove(uploadChunkFilePath);
+    }
+    uploadChunkFile = storage->open(uploadChunkFilePath, "w");
+    if (uploadChunkFile) {
+      uploadChunkFile.setBufferSize(8192); // 8 KB donanımsal yazma tamponu
+      lastUploadChunkTime = millis();
+      server.send(200, "application/json", "{\"status\":\"ok\"}");
+    } else {
+      isUploading = false;
+      server.send(500, "application/json", "{\"error\":\"Dosya açılamadı\"}");
+    }
+  });
+
+  server.on("/upload_chunk", HTTP_POST, []() {
+    lastUploadChunkTime = millis();
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
+  }, []() {
+    HTTPUpload& upload = server.upload();
+    lastUploadChunkTime = millis();
+    if (upload.status == UPLOAD_FILE_WRITE) {
+      if (uploadChunkFile && upload.currentSize > 0) {
+        uploadChunkFile.write(upload.buf, upload.currentSize);
+      }
+    }
+  });
+
+  server.on("/upload_finish", HTTP_POST, []() {
+    String name = server.hasArg("name") ? server.arg("name") : "";
+    if (uploadChunkFile) {
+      uploadChunkFile.flush();
+      uploadChunkFile.close();
+    }
+    isUploading = false;
+    Serial.printf("Parçalı Yükleme Tamamlandı: %s\n", uploadChunkFilePath.c_str());
+
+    refreshPlaylist();
+    if (!playlist.empty()) {
+      if (name.length() > 0) {
+        for (size_t i = 0; i < playlist.size(); i++) {
+          if (playlist[i] == name) {
+            playVideoByIndex(i);
+            server.send(200, "application/json", "{\"status\":\"ok\"}");
+            return;
+          }
+        }
+      }
+      playVideoByIndex(playlist.size() - 1);
+    }
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
+  });
+
+  server.on("/upload_abort", HTTP_POST, []() {
+    if (uploadChunkFile) {
+      uploadChunkFile.close();
+    }
+    if (uploadChunkFilePath.length() > 0 && storage->exists(uploadChunkFilePath)) {
+      storage->remove(uploadChunkFilePath);
+      Serial.printf("Yarıda kalan yükleme silindi: %s\n", uploadChunkFilePath.c_str());
+    }
+    isUploading = false;
+    server.send(200, "application/json", "{\"status\":\"aborted\"}");
+  });
+
+  // Geleneksel Tek Parça Yükleme (Geriye Dönük Uyumluluk)
   static File uploadFile;
   server.on("/upload", HTTP_POST, []() {
     server.send(200, "text/plain", "Yükleme Başarılı");
@@ -486,16 +681,22 @@ void setupWebServer() {
       if (filename.lastIndexOf('\\') >= 0) filename = filename.substring(filename.lastIndexOf('\\') + 1);
 
       String path = String(VIDEO_DIR) + "/" + filename;
-      Serial.printf("Yükleme Başlıyor: %s\n", path.c_str());
+      Serial.printf("Geleneksel Yükleme Başlıyor: %s\n", path.c_str());
       if (storage->exists(path)) storage->remove(path);
       uploadFile = storage->open(path, "w");
+      if (uploadFile) uploadFile.setBufferSize(8192);
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
       if (uploadFile) {
+        uploadFile.flush();
         uploadFile.close();
         Serial.printf("Yükleme Tamamlandı: %u bayt\n", upload.totalSize);
       }
+    } else if (upload.status == UPLOAD_FILE_ABORTED) {
+      if (uploadFile) uploadFile.close();
+      isUploading = false;
+      Serial.println("Yükleme iptal edildi veya koptu.");
     }
   });
 
@@ -574,11 +775,17 @@ void setup() {
 
   frameBuffer = (uint8_t *)malloc(frameBufferSize);
 
-  // Hafızadan son ses ve mute ayarını yükle
+  // Hafızadan son ses, mute ve Wi-Fi ayarlarını yükle
   prefs.begin("retro_tv", false);
   currentVolume = prefs.getUChar("vol", DEFAULT_VOLUME);
   isMuted = prefs.getBool("muted", false);
   lastUnmutedVolume = (currentVolume > 0) ? currentVolume : DEFAULT_VOLUME;
+
+  currentApSsid = prefs.getString("ap_ssid", AP_SSID);
+  currentApPass = prefs.getString("ap_pass", AP_PASS);
+  if (currentApPass.length() < 8) currentApPass = AP_PASS;
+  currentStaSsid = prefs.getString("sta_ssid", "");
+  currentStaPass = prefs.getString("sta_pass", "");
 
 #if USE_AUDIO
   // 2. I2S Ses Başlat (MAX98357A: BCLK=7, LRC=8, DIN=9)
@@ -619,15 +826,36 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi AP Başlat (Maksimum Çıkış Gücü ve Kesintisiz Yayın)
-  WiFi.mode(WIFI_AP);
+  // 4. Wi-Fi AP + STA Başlat (Maksimum Çıkış Gücü ve Kesintisiz Çift Mod)
+  WiFi.mode(WIFI_AP_STA);
   WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gücünü ve hızı tavan yapar)
   WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal verici gücü (19.5 dBm)
-  WiFi.softAP(AP_SSID, AP_PASS, 6);     // 6. Temiz Wi-Fi Kanalı (Kanal 1 çakışmalarını önler)
-  Serial.print("Wi-Fi AP: ");
-  Serial.print(AP_SSID);
+  WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6); // 6. Temiz Wi-Fi Kanalı
+  Serial.print("Wi-Fi Hotspot: ");
+  Serial.print(currentApSsid);
   Serial.print(" - IP: ");
   Serial.println(WiFi.softAPIP());
+
+  // Eğer kayıtlı ev ağı varsa bağlan
+  if (currentStaSsid.length() > 0) {
+    Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
+    WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
+    unsigned long startConn = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startConn < 4000) {
+      delay(100);
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.printf(">>> EV WI-FI AGINA BAGLANDI! IP: %s <<<\n", WiFi.localIP().toString().c_str());
+    } else {
+      Serial.println("Ev Wi-Fi baglantisi arka planda denenmeye devam edecek.");
+    }
+  }
+
+  // mDNS Başlat (http://collectibletv.local)
+  if (MDNS.begin("collectibletv")) {
+    MDNS.addService("http", "tcp", 80);
+    Serial.println("mDNS Aktif: http://collectibletv.local");
+  }
 
   setupWebServer();
   refreshPlaylist();
@@ -694,8 +922,18 @@ void loop() {
   server.handleClient();
   handleButton();
 
+  // Yükleme Zaman Aşımı Emniyeti (30 sn sessizlik olursa yarıda kalan yüklemeyi temizle)
+  if (isUploading && uploadChunkFile && (millis() - lastUploadChunkTime > 30000)) {
+    Serial.println("Yükleme zaman aşımına uğradı! Yarıda kalan dosya temizleniyor...");
+    uploadChunkFile.close();
+    if (uploadChunkFilePath.length() > 0) {
+      storage->remove(uploadChunkFilePath);
+    }
+    isUploading = false;
+  }
+
   if (isUploading) {
-    delay(10);
+    delay(5);
     return;
   }
 
