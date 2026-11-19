@@ -1,315 +1,494 @@
 #pragma once
-// =============================================================
-//  MiniRetroTV - Gömülü Web Arayüzü (Müşteri Dostu Wi-Fi Kurulumu + Sesli)
-//  - Telefondan yakındaki Wi-Fi ağlarını tarayıp şifre kaydeder (kod/config yok!)
-//  - MP4/WebM/MOV dosyalarının HEM görüntüsünü (280x240 MJPEG) HEM sesini
-//    (16 kHz mono PCM) tarayıcı içinde otomatik dönüştürüp Wi-Fi'dan yükler.
-// =============================================================
 
-static const char INDEX_HTML[] PROGMEM = R"rawliteral(
-<!DOCTYPE html>
+const char INDEX_HTML[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mini Retro TV</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collectible Display - Medya Paneli</title>
 <style>
-:root{--bg:#181412;--card:#26201c;--acc:#e05a3a;--cream:#f3e7d0;--muted:#a79882}
-*{box-sizing:border-box}
-body{margin:0;padding:16px;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--cream);max-width:560px;margin-inline:auto}
-h1{font-size:1.35rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
-.sub{color:var(--muted);font-size:.85rem;margin-bottom:14px}
-.card{background:var(--card);border:1px solid #3a312b;border-radius:14px;padding:14px;margin-bottom:14px}
-label{display:block;font-size:.82rem;color:var(--muted);margin:8px 0 4px}
-input[type=text],input[type=password],input[type=number],select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #473c35;background:#151210;color:var(--cream)}
-input[type=range]{width:100%;accent-color:var(--acc)}
-.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.flex{display:flex;gap:8px;align-items:center}
-button,.btn{background:var(--acc);color:#fff;border:0;padding:10px 14px;border-radius:9px;font-weight:600;cursor:pointer;font-size:.9rem}
-button:disabled{opacity:.45;cursor:not-allowed}
-.btn-sec{background:#3a312b;color:var(--cream)}
-.btn-sm{padding:6px 10px;font-size:.8rem}
-.drop{border:2px dashed #4a3f37;border-radius:12px;padding:16px;text-align:center;cursor:pointer}
-.drop input{display:none}
-canvas{width:180px;height:154px;background:#000;border-radius:12px;border:3px solid #3a312b;display:block;margin:10px auto}
-.bar{height:8px;background:#151210;border-radius:4px;overflow:hidden;margin-top:8px}
-.bar>div{height:100%;background:var(--acc);width:0%;transition:width .15s}
-.ch{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #332b26;gap:8px}
-.ch:last-child{border:0}
-.ch .name{font-weight:600;word-break:break-all}
-.ch .sz{color:var(--muted);font-size:.78rem}
-.badge{background:var(--acc);color:#fff;font-size:.7rem;padding:2px 6px;border-radius:6px;margin-left:6px}
-.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.86rem;color:var(--cream);cursor:pointer}
-.chk input{width:auto;accent-color:var(--acc)}
-.note{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.4}
-#status,#wStatus{font-size:.83rem;color:var(--muted);margin-top:6px;min-height:1.1em}
+:root {
+  --bg: #0d0f17;
+  --card: #151824;
+  --accent: #e50914;
+  --accent2: #00e5ff;
+  --text: #e0e6ed;
+  --text-dim: #798299;
+  --border: #23273a;
+  --danger: #ff4444;
+  --success: #00e676;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+header {
+  text-align: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+h1 {
+  font-size: 22px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(229,9,20,0.4);
+}
+.subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.card h2 {
+  font-size: 15px;
+  margin-bottom: 12px;
+  color: var(--accent2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.stat-box {
+  background: rgba(0,0,0,0.3);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+.stat-label { font-size: 11px; color: var(--text-dim); }
+.stat-val { font-size: 15px; font-weight: bold; color: var(--text); margin-top: 2px; }
+.progress-bar-bg {
+  background: #252839;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s;
+}
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(0,0,0,0.2);
+  transition: 0.2s;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: rgba(229,9,20,0.06);
+}
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-block;
+  margin-top: 8px;
+}
+.btn:hover { opacity: 0.9; }
+.btn-small { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+.btn-danger { background: var(--danger); }
+.btn-play { background: var(--success); color: #000; }
+.video-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--accent2);
+}
+.video-item.active {
+  border-left-color: var(--accent);
+  background: rgba(229,9,20,0.1);
+}
+.video-info { flex: 1; margin-right: 12px; }
+.video-name { font-weight: 600; font-size: 14px; word-break: break-all; }
+.video-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.video-actions { display: flex; gap: 6px; }
+.status-msg {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 10px;
+  display: none;
+}
+.status-msg.active { display: block; }
+.status-info { background: rgba(0,229,255,0.1); color: var(--accent2); }
+.status-err { background: rgba(255,68,68,0.1); color: var(--danger); }
+.status-ok { background: rgba(0,230,118,0.1); color: var(--success); }
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.crop-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 12px;
+  justify-content: center;
+}
+.crop-opt {
+  cursor: pointer;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.crop-opt.active {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(0,229,255,0.1);
+}
+#preview-canvas {
+  display: none;
+  margin: 12px auto 0;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  width: 160px;
+  height: 160px;
+}
 </style>
 </head>
 <body>
-<h1>📺 Mini Retro TV</h1>
-<div class="sub">Sesli & Kablosuz Kanal Yöneticisi (280×240)</div>
+
+<header>
+  <h1>🎬 COLLECTIBLE DISPLAY</h1>
+  <div class="subtitle">1.3" IPS Yatay Ekran - Kablosuz Medya Paneli</div>
+</header>
 
 <div class="card">
-  <div style="display:flex;justify-content:space-between;font-size:.82rem">
-    <span id="memLbl">Hafıza</span><span id="memTxt">-</span>
+  <h2><span>16 GB SD Kart Hafıza Durumu</span><span id="conn-badge" style="font-size:11px;color:var(--success);">● Yayında</span></h2>
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="stat-label">BOŞ ALAN</div>
+      <div class="stat-val" id="free-space">-- MB</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">TOPLAM MEDYA</div>
+      <div class="stat-val" id="video-count">--</div>
+    </div>
   </div>
-  <div class="bar"><div id="memBar"></div></div>
-  <div class="row2" style="margin-top:8px">
-    <div>
-      <label>Ekran Parlaklığı</label>
-      <input type="range" id="bri" min="10" max="255" value="200" onchange="saveBri(this.value)">
-    </div>
-    <div>
-      <label>🔊 Ses Seviyesi (<span id="volTxt">65</span>%)</label>
-      <input type="range" id="vol" min="0" max="100" value="65" oninput="document.getElementById('volTxt').textContent=this.value" onchange="saveVol(this.value)">
-    </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar" id="space-bar"></div>
   </div>
 </div>
 
 <div class="card">
-  <strong>Yeni Video Yükle</strong>
-  <label class="drop" style="margin-top:8px">
-    <input type="file" id="file" accept="video/*,image/*,.mjpeg,.pcm" onchange="onFile()">
-    <div id="fileLbl">📁 MP4 / MOV / WebM veya hazır .mjpeg seçin</div>
-  </label>
-  <canvas id="cv" width="280" height="240"></canvas>
-  <div class="row">
-    <div><label>FPS</label><input type="number" id="fps" value="12" min="5" max="24"></div>
-    <div><label>Max Süre (sn)</label><input type="number" id="maxDur" value="30" min="1" max="300"></div>
-    <div><label>Kalite</label>
-      <select id="qual">
-        <option value="0.5">Küçük dosya</option>
-        <option value="0.62" selected>Dengeli</option>
-        <option value="0.75">Yüksek</option>
-      </select>
-    </div>
+  <h2>Fotoğraf veya Video Yükle</h2>
+  <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div style="font-size:32px;margin-bottom:8px;">📷 📼</div>
+    <div style="font-weight:600;margin-bottom:4px;">Herhangi Bir Fotoğraf veya Video Seçin</div>
+    <div style="font-size:12px;color:var(--text-dim);">MP4, MOV, GIF, JPG, PNG, WEBP — 240x240'a Otomatik Dönüştürülür</div>
+    <input type="file" id="file-input" accept="image/*,video/*,.mjpeg" style="display:none" onchange="handleFileSelect(this.files)">
   </div>
-  <label>Sığdırma</label>
-  <select id="fit">
-    <option value="cover" selected>Ekranı Doldur (4:3 kırp)</option>
-    <option value="contain">Tamamını Göster (siyah kenar)</option>
-  </select>
-  <label class="chk"><input type="checkbox" id="withAudio" checked> 🔊 Videonun sesini de aktar (16 kHz)</label>
-  <button id="upBtn" style="width:100%;margin-top:12px" onclick="startUpload()" disabled>Dönüştür ve TV'ye Gönder</button>
-  <div class="bar"><div id="pBar"></div></div>
-  <div id="status"></div>
+
+  <div class="crop-options">
+    <div class="crop-opt active" id="opt-cover" onclick="setFitMode('cover')">Tam Ekran Doldur (Kırp)</div>
+    <div class="crop-opt" id="opt-contain" onclick="setFitMode('contain')">Sığdır (Siyah Çerçeve)</div>
+  </div>
+
+  <canvas id="preview-canvas" width="240" height="240"></canvas>
+
+  <div id="status-box" class="status-msg"></div>
+  <div class="progress-bar-bg" id="upload-prog-bg" style="display:none;margin-top:12px;">
+    <div class="progress-bar" id="upload-prog-bar"></div>
+  </div>
 </div>
 
 <div class="card">
-  <strong>Kanallar</strong>
-  <div id="chList" style="margin-top:6px;color:var(--muted);font-size:.85rem">Yükleniyor...</div>
-</div>
-
-<div class="card">
-  <div class="flex" style="justify-content:space-between">
-    <strong>📶 Ev Wi-Fi Ayarları</strong>
-    <span id="wifiBadge" class="sz">-</span>
+  <h2><span>Yüklü Medyalar</span><button class="btn btn-small" onclick="loadVideos()" style="background:#23273a">Yenile</button></h2>
+  <div id="video-list">
+    <div style="text-align:center;color:var(--text-dim);padding:16px;">Yükleniyor...</div>
   </div>
-  <div class="note">TV'yi ev modeminize bağlarsanız telefonunuzun Wi-Fi'ını değiştirmeden doğrudan <b>http://minitv.local</b> üzerinden yönetebilirsiniz.</div>
-  <label>Wi-Fi Ağı</label>
-  <div class="flex">
-    <select id="wList" onchange="if(this.value)document.getElementById('wSsid').value=this.value" style="flex:1">
-      <option value="">-- Tarayarak seçin veya aşağıya yazın --</option>
-    </select>
-    <button class="btn-sec btn-sm" id="scanBtn" onclick="scanWifi()">🔍 Tara</button>
-  </div>
-  <input type="text" id="wSsid" placeholder="Ev Wi-Fi Adı (SSID)" style="margin-top:8px">
-  <label>Wi-Fi Şifresi</label>
-  <input type="password" id="wPass" placeholder="Ev Wi-Fi Şifresi">
-  <div class="flex" style="margin-top:10px">
-    <button style="flex:1" onclick="saveWifi()">Kaydet ve Bağlan</button>
-    <button class="btn-sec" onclick="resetWifi()">Ağı Unut</button>
-  </div>
-  <div id="wStatus"></div>
 </div>
 
 <script>
-const W=280,H=240,SR=16000,cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-let selFile=null;
+let totalBytes = 0;
+let usedBytes = 0;
+let fitMode = 'cover';
 
-function fmtKB(kb){return kb>=1024?(kb/1024).toFixed(1)+' MB':kb+' KB';}
-function setSt(t,p){document.getElementById('status').textContent=t;if(p!==undefined)document.getElementById('pBar').style.width=p+'%';}
+function setFitMode(mode) {
+  fitMode = mode;
+  document.getElementById('opt-cover').className = 'crop-opt ' + (mode === 'cover' ? 'active' : '');
+  document.getElementById('opt-contain').className = 'crop-opt ' + (mode === 'contain' ? 'active' : '');
+}
 
-async function refresh(){
-  const r=await fetch('/api/list'); const d=await r.json();
-  const pct=d.total?Math.round(d.used*100/d.total):0;
-  document.getElementById('memLbl').textContent=d.sd?'💾 MicroSD Kart':'📦 Dahili Hafıza';
-  document.getElementById('memTxt').textContent=`${fmtKB(d.used)} / ${fmtKB(d.total)} (%${pct})`;
-  document.getElementById('memBar').style.width=pct+'%';
-  document.getElementById('bri').value=d.brightness;
-  document.getElementById('vol').value=d.volume;
-  document.getElementById('volTxt').textContent=d.volume;
-  document.getElementById('wifiBadge').textContent=d.ap?`Kurulum Ağı (${d.ssid})`:`Bağlı: ${d.ssid} (${d.ip})`;
-  if(d.savedSsid && !document.getElementById('wSsid').value) document.getElementById('wSsid').value=d.savedSsid;
-  const box=document.getElementById('chList');
-  if(!d.files.length){box.innerHTML='Henüz video yok. Yukarıdan bir MP4 seçin.';return;}
-  box.innerHTML=d.files.map((f,i)=>`
-    <div class="ch">
-      <div><span class="name">CH${i+1}: ${f.name}</span>${f.audio?' 🔊':''}${i===d.current?'<span class="badge">AÇIK</span>':''}<div class="sz">${(f.size/1024).toFixed(0)} KB</div></div>
-      <div style="display:flex;gap:6px">
-        <button class="btn-sm" onclick="playCh(${i})">Oynat</button>
-        <button class="btn-sm btn-sec" onclick="delCh('${f.name}')">Sil</button>
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function showStatus(msg, type='info', spin=false) {
+  const box = document.getElementById('status-box');
+  box.className = 'status-msg active status-' + type;
+  box.innerHTML = (spin ? '<span class="spinner"></span>' : '') + msg;
+}
+
+function hideStatus() {
+  const box = document.getElementById('status-box');
+  box.className = 'status-msg';
+}
+
+async function loadVideos() {
+  try {
+    const res = await fetch('/list');
+    const data = await res.json();
+    totalBytes = data.total;
+    usedBytes = data.used;
+    const free = totalBytes - usedBytes;
+
+    document.getElementById('free-space').innerText = formatBytes(free);
+    document.getElementById('video-count').innerText = data.files.length;
+    const pct = totalBytes > 0 ? (usedBytes / totalBytes) * 100 : 0;
+    document.getElementById('space-bar').style.width = pct + '%';
+
+    const listEl = document.getElementById('video-list');
+    if (data.files.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:16px;">Henüz video yüklenmemiş.<br>Yukarıdan fotoğraf veya video seçin!</div>';
+      return;
+    }
+
+    listEl.innerHTML = data.files.map((f, i) => `
+      <div class="video-item ${f.name === data.active ? 'active' : ''}">
+        <div class="video-info">
+          <div class="video-name">${f.name} ${f.name === data.active ? '<span style="color:var(--accent);font-size:11px;">[Oynatılıyor]</span>' : ''}</div>
+          <div class="video-meta">${formatBytes(f.size)}</div>
+        </div>
+        <div class="video-actions">
+          <button class="btn btn-small btn-play" onclick="playVideo('${f.name}')">Oynat</button>
+          <button class="btn btn-small btn-danger" onclick="deleteVideo('${f.name}')">Sil</button>
+        </div>
       </div>
-    </div>`).join('');
-}
-
-async function scanWifi(){
-  const btn=document.getElementById('scanBtn'), st=document.getElementById('wStatus');
-  btn.disabled=true; st.textContent='Yakındaki Wi-Fi ağları taranıyor...';
-  try{
-    const r=await fetch('/api/wifi/scan'); const d=await r.json();
-    const sel=document.getElementById('wList');
-    sel.innerHTML='<option value="">-- Bir Wi-Fi ağı seçin --</option>' +
-      d.nets.map(n=>`<option value="${n.ssid.replace(/"/g,'&quot;')}">${n.ssid} (${n.rssi} dBm)</option>`).join('');
-    st.textContent=d.nets.length?`${d.nets.length} ağ bulundu.`:'Ağ bulunamadı, adını elle yazabilirsiniz.';
-  }catch(e){st.textContent='Tarama başarısız.';}
-  btn.disabled=false;
-}
-
-async function saveWifi(){
-  const ssid=document.getElementById('wSsid').value.trim();
-  const pass=document.getElementById('wPass').value;
-  const st=document.getElementById('wStatus');
-  if(!ssid){st.textContent='⚠️ Lütfen Wi-Fi adını girin.';return;}
-  st.textContent='Kaydediliyor...';
-  const body=new URLSearchParams({ssid,pass});
-  const r=await fetch('/api/wifi/save',{method:'POST',body});
-  if(r.ok){
-    st.textContent='✅ Kaydedildi! TV ev Wi-Fi ağına bağlanıyor (yeni IP TV ekranında görünecek).';
-  }else{
-    st.textContent='❌ Kaydedilemedi.';
+    `).join('');
+  } catch(e) {
+    console.error(e);
   }
 }
 
-async function resetWifi(){
-  if(!confirm('Kayıtlı ev Wi-Fi bilgisi silinip MiniTV ağına dönülsün mü?'))return;
-  await fetch('/api/wifi/reset',{method:'POST'});
-  document.getElementById('wSsid').value='';
-  document.getElementById('wPass').value='';
-  document.getElementById('wStatus').textContent='🔄 Sıfırlandı! TV "MiniTV" ağına geçiyor.';
+async function playVideo(name) {
+  try {
+    await fetch('/play?file=' + encodeURIComponent(name));
+    loadVideos();
+  } catch(e) { alert('Hata: ' + e); }
 }
 
-async function playCh(i){await fetch('/api/play?i='+i,{method:'POST'});refresh();}
-async function delCh(n){if(!confirm(n+' silinsin mi?'))return;await fetch('/api/delete?name='+encodeURIComponent(n),{method:'POST'});refresh();}
-async function saveBri(v){await fetch('/api/settings?b='+v,{method:'POST'});}
-async function saveVol(v){await fetch('/api/settings?vol='+v,{method:'POST'});}
-
-function drawFit(el,vw,vh){
-  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-  const cover=document.getElementById('fit').value==='cover';
-  const s=cover?Math.max(W/vw,H/vh):Math.min(W/vw,H/vh);
-  const dw=vw*s,dh=vh*s;
-  ctx.drawImage(el,(W-dw)/2,(H-dh)/2,dw,dh);
+async function deleteVideo(name) {
+  if (!confirm(name + ' medyasını silmek istediğinize emin misiniz?')) return;
+  try {
+    const res = await fetch('/delete?file=' + encodeURIComponent(name));
+    loadVideos();
+  } catch(e) { alert('Silinemedi: ' + e); }
 }
 
-function onFile(){
-  selFile=document.getElementById('file').files[0];
-  if(!selFile)return;
-  document.getElementById('fileLbl').textContent='📄 '+selFile.name;
-  document.getElementById('upBtn').disabled=false;
-  setSt('Hazır.',0);
+// Drag & Drop
+const dropZone = document.getElementById('drop-zone');
+['dragenter', 'dragover'].forEach(n => dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(n => dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
+dropZone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) {
+    handleFileSelect(e.dataTransfer.files);
+  }
+});
+
+function handleFileSelect(files) {
+  if (!files || !files.length) return;
+  const file = files[0];
+  const name = file.name.toLowerCase();
+
+  if (name.endsWith('.mjpeg')) {
+    uploadRawFile(file);
+  } else if (file.type.startsWith('image/') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || name.endsWith('.webp') || name.endsWith('.bmp')) {
+    convertAndUploadPhoto(file);
+  } else {
+    convertAndUploadVideo(file);
+  }
 }
 
-async function toJpegBytes(q){
-  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',q));
-  return new Uint8Array(await blob.arrayBuffer());
-}
+function uploadRawFile(file) {
+  showStatus('Yükleniyor: ' + file.name, 'info', true);
+  const progBg = document.getElementById('upload-prog-bg');
+  const progBar = document.getElementById('upload-prog-bar');
+  progBg.style.display = 'block';
+  progBar.style.width = '0%';
 
-async function extractPcm(file,maxDur){
-  try{
-    setSt('Ses çıkarılıyor (16 kHz)...',55);
-    const ab=await file.arrayBuffer();
-    const ac=new (window.AudioContext||window.webkitAudioContext)();
-    const dec=await ac.decodeAudioData(ab);
-    ac.close();
-    const dur=Math.min(dec.duration,maxDur);
-    const len=Math.max(1,Math.floor(dur*SR));
-    const off=new OfflineAudioContext(1,len,SR);
-    const src=off.createBufferSource();
-    src.buffer=dec; src.connect(off.destination); src.start(0);
-    const rendered=await off.startRendering();
-    const ch=rendered.getChannelData(0);
-    const pcm=new Int16Array(ch.length);
-    for(let i=0;i<ch.length;i++){
-      let s=Math.max(-1,Math.min(1,ch[i]));
-      pcm[i]=s<0?s*32768:s*32767;
+  const formData = new FormData();
+  formData.append('video', file, file.name);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/upload', true);
+  xhr.upload.onprogress = (e) => {
+    if (e.lengthComputable) {
+      const p = Math.round((e.loaded / e.total) * 100);
+      progBar.style.width = p + '%';
+      showStatus(`Yükleniyor: %${p} (${formatBytes(e.loaded)} / ${formatBytes(e.total)})`, 'info', true);
     }
-    return new Blob([pcm.buffer],{type:'application/octet-stream'});
-  }catch(e){return null;}
+  };
+  xhr.onload = () => {
+    progBg.style.display = 'none';
+    if (xhr.status === 200) {
+      showStatus('Medya başarıyla yüklendi ve ekranda açıldı! 🎉', 'ok');
+      loadVideos();
+      setTimeout(hideStatus, 4000);
+    } else {
+      showStatus('Yükleme hatası: ' + xhr.responseText, 'err');
+    }
+  };
+  xhr.onerror = () => {
+    progBg.style.display = 'none';
+    showStatus('Bağlantı hatası oluştu!', 'err');
+  };
+  xhr.send(formData);
 }
 
-async function convertVideo(file,fps,maxDur,q){
-  const url=URL.createObjectURL(file);
-  const v=document.createElement('video');
-  v.src=url; v.muted=true; v.playsInline=true; v.preload='auto';
-  await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=()=>rej('Video açılamadı (H.264 MP4 deneyin)');});
-  const dur=Math.min(v.duration||maxDur,maxDur);
-  const total=Math.max(1,Math.floor(dur*fps));
-  const parts=[]; let sz=0;
-  for(let i=0;i<total;i++){
-    v.currentTime=i/fps;
-    await new Promise(r=>{v.onseeked=r;});
-    drawFit(v,v.videoWidth,v.videoHeight);
-    const b=await toJpegBytes(q);
-    parts.push(b); sz+=b.byteLength;
-    setSt(`Video dönüştürülüyor: ${i+1}/${total} kare (${(sz/1024).toFixed(0)} KB)`,Math.round((i+1)*50/total));
-  }
-  URL.revokeObjectURL(url);
-  return {blob:new Blob(parts,{type:'application/octet-stream'}),dur};
+// 1. FOTOĞRAF -> 240x240 MJPEG DÖNÜŞTÜRÜCÜ
+function convertAndUploadPhoto(file) {
+  showStatus('Fotoğraf işleniyor ve 240x240 boyutuna ölçekleniyor...', 'info', true);
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  img.onload = () => {
+    const canvas = document.getElementById('preview-canvas');
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 240, 240);
+
+    let sw, sh, sx, sy, dw, dh, dx, dy;
+    if (fitMode === 'cover') {
+      const scale = Math.max(240 / img.width, 240 / img.height);
+      sw = 240 / scale;
+      sh = 240 / scale;
+      sx = (img.width - sw) / 2;
+      sy = (img.height - sh) / 2;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 240, 240);
+    } else {
+      const scale = Math.min(240 / img.width, 240 / img.height);
+      dw = img.width * scale;
+      dh = img.height * scale;
+      dx = (240 - dw) / 2;
+      dy = (240 - dh) / 2;
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
+
+    // Fotoğrafı tek kare MJPEG olarak kodla (döngüde sabit kalır)
+    canvas.toBlob((blob) => {
+      const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
+      const mjpegFile = new File([blob], outName, { type: 'video/x-motion-jpeg' });
+      URL.revokeObjectURL(img.src);
+      uploadRawFile(mjpegFile);
+    }, 'image/jpeg', 0.85);
+  };
 }
 
-async function convertImage(file,q){
-  const bmp=await createImageBitmap(file);
-  drawFit(bmp,bmp.width,bmp.height);
-  const b=await toJpegBytes(q);
-  return new Blob([b,b,b],{type:'application/octet-stream'});
-}
+// 2. VİDEO -> 240x240 MJPEG DÖNÜŞTÜRÜCÜ
+async function convertAndUploadVideo(file) {
+  showStatus('Video inceleniyor ve karelere ayrılıyor...', 'info', true);
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.src = URL.createObjectURL(file);
 
-function sendBlob(blob,name,pStart,pSpan,label){
-  return new Promise((res,rej)=>{
-    const fd=new FormData(); fd.append('file',blob,name);
-    const x=new XMLHttpRequest();
-    x.open('POST','/api/upload');
-    x.upload.onprogress=e=>{if(e.lengthComputable)setSt(`${label} %${Math.round(e.loaded*100/e.total)}`,pStart+Math.round(e.loaded*pSpan/e.total));};
-    x.onload=()=>x.status===200?res():rej('Yükleme hatası (hafıza dolu olabilir)');
-    x.onerror=()=>rej('Bağlantı koptu');
-    x.send(fd);
+  await new Promise((res, rej) => {
+    video.onloadedmetadata = () => res();
+    video.onerror = rej;
   });
+
+  const duration = Math.min(video.duration, 45); // 45 saniyeye kadar video
+  const fps = 20; // 20 FPS ideal
+  const totalFrames = Math.floor(duration * fps);
+  const canvas = document.getElementById('preview-canvas');
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+
+  const blobs = [];
+  const progBg = document.getElementById('upload-prog-bg');
+  const progBar = document.getElementById('upload-prog-bar');
+  progBg.style.display = 'block';
+
+  for (let i = 0; i < totalFrames; i++) {
+    const time = i / fps;
+    video.currentTime = time;
+    await new Promise(r => { video.onseeked = r; });
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 240, 240);
+
+    if (fitMode === 'cover') {
+      const scale = Math.max(240 / video.videoWidth, 240 / video.videoHeight);
+      const sw = 240 / scale;
+      const sh = 240 / scale;
+      const sx = (video.videoWidth - sw) / 2;
+      const sy = (video.videoHeight - sh) / 2;
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 240, 240);
+    } else {
+      const scale = Math.min(240 / video.videoWidth, 240 / video.videoHeight);
+      const dw = video.videoWidth * scale;
+      const dh = video.videoHeight * scale;
+      const dx = (240 - dw) / 2;
+      const dy = (240 - dh) / 2;
+      ctx.drawImage(video, dx, dy, dw, dh);
+    }
+
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.65));
+    blobs.push(blob);
+
+    const pct = Math.round(((i + 1) / totalFrames) * 100);
+    progBar.style.width = pct + '%';
+    showStatus(`Dönüştürülüyor: Kare ${i+1}/${totalFrames} (%${pct})`, 'info', true);
+  }
+
+  showStatus('Video SD karta paketleniyor...', 'info', true);
+  const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
+  const mjpegBlob = new Blob(blobs, { type: 'video/x-motion-jpeg' });
+  const mjpegFile = new File([mjpegBlob], outName, { type: 'video/x-motion-jpeg' });
+
+  URL.revokeObjectURL(video.src);
+  uploadRawFile(mjpegFile);
 }
 
-async function startUpload(){
-  if(!selFile)return;
-  const btn=document.getElementById('upBtn'); btn.disabled=true;
-  try{
-    const fps=parseInt(document.getElementById('fps').value)||12;
-    const maxDur=parseFloat(document.getElementById('maxDur').value)||30;
-    const q=parseFloat(document.getElementById('qual').value)||0.62;
-    const wantAudio=document.getElementById('withAudio').checked;
-    let blob, pcmBlob=null, base=selFile.name.replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,20)||'video';
-    let outName, pcmName=null;
-    const low=selFile.name.toLowerCase();
-    if(low.endsWith('.mjpeg')||low.endsWith('.pcm')){
-      blob=selFile; outName=base+(low.endsWith('.pcm')?'.pcm':'.mjpeg');
-    }else if(selFile.type.startsWith('image/')){
-      blob=await convertImage(selFile,q); outName=base+'_f1.mjpeg';
-    }else{
-      const res=await convertVideo(selFile,fps,maxDur,q);
-      blob=res.blob; outName=`${base}_f${fps}.mjpeg`;
-      if(wantAudio){ pcmBlob=await extractPcm(selFile,res.dur); pcmName=`${base}_f${fps}.pcm`; }
-    }
-    if(pcmBlob){
-      await sendBlob(pcmBlob,pcmName,60,15,'Ses yükleniyor');
-      await sendBlob(blob,outName,75,25,'Video yükleniyor');
-    }else{
-      await sendBlob(blob,outName,60,40,'Yükleniyor');
-    }
-    setSt('✅ Yüklendi ve oynatılıyor!',100);
-    refresh();
-  }catch(e){setSt('❌ '+e,0);}
-  btn.disabled=false;
-}
-refresh();
+loadVideos();
+setInterval(loadVideos, 10000);
 </script>
 </body>
 </html>

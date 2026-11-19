@@ -1,99 +1,117 @@
-# 📺 Mini Retro TV (Sesli, MicroSD'li, Şarjlı, Wi-Fi Video Yüklemeli)
+# 📺 Mini Retro TV (16GB MicroSD, Wi-Fi Otomatik Medya Yüklemeli, 25 FPS)
 
-Figür ve diorama rafları için **55.9 × 36.2 × 28.3 mm** (gerçek derin tüplü CRT oranında, avuç içi/saat boyutunda) tam renkli, **gerçek sesli**, **MicroSD kartlı**, şarjlı ve kablosuz video yüklenebilen retro televizyon projesi.
+Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS canlı ekranlı**, **16GB MicroSD kart destekli**, **25 FPS akıcı video oynatıcılı**, kablosuz web panelli retro televizyon projesi.
 
 <p align="center">
   <img src="enclosure/preview.png" alt="Mini Retro TV Ön Görünüm" width="48%">
   <img src="enclosure/preview_back.png" alt="Mini Retro TV Arka Görünüm" width="48%">
 </p>
 
-<p align="center">
-  <img src="enclosure/preview_plate.png" alt="3D Baskı Parçaları (Tek Tabla)" width="70%">
-</p>
+---
+
+## 🌟 Öne Çıkan Özellikler
+
+1. **🎬 Çift SPI & 25 FPS Akıcı Video Motoru:**
+   - Ekran `FSPI` (GPIO 4, 6, 2, 3, 1) veriyolunda 30 MHz hızında çalışır.
+   - 16GB MicroSD modülü bağımsız `HSPI` (GPIO 10, 11, 12, 13) veriyolunda çalışır; CS çakışması sıfıra indirilmiştir.
+   - 4096 baytlık RAM tamponlu (chunk-buffered) okuma motoru sayesinde takılma olmadan pürüzsüz 25 FPS oynatım sağlar.
+
+2. **✨ Tarayıcıdan Tek Tıkla Fotoğraf & Video Yükleme (Otomatik Dönüştürme):**
+   - Herhangi bir ek programa veya FFmpeg komutlarına ihtiyaç yoktur!
+   - `CollectibleDisplay` Wi-Fi ağına bağlanıp tarayıcıdan `http://192.168.4.1` adresine girildiğinde:
+     - **İstediğiniz Fotoğrafı Seçin (JPG, PNG, WEBP, BMP):** Tarayıcı içinde anında 240×240 çözünürlüğe ölçeklenip formatlanır ve SD karta kaydedilerek ekranda gösterilir.
+     - **İstediğiniz Videoyu Seçin (MP4, MOV, WEBM):** Tarayıcı HTML5 Canvas motoru videoyu 20 FPS'de kare kare işler, 240×240 boyutuna getirir ve MJPEG formatında MicroSD karta yükler.
+     - **Kırpma Modları:** "Tam Ekran Doldur (Kırp)" veya "Sığdır (Siyah Çerçeve)" seçenekleriyle tam kontrol.
+
+3. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
+   - 1.3" ST7789 ekranın sol kenarındaki 7-pin header ve dişi DuPont kablolar için sol taraftan **1 cm (10 mm) genişletildi** (`pcb_w = 59.0 mm`, toplam dış genişlik `65.9 mm`).
+   - Ekran penceresi 1.3" kare aktif alan için `27.5 × 26.5 mm` olarak hassas ayarlandı.
+   - Geçmeli kapak tasarımı sayesinde vidaya ihtiyaç duymaz.
 
 ---
 
-## 1. Donanım Seti
+## 1. Donanım Özeti
 
-| Parça | Seçilen Model | Görevi |
+| Parça | Model | Görevi / Açıklama |
 |---|---|---|
-| **Ekran** | **1.69" 240×280 SPI IPS TFT LCD (ST7789, 8-pin)** | Yuvarlak köşeli canlı IPS ekran (gerçek tüplü TV görünümü) |
-| **Wi-Fi Beyin** | **ESP32-C3 SuperMini (Lehimsiz)** | 18 × 22.5 mm, Wi-Fi, 4 MB Flash, Type-C |
-| **Ses Sistemi** | **MAX98357A I2S 3W Dijital Amfi + 8Ω 1W Mini Hoparlör** | Video sesleri + kanal değişiminde gerçek retro TV cızırtısı |
-| **Depolama** | **SPI MicroSD Kart Modülü** *(takılı değilse dahili hafıza)* | Gigabaytlarca çizgi film / dizi / film klibi |
-| **Şarj & Pil** | **TP4056 Type-C Korumalı + 3.7V 600 mAh LiPo (603035)** | Tek şarjla ~4–6 saat sesli oynatma |
-| **Kasa & Anten** | **3D Baskı (~20g PLA) + 1 adet metal ataş** | Destek (support) ve vida gerektirmez, açık ön hoparlör ızgaralı |
+| **Ekran** | **1.3" 240×240 SPI IPS TFT LCD (ST7789, 7-pin)** | 240×240 piksel, geniş açılı IPS panel |
+| **İşlemci Kartı** | **ESP32-S3 Mini / ESP32-C3** | Çift çekirdek / Wi-Fi / Bluetooth, çift donanımsal SPI desteği |
+| **Depolama** | **16GB MicroSD Kart Modülü (SPI)** | Onlarca saat video ve yüzlerce fotoğraf hafızası |
+| **Kasa** | **3D Baskı (OpenSCAD Parametrik)** | 1 cm kablo geçiş paylı, 65.9 × 36.4 × 28.8 mm |
 
-👉 **Satın Alma Linkleri:** [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md)  
-👉 **Ayrıntılı Pin Tablosu & Montaj:** [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md)
+👉 **Orijinal Satın Alma Listesi:** [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md) *(Değiştirilmeden korunmuştur)*  
+👉 **Ayrıntılı Pin Bağlantı Tablosu:** [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md)
 
 ---
 
-## 2. 🔌 Görsel Bağlantı Şeması ve Lehim Sırası
+## 2. 🔌 Doğrulanmış Çalışan Pin Bağlantıları (1.3" ST7789 + ESP32-S3)
 
-![Mini Retro TV Bağlantı Şeması](docs/baglanti_semasi.png)
+### Ekran (FSPI Veriyolu)
+* **GND** $\rightarrow$ `GND`
+* **VCC** $\rightarrow$ `3.3V`
+* **SCL** $\rightarrow$ `GPIO 4`
+* **SDA** $\rightarrow$ `GPIO 6`
+* **RES** $\rightarrow$ `GPIO 2`
+* **DC**  $\rightarrow$ `GPIO 3`
+* **BLK** $\rightarrow$ `GPIO 1`
 
-### Kartı Doğru Tutun (`ESP32-C3 SuperMini`)
-USB-C soketi **yukarı**, çipli yüz **size** bakacak şekilde:
-* **Sol sıra (yukarıdan aşağı):** `5`, `6`, `7`, `8`, `9`, `10`, `20 (RX)`, `21 (TX)`
-* **Sağ sıra (yukarıdan aşağı):** `5V`, `G (GND)`, `3V3`, `4`, `3`, `2`, `1`, `0`
-*(Header pinlerini takmayın; ince 28–30 AWG kabloları doğrudan deliklere lehimleyin.)*
-
-### Adım Adım 4 Aşamalı Bağlantı
-1. **Ekran (8 Kablo — Sadece 3.3V!):**
-   `GND→G`, `VCC→3V3`, `SCL→4`, `SDA→6`, `RES→2`, `DC→3`, `CS→7`, `BLK→1`
-   *(Önce pili bağlamadan USB-C ile kodu yükleyip ekranda renk çubuklarını test edin.)*
-2. **Ses Amfisi (`MAX98357A`) + Mini Hoparlör:**
-   `VIN→5V`, `GND→G`, `BCLK→0`, `LRC→10`, `DIN→21 (TX)`, `+ / - → Hoparlör` *(SD ve GAIN boş kalır)*
-3. **MicroSD Kart Modülü (Paylaşımlı SPI):**
-   `GND→G`, `VCC→3V3`, `SCK→4` *(Ekran SCL ile ortak)*, `MOSI→6` *(Ekran SDA ile ortak)*, `MISO→5`, `CS→20 (RX)`
-   *(5V regülatörlü modül pille çalışırken kartı görmezse `3V3`'ü modüldeki 3 bacaklı AMS1117 regülatörünün orta bacağına bağlayın.)*
-4. **Güç & Şarj (En Son, USB Sökülüyken):**
-   Pil Kırmızı (`+`) → TP4056 `B+` | Pil Siyah (`-`) → TP4056 `B-` | TP4056 `OUT+` → ESP32 `5V` (+ Amfi `VIN`) | TP4056 `OUT-` → Ortak `GND`.
-
-> **🛡️ 3 Altın Kural:** (1) İlk kod yüklerken sadece ESP32-C3 USB'sini kullanın (pil ayrık olsun). (2) Günlük şarjı sadece sol yandaki **TP4056 Type-C** portundan yapın. (3) Kasa içinde tüm kartların arkasına **elektrik/kapton bant** yapıştırın.
+### 16GB MicroSD Kart Modülü (HSPI Veriyolu)
+* **VCC** $\rightarrow$ **`5V (5U)`** *(Dahili AMS1117 regülatörün sağlıklı çalışması için 5V şarttır)*
+* **GND** $\rightarrow$ `GND`
+* **CS**  $\rightarrow$ `GPIO 10`
+* **MOSI** $\rightarrow$ `GPIO 11`
+* **SCK** $\rightarrow$ `GPIO 12`
+* **MISO** $\rightarrow$ `GPIO 13`
 
 ---
 
-## 3. 📱 Müşteri Dostu Wi-Fi Kurulumu & Web Arayüzü (Kod/Config Gerekmez!)
+## 3. 🌐 Kablosuz Web Arayüzü Kullanımı
 
-Müşteriniz bilgisayara bağlamadan, hiçbir kod veya `config.h` dosyasına dokunmadan **doğrudan telefonundan** TV'yi kendi ev Wi-Fi'ına bağlayabilir:
-
-### İlk Kurulum (Tıpkı Akıllı Ev Cihazı Gibi — Captive Portal)
-1. Müşteri TV'yi açtığında TV otomatik olarak **`MiniTV`** Wi-Fi ağını açar *(Şifre: **`retro1234`**)*.
-2. Telefonla **`MiniTV`** ağına bağlanıldığında kurulum sayfası **Captive Portal** sayesinde otomatik açılır *(açılmazsa tarayıcıya `http://192.168.4.1` yazılır)*.
-3. Sayfanın altındaki **📶 Ev Wi-Fi Ayarları** bölümünden **🔍 Tara** butonuna basılır, müşteri kendi ev Wi-Fi'ını listeden seçer, şifresini girip **Kaydet ve Bağlan** tuşuna basar.
-4. Wi-Fi bilgileri ESP32'nin kalıcı hafızasına (NVS) kaydedilir, TV anında müşterinin ev Wi-Fi'ına bağlanır ve ekranda yeni adresini (**`http://minitv.local`** + IP) gösterir.
-5. **Güvenli Geri Dönüş:** TV başka bir eve götürülürse veya modem şifresi değişirse 10 saniye bağlanamayınca otomatik olarak tekrar **`MiniTV`** kurulum ağına döner — cihaz asla kilitlenmez!
-
-### Web Panelinde Neler Var?
-* **Hafıza, Parlaklık ve 🔊 Ses Seviyesi (%0–100):** MicroSD kart (veya dahili hafıza) doluluğunu canlı gösterir; ekran parlaklığını ve hoparlör sesini anında ayarlayıp kaydeder.
-* **Program Gerektirmeyen Kablosuz MP4 Yükleme:** Telefon galerisinden seçtiğiniz MP4 / MOV / WebM videosunu tarayıcı içinde otomatik olarak **280×240 `.mjpeg`** + **16 kHz mono `.pcm` ses** dosyasına çevirip kablosuz olarak TV'ye gönderir; biter bitmez karlanma efektiyle oynatmaya başlar.
-* **Kanallar (Uzaktan Kumanda):** Yüklü tüm videoları `CH1`, `CH2`, `CH3` şeklinde listeler; tek tıkla kanal değiştirebilir veya silebilirsiniz.
-* **📶 Ev Wi-Fi Ayarları:** Yakındaki ağları tarama, ev Wi-Fi'ına bağlanma veya tek tuşla **Ağı Unut** ile sıfırlama.
-* **Otomatik Wi-Fi Pil Tasarrufu:** 10 dakika işlem yapılmazsa Wi-Fi pil için otomatik kapanır (videolar oynamaya devam eder). Tekrar açmak için üstteki `BOOT` butonuna **1.5 saniye** basılı tutmanız yeterlidir.
-
-> 💡 **Uzun Çizgi Film / Dizi Bölümleri İçin:** 5–45 saniyelik klipleri telefondan kablosuz yüklemek çok pratiktir. 15–20 dakikalık uzun bölümler için MicroSD kartı PC'ye takıp MP4 dosyasını [convert_to_mjpeg.bat](tools/convert_to_mjpeg.bat) üzerine sürükleyip çıkan `.mjpeg` + `.pcm` dosyalarını doğrudan SD karttaki **`/v/`** klasörüne atın.
+1. Cihaza güç verdiğinizde **`CollectibleDisplay`** Wi-Fi erişim noktası yayınlanır.
+2. Telefon veya bilgisayarınızdan bu ağa bağlanın *(Şifre: **`display1234`**)*.
+3. Tarayıcınızda **`http://192.168.4.1`** adresine gidin.
+4. Karşınıza gelen modern panelde:
+   - 16GB SD kartınızın kalan ve kullanılan alanını canlı olarak görebilirsiniz.
+   - Sürükle-bırak veya dosya seçici ile herhangi bir fotoğraf veya videoyu seçebilirsiniz.
+   - Tarayıcınız görseli anında 240×240 boyutuna ölçekler ve SD karta yükler.
+   - Yüklenen medya anında TV ekranında oynamaya başlar!
+   - Alt kısımdaki listeden yüklü videolar arasında geçiş yapabilir veya silebilirsiniz.
 
 ---
 
-## 4. ⚙️ Fiziksel Buton Kontrolleri & Arduino IDE Ayarları
+## 4. 🖨️ 3D Baskı Dosyaları (`enclosure/stl/`)
 
-* **Üstteki Buton (`BOOT` / GPIO 9):**
-  * **Kısa bas:** Karlanma görüntüsü + cızırtı sesi + yeşil `CH1 / CH2` yazısıyla sonraki kanala geçer *(TV uykudaysa CRT efektiyle uyandırır)*.
-  * **1.5 sn basılı tut:** Wi-Fi açar / kapatır.
-  * **4 sn basılı tut:** Tüplü TV kapanış çizgisiyle TV'yi kapatır / uyku moduna alır.
-* **Arduino IDE Ayarları (`ESP32-C3 SuperMini`):**
-  * Kütüphaneler: `GFX Library for Arduino`, `JPEGDEC` *(ESP32 paketi: `3.1.3`)*
-  * **Board:** `ESP32C3 Dev Module` | **USB CDC On Boot:** `Enabled` | **Flash Size:** `4MB (32Mb)` | **Partition Scheme:** `No OTA (2MB APP/2MB SPIFFS)`
+* [body.stl](enclosure/stl/body.stl) — Ana TV gövdesi (Sol tarafta 1 cm kablo payı eklenmiş)
+* [back.stl](enclosure/stl/back.stl) — Geçmeli arka kapak
+* [plate.stl](enclosure/stl/plate.stl) — Tüm parçalar tek baskı tablasında (Gövde + Kapak + Düğmeler + Ayaklar + Anten)
+* [knobs.stl](enclosure/stl/knobs.stl) — Ön dekoratif çevirme düğmeleri
+* [legs.stl](enclosure/stl/legs.stl) — Retro konik TV ayakları
+* [antenna.stl](enclosure/stl/antenna.stl) — V anten tabanı ve boncukları
+* [mini_retro_tv.scad](enclosure/mini_retro_tv.scad) — Parametrik OpenSCAD kaynak kodu
 
 ---
 
-## 5. Proje Dosyaları
+## 5. 🛠️ Proje Dizin Yapısı
 
-* **3D Kasa (`enclosure/`):**
-  * [mini_retro_tv.scad](enclosure/mini_retro_tv.scad) — Parametrik OpenSCAD tasarımı
-  * **Baskıya Hazır STL'ler (`enclosure/stl/`):** [body.stl](enclosure/stl/body.stl), [back.stl](enclosure/stl/back.stl), [knobs.stl](enclosure/stl/knobs.stl), [legs.stl](enclosure/stl/legs.stl), [antenna.stl](enclosure/stl/antenna.stl), [antenna_solid.stl](enclosure/stl/antenna_solid.stl) *(Yekpare V anten)*, [plate.stl](enclosure/stl/plate.stl) *(K1 ve tüm tablalara tam ortalı)*
-* **Yazılım (`firmware/MiniRetroTV/`):** [MiniRetroTV.ino](firmware/MiniRetroTV/MiniRetroTV.ino), [config.h](firmware/MiniRetroTV/config.h), [web_page.h](firmware/MiniRetroTV/web_page.h)
-* **Görseller & Dokümanlar:** [baglanti_semasi.png](docs/baglanti_semasi.png), [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md), [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md)
-* **PC Video+Ses Dönüştürücü (`tools/`):** [convert_to_mjpeg.bat](tools/convert_to_mjpeg.bat)
+```
+mini-retro-tv/
+├── BAGLANTI_SEMASI.md       # Ayrıntılı pin bağlantı rehberi
+├── README.md                # Proje genel tanıtımı ve kullanım kılavuzu
+├── SATIN_ALMA_LISTESI.md    # Korunan orijinal malzeme sepeti listesi
+├── enclosure/               # 3D Baskı ve CAD kaynak dosyaları
+│   ├── mini_retro_tv.scad   # OpenSCAD kaynak modeli (+10 mm sol paylı)
+│   ├── preview.png          # Kasa ön görseli
+│   ├── preview_back.png     # Kasa arka görseli
+│   └── stl/                 # Baskıya hazır STL dosyaları (body, back, plate vb.)
+├── firmware/
+│   └── MiniRetroTV/         # Arduino IDE yazılımı
+│       ├── MiniRetroTV.ino  # 25 FPS çift SPI video motoru
+│       ├── config.h         # Pin tanımları ve ayarlar
+│       └── web_page.h       # Otomatik fotoğraf/video dönüştürücülü web panel
+├── sample_media/            # Örnek hazır MJPEG videolar
+│   ├── korku_filmi_ornegi.mjpeg
+│   └── ornek_retro_animasyon.mjpeg
+└── tools/                   # PC dönüştürücü araçları (FFmpeg & Python)
+    ├── video_donusturucu.py
+    └── video_donusturucu.bat
+```

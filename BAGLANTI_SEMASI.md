@@ -1,19 +1,51 @@
-# 🔌 Mini Retro TV — Tam Pin Bağlantı Şeması (Sesli + MicroSD Sürümü)
+# 🔌 Mini Retro TV — Tam Pin Bağlantı Şemaları
 
-![Mini Retro TV Bağlantı Şeması](docs/baglanti_semasi.png)
-
-**Tam Donanım Seti (7 Parça):**
-1. **Voltaj 1.69" 240×280 SPI IPS TFT Ekran (ST7789)**
-2. **TLS Robotik ESP32-C3 SuperMini (Lehimsiz)**
-3. **MAX98357A I2S 3W Dijital Ses Amfisi**
-4. **8Ω 1W Mini Hoparlör** *(20 mm yuvarlak veya 14×20 mm ince)*
-5. **MicroSD Kart Modülü (SPI)** + FAT32 formatlı MicroSD kart
-6. **Robocombo TP4056 Type-C Korumalı Şarj Devresi**
-7. **Powermaster 603035 3.7V 600mAh LiPo Pil (6 × 30 × 35 mm)**
+> 💡 **İki Desteklenen Donanım Yapılandırması:**
+> 1. **Doğrulanmış ve Çalışan Güncel Yapılandırma:** **1.3" ST7789 IPS Ekran + ESP32-S3 + 16GB MicroSD (Çift Donanımsal SPI, 25 FPS Akıcı Oynatıcı)**
+> 2. **Alternatif Kompakt Yapılandırma:** **1.69" ST7789 + ESP32-C3 SuperMini + MAX98357A I2S Amfi**
 
 ---
 
-## 1. Ekran ↔ ESP32-C3 SuperMini (8 Kablo)
+## 🌟 1. Doğrulanmış Çalışan Sistem (1.3" ST7789 + ESP32-S3 + 16GB MicroSD)
+
+Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD** ile **25 FPS akıcı video oynatımı** doğrulanmıştır. Ekran ile SD kart birbirinden bağımsız çift donanımsal SPI veriyolu (`FSPI` ve `HSPI`) üzerinden çalışır, böylece sıfır veri çakışması ve maksimum hız elde edilir.
+
+### A. 1.3" ST7789 IPS Ekran ↔ ESP32-S3 (FSPI Veriyolu - Sol Sıra)
+
+| Ekran Pini | Ekran Kablo Rengi | ESP32-S3 Pini | Görevi / Not |
+| :--- | :--- | :--- | :--- |
+| **GND** | Siyah | **GND** | Ortak Toprak |
+| **VCC** | Kırmızı | **3.3V** | Ekran Lojik ve LED Gücü |
+| **SCL (CLK)** | Turuncu | **GPIO 4** | Donanımsal FSPI Saat Sinyali |
+| **SDA (MOSI)**| Mavi | **GPIO 6** | Donanımsal FSPI Veri Hattı |
+| **RES** | Yeşil | **GPIO 2** | Donanımsal Ekran Sıfırlama (Reset) |
+| **DC** | Mor | **GPIO 3** | Veri / Komut Seçimi (Data/Command) |
+| **BLK** | Sarı | **GPIO 1** | Arka Işık (Backlight) Açma |
+| *(CS)* | *(Dahili)* | *(Yok)* | Bu ekranda CS pini dahili olarak GND'ye bağlıdır |
+
+---
+
+### B. 16GB MicroSD Modülü ↔ ESP32-S3 (HSPI Veriyolu - Sağ Sıra)
+
+> ⚠️ **KRİTİK GÜÇ NOTU:** Arduino MicroSD modülleri üzerinde dahili `AMS1117-3.3V` regülatör bulunur. Modülün `VCC` pinini ESP32-S3'ün **5V (5U)** pinine bağlayın! 3.3V verilirse voltaj 2.1V'a düşer ve kart başlatılamaz.
+
+| MicroSD Modülü | ESP32-S3 Pini | Header Konumu | Görevi / Açıklama |
+| :--- | :--- | :--- | :--- |
+| **VCC** | **5V (5U)** | Üst Güç Pini | **5V Besleme (Dahili regülatör için şart)** |
+| **GND** | **GND** | Üst Toprak | Ortak Toprak |
+| **CS** | **GPIO 10** | Sağ Sıra 10 | Bağımsız SD Kart Seçim Pini |
+| **MOSI** | **GPIO 11** | Sağ Sıra 11 | Donanımsal HSPI Veri Gönderme |
+| **SCK (CLK)**| **GPIO 12** | Sağ Sıra 12 | Donanımsal HSPI Saat Sinyali |
+| **MISO** | **GPIO 13** | Sağ Sıra 13 | Donanımsal HSPI Veri Okuma |
+
+---
+
+### C. Kontrol Butonu
+* **BOOT Butonu / Harici Buton:** `GPIO 0` (Kısa basış sonraki kanala/videoya geçer).
+
+---
+
+## 2. Alternatif Kompakt Yapılandırma (1.69" + ESP32-C3 SuperMini)
 
 | 1.69" ST7789 Ekran | ESP32-C3 SuperMini | Not |
 | :--- | :--- | :--- |

@@ -19,16 +19,16 @@
 
 part = "preview"; // [preview, body, back, knobs, legs, antenna, plate]
 
-/* [Elektronik - Ekran + ESP32-C3 + TP4056 + MAX98357A + Hoparlör + MicroSD] */
-pcb_w   = 49.0;  // 1.69" ST7789 ekran PCB genişliği (yatayda, 8-pin sağda)
-pcb_h   = 31.8;  // 1.69" ST7789 ekran PCB yüksekliği
-pcb_t   = 15.5;  // ekran (~4mm) + ESP32/TP4056 (~5mm) + MAX98357A/Hoparlör/MicroSD (~6.5mm)
-win_w   = 32.8;  // görünür ekran penceresi (1.69" aktif alan 32.6 x 28.0)
-win_h   = 28.2;
-win_r   = 4.0;   // pencere köşe yarıçapı (tüplü TV görünümü)
-win_dx  = -5.5;  // ekran camı sol tarafa yakın, 8-pin + hoparlör sağ panel arkasına gelir
+/* [Elektronik - 1.3" ST7789 Ekran + ESP32-S3 + MicroSD] */
+pcb_w   = 59.0;  // 10 mm (1 cm) genişletildi: 1.3" ekran ve sol kenardaki kablo/pin geçişi için
+pcb_h   = 32.0;  // Ekran PCB yüksekliği
+pcb_t   = 16.0;  // ekran + ESP32-S3 + MicroSD kart modülü derinliği
+win_w   = 27.5;  // 1.3" IPS 240x240 aktif ekran penceresi
+win_h   = 26.5;
+win_r   = 3.5;   // retro tüplü TV köşe yuvarlaklığı
+win_dx  = -8.0;  // sol tarafa 1 cm montaj payı bırakıldı
 win_dz  = 0;     // (+yukarı)
-bat_t   = 6.5;   // Powermaster 603035 LiPo kalınlığı (6.0 mm + bant/kablo payı)
+bat_t   = 6.5;   // LiPo pil payı
 
 /* [TP4056 USB-C, MicroSD Yuvası ve Buton Delikleri] */
 usb_side = "left";  // [left, right, bottom, top]
