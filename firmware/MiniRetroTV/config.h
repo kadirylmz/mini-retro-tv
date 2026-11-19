@@ -32,7 +32,7 @@
 #define SCREEN_W    240
 #define SCREEN_H    240
 #define LCD_ROTATION 1  // Yatay kullanım
-#define SPI_SPEED   30000000  // 30 MHz Donanımsal SPI (Akıcı 25 FPS)
+#define SPI_SPEED   24000000  // 24 MHz Kararlı Donanımsal SPI (Jumper kablolar için güvenilir sinyal)
 
 // ---- Wi-Fi Ayarları ----
 #define AP_SSID     "CollectibleDisplay"

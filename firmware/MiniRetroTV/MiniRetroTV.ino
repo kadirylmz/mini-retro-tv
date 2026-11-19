@@ -338,20 +338,22 @@ void refreshPlaylist() {
         String name = String(f.name());
         if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
           size_t sz = f.size();
-          if (sz > 1024) {
-            String pcmPath = String(VIDEO_DIR) + "/" + name.substring(0, name.lastIndexOf('.')) + ".pcm";
-            bool hasAudio = storage->exists(pcmPath);
-            MediaItem item;
-            item.name = name;
-            item.size = sz;
-            item.hasAudio = hasAudio;
-            playlist.push_back(item);
-          } else {
-            // 0 bayt veya bozuk dosyaları temizle
-            String delPath = String(VIDEO_DIR) + "/" + name;
+          Serial.printf("BULUNAN DOSYA: [%s] (%u bayt)\n", name.c_str(), sz);
+          if (name.indexOf("WhatsApp") >= 0 || sz < 20000) {
+            String delPath = name.startsWith("/") ? name : (String(VIDEO_DIR) + "/" + name);
+            f.close();
             storage->remove(delPath);
-            Serial.printf("Bozuk/bos dosya silindi: %s\n", name.c_str());
+            Serial.printf("Yarım kalmış bozuk dosya silindi: %s\n", delPath.c_str());
+            f = root.openNextFile();
+            continue;
           }
+          String pcmPath = String(VIDEO_DIR) + "/" + name.substring(0, name.lastIndexOf('.')) + ".pcm";
+          bool hasAudio = storage->exists(pcmPath);
+          MediaItem item;
+          item.name = name;
+          item.size = sz;
+          item.hasAudio = hasAudio;
+          playlist.push_back(item);
         }
       }
       f = root.openNextFile();
@@ -811,6 +813,7 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 void setup() {
   esp_brownout_disable(); // Pilde voltaj çöküşü resetlerini ve ekran titremesini engeller
   Serial.begin(115200);
+  Serial.setTimeout(10);
   Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print kilitlenmesini engeller
   delay(100);
   Serial.println("\n=============================================");
@@ -1036,6 +1039,13 @@ void loop() {
   server.handleClient();
   handleButton();
   handleSerialCommands();
+
+  static unsigned long lastDbg = 0;
+  if (millis() - lastDbg > 1000) {
+    lastDbg = millis();
+    Serial.printf("[HEARTBEAT] Uptime: %lu s | VideoIdx: %d | FreeHeap: %u | Wi-Fi Clients: %d\n", 
+                  millis() / 1000, currentVideoIdx, ESP.getFreeHeap(), WiFi.softAPgetStationNum());
+  }
 
   // Yükleme Zaman Aşımı Emniyeti (30 sn sessizlik olursa yarıda kalan yüklemeyi temizle)
   if (isUploading && uploadChunkFile && (millis() - lastUploadChunkTime > 30000)) {
