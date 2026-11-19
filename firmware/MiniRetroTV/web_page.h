@@ -845,7 +845,7 @@ function handleFileSelect(files) {
 
 // ---- KESİNTİSİZ PARÇALI (CHUNKED) YÜKLEME MOTORU ----
 async function uploadFileChunked(file) {
-  const CHUNK_SIZE = 32 * 1024; // 32 KB optimum parçalar (Wi-Fi kopmalarını %100 engeller)
+  const CHUNK_SIZE = 8 * 1024; // 8 KB optimum parçalar (FreeRTOS Wi-Fi tamponuyla %100 uyumlu)
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   const progBg = document.getElementById('upload-prog-bg');
   const progBar = document.getElementById('upload-prog-bar');
@@ -919,8 +919,8 @@ async function uploadFileChunked(file) {
     const speedKb = elapsed > 0 ? ((end / 1024) / elapsed).toFixed(0) : 0;
     showStatus(`Yükleniyor: ${file.name} (%${pct}) - ${c+1}/${totalChunks} Parça [${speedKb} KB/s]`, 'info', true);
 
-    // Wi-Fi radyo ve beacon'ların nefes alması için minik mola (20 ms)
-    await new Promise(r => setTimeout(r, 20));
+    // Wi-Fi radyo ve FreeRTOS beacon iletimine nefes aldır (40 ms mola)
+    await new Promise(r => setTimeout(r, 40));
   }
 
   showStatus(`"${file.name}" SD karta yazıldı, oynatılıyor...`, 'info', true);
@@ -962,7 +962,10 @@ function convertAndUploadPhoto(file) {
     }
 
     canvas.toBlob(async (blob) => {
-      const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
+      let base = file.name.substring(0, file.name.lastIndexOf('.'));
+      base = base.replace(/[^a-zA-Z0-9_-]/g, '_');
+      if (!base) base = 'photo_' + Date.now();
+      const outName = base + '.mjpeg';
       const mjpegFile = new File([blob], outName, { type: 'video/x-motion-jpeg' });
       URL.revokeObjectURL(img.src);
       try {
@@ -1080,19 +1083,23 @@ async function convertAndUploadVideo(file) {
       showStatus(`Dönüştürülüyor: Kare ${i+1}/${totalFrames} (%${pct})`, 'info', true);
     }
 
+    let base = file.name.substring(0, file.name.lastIndexOf('.'));
+    base = base.replace(/[^a-zA-Z0-9_-]/g, '_');
+    if (!base) base = 'video_' + Date.now();
+
     let pcmFile = null;
     const wantAudio = document.getElementById('chk-audio').checked;
     if (wantAudio) {
       showStatus('Videonun sesi 16 kHz mono formatına ayıklanıyor...', 'info', true);
       const pcmBlob = await extractPcm(file, duration);
       if (pcmBlob) {
-        const pcmName = file.name.substring(0, file.name.lastIndexOf('.')) + '.pcm';
+        const pcmName = base + '.pcm';
         pcmFile = new File([pcmBlob], pcmName, { type: 'application/octet-stream' });
       }
     }
 
     showStatus('Video SD karta paketleniyor...', 'info', true);
-    const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
+    const outName = base + '.mjpeg';
     const mjpegBlob = new Blob(blobs, { type: 'video/x-motion-jpeg' });
     const mjpegFile = new File([mjpegBlob], outName, { type: 'video/x-motion-jpeg' });
     URL.revokeObjectURL(video.src);

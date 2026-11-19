@@ -126,20 +126,10 @@ int JPEGDraw(JPEGDRAW *pDraw) {
 }
 
 // =========================================================================
-//  CRT Parazit Efekti
+//  Kanal Geçiş Efekti (Hızlı ve Güvenli Ekran Temizleme)
 // =========================================================================
 void drawCRTStatic(int ms) {
-  unsigned long start = millis();
-  while (millis() - start < (unsigned long)ms) {
-    for (int y = 0; y < SCREEN_H; y += 8) {
-      uint16_t row[SCREEN_W];
-      for (int x = 0; x < SCREEN_W; x++) {
-        uint8_t r = (uint8_t)esp_random();
-        row[x] = (r < 128) ? 0x0000 : 0xFFFF;
-      }
-      tft.drawRGBBitmap(0, y, row, SCREEN_W, 8);
-    }
-  }
+  tft.fillScreen(ST77XX_BLACK);
 }
 
 // =========================================================================
@@ -339,11 +329,11 @@ void refreshPlaylist() {
         if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
           size_t sz = f.size();
           Serial.printf("BULUNAN DOSYA: [%s] (%u bayt)\n", name.c_str(), sz);
-          if (name.indexOf("WhatsApp") >= 0 || sz < 20000) {
+          if (sz == 0 || name.indexOf("WhatsApp") >= 0) {
             String delPath = name.startsWith("/") ? name : (String(VIDEO_DIR) + "/" + name);
             f.close();
             storage->remove(delPath);
-            Serial.printf("Yarım kalmış bozuk dosya silindi: %s\n", delPath.c_str());
+            Serial.printf("Gecersiz veya bozuk dosya silindi: %s\n", delPath.c_str());
             f = root.openNextFile();
             continue;
           }
@@ -358,16 +348,20 @@ void refreshPlaylist() {
       }
       f = root.openNextFile();
     }
+    root.close();
   }
 
-  // Kapasiteyi bir kez hafızaya al
+  // Kapasiteyi anında hafızaya al (FAT taraması yapmadan anında biter)
   if (isSDActive) {
-    cachedTotalBytes = SD.totalBytes();
-    cachedUsedBytes = SD.usedBytes();
+    cachedTotalBytes = (size_t)SD.cardSize();
   } else {
     cachedTotalBytes = LittleFS.totalBytes();
-    cachedUsedBytes = LittleFS.usedBytes();
   }
+  size_t used = 0;
+  for (const auto &item : playlist) {
+    used += item.size;
+  }
+  cachedUsedBytes = used;
 
   Serial.printf("Oynatma listesi güncellendi: %d video bulundu. (Depolama: %s)\n", 
                 playlist.size(), isSDActive ? "16GB MicroSD" : "LittleFS");
@@ -436,10 +430,12 @@ void setupWebServer() {
   });
 
   server.on("/ping", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(200, "text/plain", "pong");
   });
 
   server.on("/volume", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     if (server.hasArg("val")) {
       int val = server.arg("val").toInt();
       setVolume(val);
@@ -449,12 +445,14 @@ void setupWebServer() {
   });
 
   server.on("/mute", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     toggleMute();
     String json = "{\"volume\":" + String(currentVolume) + ",\"muted\":" + (isMuted ? "true" : "false") + "}";
     server.send(200, "application/json", json);
   });
 
   server.on("/list", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     bool staConn = (WiFi.status() == WL_CONNECTED);
     String staIp = staConn ? WiFi.localIP().toString() : "";
 
@@ -482,6 +480,7 @@ void setupWebServer() {
   });
 
   server.on("/play", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     if (server.hasArg("file")) {
       String name = server.arg("file");
       for (size_t i = 0; i < playlist.size(); i++) {
@@ -496,6 +495,7 @@ void setupWebServer() {
   });
 
   server.on("/delete", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     if (server.hasArg("file")) {
       String name = server.arg("file");
       String path = String(VIDEO_DIR) + "/" + name;
@@ -581,6 +581,7 @@ void setupWebServer() {
 
   // ---- KESİNTİSİZ PARÇALI (CHUNKED) YÜKLEME ENDPOINT'LERİ ----
   server.on("/upload_start", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
     if (!server.hasArg("name")) {
       server.send(400, "application/json", "{\"error\":\"name parametresi eksik\"}");
       return;
@@ -604,7 +605,7 @@ void setupWebServer() {
     }
     uploadChunkFile = storage->open(uploadChunkFilePath, "w");
     if (uploadChunkFile) {
-      uploadChunkFile.setBufferSize(8192); // 8 KB donanımsal yazma tamponu
+      uploadChunkFile.setBufferSize(4096);
       lastUploadChunkTime = millis();
 
       // Mini TV Ekranında Yükleme Görseli
@@ -631,11 +632,12 @@ void setupWebServer() {
   });
 
   server.on("/upload_chunk", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
     lastUploadChunkTime = millis();
     if (server.hasArg("idx") && server.hasArg("total")) {
       int idx = server.arg("idx").toInt();
       int total = server.arg("total").toInt();
-      if (total > 0 && idx % 4 == 0) {
+      if (total > 0 && idx % 2 == 0) {
         int w = ((SCREEN_W - 44) * (idx + 1)) / total;
         tft.fillRect(22, 142, w, 10, 0x07E0); // Yeşil dolgu
       }
@@ -652,6 +654,7 @@ void setupWebServer() {
   });
 
   server.on("/upload_finish", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
     String name = server.hasArg("name") ? server.arg("name") : "";
     if (uploadChunkFile) {
       uploadChunkFile.flush();
@@ -678,6 +681,7 @@ void setupWebServer() {
   });
 
   server.on("/upload_abort", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
     if (uploadChunkFile) {
       uploadChunkFile.close();
     }
@@ -692,6 +696,7 @@ void setupWebServer() {
   // Geleneksel Tek Parça Yükleme (Geriye Dönük Uyumluluk)
   static File uploadFile;
   server.on("/upload", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
     server.send(200, "text/plain", "Yükleme Başarılı");
     isUploading = false;
     refreshPlaylist();
@@ -715,7 +720,7 @@ void setupWebServer() {
       Serial.printf("Geleneksel Yükleme Başlıyor: %s\n", path.c_str());
       if (storage->exists(path)) storage->remove(path);
       uploadFile = storage->open(path, "w");
-      if (uploadFile) uploadFile.setBufferSize(8192);
+      if (uploadFile) uploadFile.setBufferSize(4096);
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       if (uploadFile) uploadFile.write(upload.buf, upload.currentSize);
     } else if (upload.status == UPLOAD_FILE_END) {
@@ -735,18 +740,23 @@ void setupWebServer() {
 
   // Captive Portal ve Is-Online Yanıtları (Telefonların Wi-Fi'den atmasını kesin olarak engeller)
   server.on("/generate_204", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(204, "text/plain", "");
   });
   server.on("/gen_204", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(204, "text/plain", "");
   });
   server.on("/hotspot-detect.html", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
   });
   server.on("/ncsi.txt", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(200, "text/plain", "Microsoft NCSI");
   });
   server.on("/connecttest.txt", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
     server.send(200, "text/plain", "Microsoft Connect Test");
   });
   server.onNotFound([]() {
@@ -879,7 +889,7 @@ void setup() {
 
   bool sdOk = false;
   for (int r = 0; r < 3; r++) {
-    if (SD.begin(SD_CS, sdSPI, 20000000) || SD.begin(SD_CS, sdSPI, 4000000) || SD.begin(SD_CS, sdSPI, 1000000)) {
+    if (SD.begin(SD_CS, sdSPI, 10000000) || SD.begin(SD_CS, sdSPI, 4000000) || SD.begin(SD_CS, sdSPI, 1000000)) {
       sdOk = true;
       break;
     }
@@ -1126,7 +1136,7 @@ void loop() {
       videoFile.seek(0);
       resetFastReader();
       if (videoFile.size() < 100000) {
-        delay(80); // Küçük dosya/fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
+        delay(300); // Küçük dosya/fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
       }
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
