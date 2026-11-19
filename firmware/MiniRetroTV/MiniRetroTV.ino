@@ -427,6 +427,10 @@ void setupWebServer() {
     server.send_P(200, "text/html", INDEX_HTML);
   });
 
+  server.on("/ping", HTTP_GET, []() {
+    server.send(200, "text/plain", "pong");
+  });
+
   server.on("/volume", HTTP_GET, []() {
     if (server.hasArg("val")) {
       int val = server.arg("val").toInt();
@@ -607,6 +611,23 @@ void setupWebServer() {
     if (uploadChunkFile) {
       uploadChunkFile.setBufferSize(8192); // 8 KB donanımsal yazma tamponu
       lastUploadChunkTime = millis();
+
+      // Mini TV Ekranında Yükleme Görseli
+      tft.fillScreen(ST77XX_BLACK);
+      tft.fillRect(0, 0, SCREEN_W, 4, 0x001F); // Mavi
+      tft.setTextSize(2);
+      tft.setTextColor(0x07FF); // Cyan
+      tft.setCursor(35, 60);
+      tft.println("YUKLENIYOR");
+      tft.setTextSize(1);
+      tft.setTextColor(ST77XX_WHITE);
+      tft.setCursor(20, 95);
+      tft.println(name);
+      tft.setTextColor(0xFD20); // Turuncu
+      tft.setCursor(20, 118);
+      tft.println("Wi-Fi Aktarimi...");
+      tft.drawRect(20, 140, SCREEN_W - 40, 14, ST77XX_WHITE);
+
       server.send(200, "application/json", "{\"status\":\"ok\"}");
     } else {
       isUploading = false;
@@ -616,6 +637,14 @@ void setupWebServer() {
 
   server.on("/upload_chunk", HTTP_POST, []() {
     lastUploadChunkTime = millis();
+    if (server.hasArg("idx") && server.hasArg("total")) {
+      int idx = server.arg("idx").toInt();
+      int total = server.arg("total").toInt();
+      if (total > 0 && idx % 4 == 0) {
+        int w = ((SCREEN_W - 44) * (idx + 1)) / total;
+        tft.fillRect(22, 142, w, 10, 0x07E0); // Yeşil dolgu
+      }
+    }
     server.send(200, "application/json", "{\"status\":\"ok\"}");
   }, []() {
     HTTPUpload& upload = server.upload();
@@ -708,14 +737,30 @@ void setupWebServer() {
 
   server.enableCORS(true);
 
-  // Captive Portal için Android ve Apple tespit endpoint'leri
+  // Captive Portal ve Is-Online Yanıtları (Telefonların Wi-Fi'den atmasını kesin olarak engeller)
   server.on("/generate_204", HTTP_GET, []() {
-    server.send_P(200, "text/html", INDEX_HTML);
+    server.send(204, "text/plain", "");
+  });
+  server.on("/gen_204", HTTP_GET, []() {
+    server.send(204, "text/plain", "");
   });
   server.on("/hotspot-detect.html", HTTP_GET, []() {
-    server.send_P(200, "text/html", INDEX_HTML);
+    server.send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+  });
+  server.on("/ncsi.txt", HTTP_GET, []() {
+    server.send(200, "text/plain", "Microsoft NCSI");
+  });
+  server.on("/connecttest.txt", HTTP_GET, []() {
+    server.send(200, "text/plain", "Microsoft Connect Test");
   });
   server.onNotFound([]() {
+    if (server.method() == HTTP_OPTIONS) {
+      server.sendHeader("Access-Control-Allow-Origin", "*");
+      server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      server.sendHeader("Access-Control-Allow-Headers", "*");
+      server.send(204);
+      return;
+    }
     server.sendHeader("Location", "http://192.168.4.1/", true);
     server.send(302, "text/plain", "");
   });
@@ -855,7 +900,7 @@ void setup() {
   // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
   if (currentStaSsid.length() > 0) {
     WiFi.mode(WIFI_AP_STA);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6, 0, 8);
     Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
     WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
     unsigned long startConn = millis();
@@ -869,11 +914,11 @@ void setup() {
     }
   } else {
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6, 0, 8);
   }
 
-  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gücünü ve hızı tavan yapar)
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal verici gücü (19.5 dBm)
+  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gucunu ve hizi tavan yapar)
+  WiFi.setTxPower(WIFI_POWER_17dBm);    // Kararli donanimsal verici gucu (voltaj cokusunu onler)
   Serial.print("Wi-Fi Hotspot: ");
   Serial.print(currentApSsid);
   Serial.print(" - IP: ");
@@ -1006,8 +1051,11 @@ void loop() {
   }
 
   unsigned long now = millis();
-  if (now - lastFrameTime >= frameDelayMs) {
-    lastFrameTime = now;
+  if (now - lastFrameTime < frameDelayMs) {
+    delay(2);
+    return;
+  }
+  lastFrameTime = now;
 
     // 1. Ses Çalma (16 kHz Mono PCM Senkronizasyonu)
 #if USE_AUDIO
@@ -1042,9 +1090,11 @@ void loop() {
     } else {
       videoFile.seek(0);
       resetFastReader();
+      if (videoFile.size() < 100000) { // Küçük dosya veya fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
+        delay(60);
+      }
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
 #endif
     }
-  }
 }

@@ -836,16 +836,34 @@ function handleFileSelect(files) {
 
 // ---- KESİNTİSİZ PARÇALI (CHUNKED) YÜKLEME MOTORU ----
 async function uploadFileChunked(file) {
-  const CHUNK_SIZE = 128 * 1024; // 128 KB parçalar
+  const CHUNK_SIZE = 32 * 1024; // 32 KB optimum parçalar (Wi-Fi kopmalarını %100 engeller)
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   const progBg = document.getElementById('upload-prog-bg');
   const progBar = document.getElementById('upload-prog-bar');
   progBg.style.display = 'block';
 
   showStatus(`"${file.name}" için yükleme oturumu açılıyor...`, 'info', true);
-  const startUrl = `/upload_start?name=${encodeURIComponent(file.name)}&size=${file.size}`;
-  const startRes = await fetch(startUrl, { method: 'POST' });
-  if (!startRes.ok) throw new Error("Cihaz yükleme oturumunu açamadı.");
+  
+  // Oturum açma - 4 kez otomatik deneme
+  let startSuccess = false;
+  let startAttempt = 0;
+  while (!startSuccess && startAttempt < 4) {
+    startAttempt++;
+    try {
+      const startUrl = `/upload_start?name=${encodeURIComponent(file.name)}&size=${file.size}`;
+      const startRes = await fetch(startUrl, { method: 'POST' });
+      if (startRes.ok) {
+        startSuccess = true;
+      } else {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    } catch(e) {
+      showStatus(`Cihaza bağlanılıyor (${startAttempt}/4)...`, 'info', true);
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  if (!startSuccess) throw new Error("Cihaz yükleme oturumunu açamadı. Wi-Fi bağlantınızı kontrol edin.");
 
   const startTime = Date.now();
 
@@ -856,7 +874,7 @@ async function uploadFileChunked(file) {
 
     let success = false;
     let attempt = 0;
-    while (!success && attempt < 4) {
+    while (!success && attempt < 5) {
       attempt++;
       try {
         const formData = new FormData();
@@ -871,17 +889,17 @@ async function uploadFileChunked(file) {
         if (res.ok) {
           success = true;
         } else {
-          showStatus(`Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/3)...`, 'info', true);
-          await new Promise(r => setTimeout(r, 300));
+          showStatus(`Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/5)...`, 'info', true);
+          await new Promise(r => setTimeout(r, 250));
         }
       } catch (err) {
-        showStatus(`Ağ sinyali dalgalandı, Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/3)...`, 'info', true);
-        await new Promise(r => setTimeout(r, 400));
+        showStatus(`Ağ sinyali dalgalandı, Parça ${c+1}/${totalChunks} tekrar deneniyor (${attempt}/5)...`, 'info', true);
+        await new Promise(r => setTimeout(r, 350));
       }
     }
 
     if (!success) {
-      await fetch(`/upload_abort?name=${encodeURIComponent(file.name)}`, { method: 'POST' });
+      await fetch(`/upload_abort?name=${encodeURIComponent(file.name)}`, { method: 'POST' }).catch(() => {});
       throw new Error(`Parça ${c+1}/${totalChunks} yüklenirken bağlantı koptu.`);
     }
 
@@ -891,6 +909,9 @@ async function uploadFileChunked(file) {
     const elapsed = (Date.now() - startTime) / 1000;
     const speedKb = elapsed > 0 ? ((end / 1024) / elapsed).toFixed(0) : 0;
     showStatus(`Yükleniyor: ${file.name} (%${pct}) - ${c+1}/${totalChunks} Parça [${speedKb} KB/s]`, 'info', true);
+
+    // Wi-Fi radyo ve beacon'ların nefes alması için minik mola (20 ms)
+    await new Promise(r => setTimeout(r, 20));
   }
 
   showStatus(`"${file.name}" SD karta yazıldı, oynatılıyor...`, 'info', true);
@@ -985,6 +1006,11 @@ async function convertAndUploadVideo(file) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
   }
 
+  // Dönüştürme esnasında Wi-Fi bağlantısının uykuya/boşa düşmesini engelleyen Kalp Atışı (Keepalive)
+  let heartbeatTimer = setInterval(() => {
+    fetch('/ping').catch(() => {});
+  }, 2000);
+
   try {
     showStatus('Video inceleniyor ve karelere ayrılıyor...', 'info', true);
     const video = document.createElement('video');
@@ -1076,6 +1102,7 @@ async function convertAndUploadVideo(file) {
   } catch(err) {
     showStatus('Yükleme hatası: ' + err.message, 'err');
   } finally {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
     if (wakeLock) {
       try { await wakeLock.release(); } catch(e){}
     }
