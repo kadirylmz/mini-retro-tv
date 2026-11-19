@@ -619,9 +619,11 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi AP Başlat (Orijinal Güçlü Mod - Kesintisiz Bağlantı)
+  // 4. Wi-Fi AP Başlat (Maksimum Çıkış Gücü ve Kesintisiz Yayın)
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(AP_SSID, AP_PASS);
+  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gücünü ve hızı tavan yapar)
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal verici gücü (19.5 dBm)
+  WiFi.softAP(AP_SSID, AP_PASS, 6);     // 6. Temiz Wi-Fi Kanalı (Kanal 1 çakışmalarını önler)
   Serial.print("Wi-Fi AP: ");
   Serial.print(AP_SSID);
   Serial.print(" - IP: ");
