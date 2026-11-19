@@ -1,6 +1,7 @@
 // =========================================================================
 //  Collectible Display - 1.3" IPS ST7789 + ESP32-S3 Mini Firmware
 //  Çift SPI (FSPI Ekran + HSPI 16GB MicroSD) + 25 FPS Akıcı Video Motoru
+//  MAX98357A I2S Ses + Ses Kısma/Açma (MUTE) + Çok Fonksiyonlu Buton + OSD
 // =========================================================================
 
 #include <Arduino.h>
@@ -12,26 +13,41 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <Preferences.h>
 #include <vector>
 
 #include "config.h"
 #include "web_page.h"
+
+#if USE_AUDIO
+#include <ESP_I2S.h>
+I2SClass i2s;
+bool audioReady = false;
+File audioFile;
+#endif
 
 // Donanım Nesneleri (Çift Donanımsal SPI)
 Adafruit_ST7789 tft(&SPI, TFT_CS, TFT_DC, TFT_RES);
 SPIClass sdSPI(HSPI);
 JPEGDEC jpeg;
 WebServer server(80);
+Preferences prefs;
 
 // Depolama Aygıtı (SD Kart veya Dahili Flash Yedek)
 fs::FS *storage = &SD;
 bool isSDActive = false;
 
-// Video Yönetimi
+// Video & Ses Yönetimi
 std::vector<String> playlist;
 int currentVideoIdx = -1;
 File videoFile;
 bool isUploading = false;
+
+// Ses Seviyesi ve MUTE Durumu (NVS Kalıcı Hafıza)
+uint8_t currentVolume = DEFAULT_VOLUME;
+bool isMuted = false;
+uint8_t lastUnmutedVolume = DEFAULT_VOLUME;
+unsigned long osdUntil = 0;
 
 // Kare Tamponu
 uint8_t *frameBuffer = nullptr;
@@ -65,10 +81,16 @@ inline int peekFastByte(File &f) {
   return fileReadBuf[fileReadPos];
 }
 
-// Zamanlama ve Buton
+// Zamanlama
 unsigned long lastFrameTime = 0;
 unsigned long frameDelayMs = 1000 / DEFAULT_FPS;
-unsigned long lastButtonPress = 0;
+
+// Buton Yönetimi (Tek Tık: Kanal, Çift Tık: Mute, Uzun Bas: Ses Kademesi)
+static int buttonClicks = 0;
+static unsigned long buttonDownTime = 0;
+static unsigned long lastReleaseTime = 0;
+static bool buttonPressed = false;
+static bool longPressHandled = false;
 
 // =========================================================================
 //  JPEGDEC Çizim Geri Çağrısı
@@ -96,7 +118,78 @@ void drawCRTStatic(int ms) {
 }
 
 // =========================================================================
-//  Bekleme Ekranı (Yatay Tasarım)
+//  OSD (On-Screen Display) Ses & Mute Göstergesi
+// =========================================================================
+void drawVolumeOSD() {
+  int boxW = 160;
+  int boxH = 26;
+  int boxX = (SCREEN_W - boxW) / 2;
+  int boxY = 10;
+
+  if (isMuted || currentVolume == 0) {
+    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_RED);
+    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_WHITE);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setCursor(boxX + 22, boxY + 9);
+    tft.print("SES KAPALI (MUTE)");
+  } else {
+    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, 0x10A2); // Koyu lacivert
+    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_GREEN);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_GREEN);
+    tft.setCursor(boxX + 10, boxY + 9);
+    tft.printf("SES: %%%d", currentVolume);
+
+    // Ses İlerleme Çubuğu
+    int barX = boxX + 75;
+    int barY = boxY + 8;
+    int barMaxW = 75;
+    int barH = 10;
+    tft.drawRect(barX, barY, barMaxW, barH, ST77XX_WHITE);
+    int fillW = map(currentVolume, 0, 100, 0, barMaxW - 2);
+    if (fillW > 0) {
+      tft.fillRect(barX + 1, barY + 1, fillW, barH - 2, ST77XX_GREEN);
+    }
+  }
+}
+
+void triggerOSD() {
+  osdUntil = millis() + 1800; // 1.8 saniye göster
+}
+
+void setVolume(uint8_t vol) {
+  if (vol > 100) vol = 100;
+  currentVolume = vol;
+  if (currentVolume == 0) {
+    isMuted = true;
+  } else {
+    isMuted = false;
+    lastUnmutedVolume = currentVolume;
+  }
+  prefs.putUChar("vol", currentVolume);
+  prefs.putBool("muted", isMuted);
+  triggerOSD();
+  Serial.printf("Ses Seviyesi: %d%% %s\n", currentVolume, isMuted ? "(MUTE)" : "");
+}
+
+void toggleMute() {
+  if (isMuted || currentVolume == 0) {
+    isMuted = false;
+    currentVolume = (lastUnmutedVolume > 0) ? lastUnmutedVolume : DEFAULT_VOLUME;
+  } else {
+    lastUnmutedVolume = (currentVolume > 0) ? currentVolume : DEFAULT_VOLUME;
+    isMuted = true;
+    currentVolume = 0;
+  }
+  prefs.putUChar("vol", currentVolume);
+  prefs.putBool("muted", isMuted);
+  triggerOSD();
+  Serial.printf("Mute Durumu: %s (Ses: %d%%)\n", isMuted ? "SES KAPALI (MUTE)" : "SES ACIK", currentVolume);
+}
+
+// =========================================================================
+//  Bekleme Ekranı
 // =========================================================================
 void drawStandbyScreen() {
   tft.fillScreen(ST77XX_BLACK);
@@ -192,7 +285,6 @@ void refreshPlaylist() {
     }
   }
 
-  // Kök dizinde de video varsa listeye al
   if (playlist.empty()) {
     File rootRoot = storage->open("/");
     if (rootRoot) {
@@ -217,9 +309,10 @@ void refreshPlaylist() {
 //  Seçilen Videoyu Başlat
 // =========================================================================
 void playVideoByIndex(int idx) {
-  if (videoFile) {
-    videoFile.close();
-  }
+  if (videoFile) videoFile.close();
+#if USE_AUDIO
+  if (audioFile) audioFile.close();
+#endif
   resetFastReader();
 
   if (idx < 0 || idx >= (int)playlist.size()) {
@@ -243,6 +336,15 @@ void playVideoByIndex(int idx) {
     drawStandbyScreen();
   } else {
     Serial.printf("Oynatılıyor: %s (%u bayt) [25 FPS Akıcı Mod]\n", fullPath.c_str(), videoFile.size());
+#if USE_AUDIO
+    String pcmPath = fullPath.substring(0, fullPath.lastIndexOf('.')) + ".pcm";
+    if (storage->exists(pcmPath)) {
+      audioFile = storage->open(pcmPath, "r");
+      Serial.printf("Eşleşen PCM Ses Dosyası Açıldı: %s (%u bayt)\n", pcmPath.c_str(), audioFile.size());
+    } else {
+      Serial.println("Bu videoya ait ses dosyası yok (Sessiz mod)");
+    }
+#endif
     drawCRTStatic(100);
   }
 }
@@ -261,12 +363,29 @@ void setupWebServer() {
     server.send_P(200, "text/html", INDEX_HTML);
   });
 
+  server.on("/volume", HTTP_GET, []() {
+    if (server.hasArg("val")) {
+      int val = server.arg("val").toInt();
+      setVolume(val);
+    }
+    String json = "{\"volume\":" + String(currentVolume) + ",\"muted\":" + (isMuted ? "true" : "false") + "}";
+    server.send(200, "application/json", json);
+  });
+
+  server.on("/mute", HTTP_GET, []() {
+    toggleMute();
+    String json = "{\"volume\":" + String(currentVolume) + ",\"muted\":" + (isMuted ? "true" : "false") + "}";
+    server.send(200, "application/json", json);
+  });
+
   server.on("/list", HTTP_GET, []() {
     size_t total = isSDActive ? (SD.totalBytes()) : LittleFS.totalBytes();
     size_t used = isSDActive ? (SD.usedBytes()) : LittleFS.usedBytes();
 
     String json = "{\"total\":" + String(total) + 
                   ",\"used\":" + String(used) + 
+                  ",\"volume\":" + String(currentVolume) + 
+                  ",\"muted\":" + (isMuted ? "true" : "false") + 
                   ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx] : "") + "\"" +
                   ",\"files\":[";
 
@@ -277,9 +396,12 @@ void setupWebServer() {
       size_t s = f ? f.size() : 0;
       if (f) f.close();
 
+      String pcmP = p.substring(0, p.lastIndexOf('.')) + ".pcm";
+      bool hasAudio = storage->exists(pcmP);
+
       if (!first) json += ",";
       first = false;
-      json += "{\"name\":\"" + name + "\",\"size\":" + String(s) + "}";
+      json += "{\"name\":\"" + name + "\",\"size\":" + String(s) + ",\"hasAudio\":" + (hasAudio ? "true" : "false") + "}";
     }
     json += "]}";
     server.send(200, "application/json", json);
@@ -308,6 +430,16 @@ void setupWebServer() {
           videoFile.close();
         }
         storage->remove(path);
+
+        // Varsa eşleşen .pcm ses dosyasını da sil
+        String pcmPath = path.substring(0, path.lastIndexOf('.')) + ".pcm";
+        if (storage->exists(pcmPath)) {
+#if USE_AUDIO
+          if (audioFile) audioFile.close();
+#endif
+          storage->remove(pcmPath);
+        }
+
         refreshPlaylist();
         if (playlist.empty()) drawStandbyScreen();
         else playVideoByIndex(0);
@@ -331,6 +463,9 @@ void setupWebServer() {
     if (upload.status == UPLOAD_FILE_START) {
       isUploading = true;
       if (videoFile) videoFile.close();
+#if USE_AUDIO
+      if (audioFile) audioFile.close();
+#endif
 
       String filename = upload.filename;
       if (filename.lastIndexOf('/') >= 0) filename = filename.substring(filename.lastIndexOf('/') + 1);
@@ -354,7 +489,7 @@ void setupWebServer() {
 }
 
 // =========================================================================
-//  YÜKSEK HIZLI TAMPONLU KARE OKUYUCU (Chunk-Buffered Streaming)
+//  YÜKSEK HIZLI TAMPONLU KARE OKUYUCU
 // =========================================================================
 bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t maxLimit) {
   frameSize = 0;
@@ -423,7 +558,23 @@ void setup() {
 
   frameBuffer = (uint8_t *)malloc(frameBufferSize);
 
-  // 2. SD Kartı Başlat (HSPI: SCK=12, MISO=13, MOSI=11, CS=10)
+  // Hafızadan son ses ve mute ayarını yükle
+  prefs.begin("retro_tv", false);
+  currentVolume = prefs.getUChar("vol", DEFAULT_VOLUME);
+  isMuted = prefs.getBool("muted", false);
+  lastUnmutedVolume = (currentVolume > 0) ? currentVolume : DEFAULT_VOLUME;
+
+#if USE_AUDIO
+  // 2. I2S Ses Başlat (MAX98357A: BCLK=7, LRC=8, DIN=9)
+  i2s.setPins(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DIN);
+  if (i2s.begin(I2S_MODE_STD, AUDIO_RATE, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO)) {
+    audioReady = true;
+    Serial.printf(">>> I2S SES AMFISI AKTIF (MAX98357A) - Ses: %%%d %s <<<\n", 
+                  currentVolume, isMuted ? "(MUTE)" : "");
+  }
+#endif
+
+  // 3. SD Kartı Başlat (HSPI: SCK=12, MISO=13, MOSI=11, CS=10)
   Serial.println("SD Kart baslatiliyor (HSPI: 10, 11, 12, 13)...");
   sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
 
@@ -442,7 +593,7 @@ void setup() {
     isSDActive = false;
   }
 
-  // 3. Wi-Fi AP Başlat
+  // 4. Wi-Fi AP Başlat
   WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASS);
   Serial.print("Wi-Fi AP: ");
@@ -461,15 +612,59 @@ void setup() {
 }
 
 // =========================================================================
+//  BUTON KONTROLÜ (Tek Tık: Kanal, Çift Tık: Mute, Uzun Bas: Ses Kademesi)
+// =========================================================================
+void handleButton() {
+  int btnState = digitalRead(PIN_BUTTON);
+  unsigned long now = millis();
+
+  if (btnState == LOW) { // Butona basılı
+    if (!buttonPressed) {
+      buttonPressed = true;
+      buttonDownTime = now;
+      longPressHandled = false;
+    } else {
+      // Uzun basış (> 1200 ms): Ses kademesi döngüsü
+      if (!longPressHandled && (now - buttonDownTime >= 1200)) {
+        longPressHandled = true;
+        buttonClicks = 0;
+        if (isMuted || currentVolume == 0) setVolume(25);
+        else if (currentVolume < 50) setVolume(50);
+        else if (currentVolume < 75) setVolume(75);
+        else if (currentVolume < 100) setVolume(100);
+        else setVolume(0); // Sessiz / Mute
+      }
+    }
+  } else { // Buton bırakıldı
+    if (buttonPressed) {
+      buttonPressed = false;
+      unsigned long duration = now - buttonDownTime;
+      if (!longPressHandled && duration > 40) { // Geçerli basış
+        buttonClicks++;
+        lastReleaseTime = now;
+      }
+    }
+  }
+
+  // Tıklama zaman aşımı (350 ms içinde ikinci tık gelmezse karar ver)
+  if (buttonClicks > 0 && (now - lastReleaseTime > 350)) {
+    if (buttonClicks == 1) {
+      // TEK TIK: Sonraki Kanal
+      nextChannel();
+    } else if (buttonClicks >= 2) {
+      // ÇİFT TIK: Sesi Kapat / Aç (MUTE TOGGLE)
+      toggleMute();
+    }
+    buttonClicks = 0;
+  }
+}
+
+// =========================================================================
 //  LOOP
 // =========================================================================
 void loop() {
   server.handleClient();
-
-  if (digitalRead(PIN_BUTTON) == LOW && (millis() - lastButtonPress > 400)) {
-    lastButtonPress = millis();
-    nextChannel();
-  }
+  handleButton();
 
   if (isUploading) {
     delay(10);
@@ -485,15 +680,42 @@ void loop() {
   if (now - lastFrameTime >= frameDelayMs) {
     lastFrameTime = now;
 
+    // 1. Ses Çalma (16 kHz Mono PCM Senkronizasyonu)
+#if USE_AUDIO
+    if (audioReady && audioFile && audioFile.available()) {
+      int16_t audioBuf[640]; // 40 ms @ 16 kHz = 640 örnek
+      int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
+      if (nBytes > 0) {
+        int samples = nBytes / 2;
+        int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
+        for (int i = 0; i < samples; i++) {
+          audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
+        }
+        i2s.write((uint8_t *)audioBuf, nBytes);
+      }
+    } else if (audioFile) {
+      audioFile.seek(0); // Ses bittiğinde video ile birlikte başa sar
+    }
+#endif
+
+    // 2. Video Kare Çizimi
     size_t frameSize = 0;
     if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
       if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
         jpeg.decode(0, 0, 0);
         jpeg.close();
+
+        // OSD Gösterimi (Ses değiştirildiğinde veya Mute yapıldığında)
+        if (millis() < osdUntil) {
+          drawVolumeOSD();
+        }
       }
     } else {
       videoFile.seek(0);
       resetFastReader();
+#if USE_AUDIO
+      if (audioFile) audioFile.seek(0);
+#endif
     }
   }
 }

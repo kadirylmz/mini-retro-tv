@@ -5,7 +5,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collectible Display - Medya Paneli</title>
+<title>Collectible Display - Medya & Ses Paneli</title>
 <style>
 :root {
   --bg: #0d0f17;
@@ -17,6 +17,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(<!DOCTYPE html>
   --border: #23273a;
   --danger: #ff4444;
   --success: #00e676;
+  --warning: #ffb300;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 body {
@@ -90,6 +91,85 @@ h1 {
   width: 0%;
   transition: width 0.3s;
 }
+
+/* Ses Kontrolleri */
+.vol-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: #252839;
+  outline: none;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent2);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0,229,255,0.6);
+}
+.vol-badge {
+  font-weight: bold;
+  font-size: 15px;
+  min-width: 45px;
+  text-align: right;
+  color: var(--accent2);
+}
+.quick-vol {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.btn-vol {
+  flex: 1;
+  min-width: 60px;
+  padding: 8px 4px;
+  font-size: 12px;
+  text-align: center;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+.btn-vol:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.btn-mute {
+  background: rgba(255,68,68,0.15);
+  border-color: var(--danger);
+  color: var(--danger);
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+.btn-mute.is-muted {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255,68,68,0.5);
+}
+
 .upload-zone {
   border: 2px dashed var(--border);
   border-radius: 12px;
@@ -188,15 +268,54 @@ h1 {
   width: 160px;
   height: 160px;
 }
+.chk-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(0,0,0,0.2);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
 </style>
 </head>
 <body>
 
 <header>
   <h1>🎬 COLLECTIBLE DISPLAY</h1>
-  <div class="subtitle">1.3" IPS Yatay Ekran - Kablosuz Medya Paneli</div>
+  <div class="subtitle">1.3" IPS Yatay Ekran - Medya & Ses Paneli</div>
 </header>
 
+<!-- SES KONTROL KARTI -->
+<div class="card">
+  <h2>
+    <span>🔊 Hoparlör & Ses Kontrolü</span>
+    <span id="vol-status-text" style="font-size:12px;color:var(--accent2);">Ses: %70</span>
+  </h2>
+  <div class="vol-container">
+    <span style="font-size:18px;">🔈</span>
+    <input type="range" class="vol-slider" id="vol-slider" min="0" max="100" value="70" oninput="onSliderMove(this.value)" onchange="sendVolume(this.value)">
+    <span style="font-size:18px;">🔊</span>
+    <span class="vol-badge" id="vol-pct">%70</span>
+  </div>
+
+  <button class="btn-mute" id="btn-mute" onclick="toggleMute()">
+    <span id="mute-icon">🔇</span> <span id="mute-text">Sesi Kapat (MUTE)</span>
+  </button>
+
+  <div class="quick-vol">
+    <button class="btn-vol" onclick="setQuickVol(0)">🔇 %0 (Sessiz)</button>
+    <button class="btn-vol" onclick="setQuickVol(25)">🔉 %25</button>
+    <button class="btn-vol" onclick="setQuickVol(50)">🔉 %50</button>
+    <button class="btn-vol" onclick="setQuickVol(75)">🔊 %75</button>
+    <button class="btn-vol" onclick="setQuickVol(100)">🔊 %100</button>
+  </div>
+</div>
+
+<!-- HAFIZA KARTI -->
 <div class="card">
   <h2><span>16 GB SD Kart Hafıza Durumu</span><span id="conn-badge" style="font-size:11px;color:var(--success);">● Yayında</span></h2>
   <div class="stat-grid">
@@ -214,19 +333,25 @@ h1 {
   </div>
 </div>
 
+<!-- FOTOĞRAF / VİDEO YÜKLEME KARTI -->
 <div class="card">
   <h2>Fotoğraf veya Video Yükle</h2>
   <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div style="font-size:32px;margin-bottom:8px;">📷 📼</div>
     <div style="font-weight:600;margin-bottom:4px;">Herhangi Bir Fotoğraf veya Video Seçin</div>
     <div style="font-size:12px;color:var(--text-dim);">MP4, MOV, GIF, JPG, PNG, WEBP — 240x240'a Otomatik Dönüştürülür</div>
-    <input type="file" id="file-input" accept="image/*,video/*,.mjpeg" style="display:none" onchange="handleFileSelect(this.files)">
+    <input type="file" id="file-input" accept="image/*,video/*,.mjpeg,.pcm" style="display:none" onchange="handleFileSelect(this.files)">
   </div>
 
   <div class="crop-options">
     <div class="crop-opt active" id="opt-cover" onclick="setFitMode('cover')">Tam Ekran Doldur (Kırp)</div>
     <div class="crop-opt" id="opt-contain" onclick="setFitMode('contain')">Sığdır (Siyah Çerçeve)</div>
   </div>
+
+  <label class="chk-label">
+    <input type="checkbox" id="chk-audio" checked>
+    <span>🔊 Videonun sesini de dönüştür ve karta yükle (16 kHz PCM)</span>
+  </label>
 
   <canvas id="preview-canvas" width="240" height="240"></canvas>
 
@@ -236,6 +361,7 @@ h1 {
   </div>
 </div>
 
+<!-- MEDYA LİSTESİ KARTI -->
 <div class="card">
   <h2><span>Yüklü Medyalar</span><button class="btn btn-small" onclick="loadVideos()" style="background:#23273a">Yenile</button></h2>
   <div id="video-list">
@@ -247,6 +373,9 @@ h1 {
 let totalBytes = 0;
 let usedBytes = 0;
 let fitMode = 'cover';
+let currentVol = 70;
+let isMuted = false;
+let lastUnmutedVol = 70;
 
 function setFitMode(mode) {
   fitMode = mode;
@@ -271,6 +400,59 @@ function hideStatus() {
   box.className = 'status-msg';
 }
 
+// ---- SES VE MUTE YÖNETİMİ ----
+function updateVolUI(vol, muted) {
+  currentVol = parseInt(vol);
+  isMuted = !!muted;
+  document.getElementById('vol-slider').value = currentVol;
+  document.getElementById('vol-pct').innerText = '%' + currentVol;
+
+  const btnMute = document.getElementById('btn-mute');
+  const muteIcon = document.getElementById('mute-icon');
+  const muteText = document.getElementById('mute-text');
+  const volStat = document.getElementById('vol-status-text');
+
+  if (isMuted || currentVol === 0) {
+    btnMute.className = 'btn-mute is-muted';
+    muteIcon.innerText = '🔊';
+    muteText.innerText = 'Sesi Aç (Unmute: %' + (lastUnmutedVol || 70) + ')';
+    volStat.innerText = '🔇 SES KAPALI (MUTE)';
+    volStat.style.color = 'var(--danger)';
+  } else {
+    lastUnmutedVol = currentVol;
+    btnMute.className = 'btn-mute';
+    muteIcon.innerText = '🔇';
+    muteText.innerText = 'Sesi Kapat (MUTE)';
+    volStat.innerText = 'Ses: %' + currentVol;
+    volStat.style.color = 'var(--accent2)';
+  }
+}
+
+function onSliderMove(val) {
+  document.getElementById('vol-pct').innerText = '%' + val;
+}
+
+async function sendVolume(val) {
+  try {
+    const res = await fetch('/volume?val=' + val);
+    const data = await res.json();
+    updateVolUI(data.volume, data.muted);
+  } catch(e) { console.error(e); }
+}
+
+async function setQuickVol(val) {
+  sendVolume(val);
+}
+
+async function toggleMute() {
+  try {
+    const res = await fetch('/mute');
+    const data = await res.json();
+    updateVolUI(data.volume, data.muted);
+  } catch(e) { console.error(e); }
+}
+
+// ---- VİDEOLAR VE VERİLER ----
 async function loadVideos() {
   try {
     const res = await fetch('/list');
@@ -284,6 +466,10 @@ async function loadVideos() {
     const pct = totalBytes > 0 ? (usedBytes / totalBytes) * 100 : 0;
     document.getElementById('space-bar').style.width = pct + '%';
 
+    if (data.volume !== undefined) {
+      updateVolUI(data.volume, data.muted);
+    }
+
     const listEl = document.getElementById('video-list');
     if (data.files.length === 0) {
       listEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:16px;">Henüz video yüklenmemiş.<br>Yukarıdan fotoğraf veya video seçin!</div>';
@@ -293,7 +479,7 @@ async function loadVideos() {
     listEl.innerHTML = data.files.map((f, i) => `
       <div class="video-item ${f.name === data.active ? 'active' : ''}">
         <div class="video-info">
-          <div class="video-name">${f.name} ${f.name === data.active ? '<span style="color:var(--accent);font-size:11px;">[Oynatılıyor]</span>' : ''}</div>
+          <div class="video-name">${f.name} ${f.hasAudio ? '🔊' : ''} ${f.name === data.active ? '<span style="color:var(--accent);font-size:11px;">[Oynatılıyor]</span>' : ''}</div>
           <div class="video-meta">${formatBytes(f.size)}</div>
         </div>
         <div class="video-actions">
@@ -337,7 +523,7 @@ function handleFileSelect(files) {
   const file = files[0];
   const name = file.name.toLowerCase();
 
-  if (name.endsWith('.mjpeg')) {
+  if (name.endsWith('.mjpeg') || name.endsWith('.pcm')) {
     uploadRawFile(file);
   } else if (file.type.startsWith('image/') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || name.endsWith('.webp') || name.endsWith('.bmp')) {
     convertAndUploadPhoto(file);
@@ -346,7 +532,7 @@ function handleFileSelect(files) {
   }
 }
 
-function uploadRawFile(file) {
+function uploadRawFile(file, onDone) {
   showStatus('Yükleniyor: ' + file.name, 'info', true);
   const progBg = document.getElementById('upload-prog-bg');
   const progBar = document.getElementById('upload-prog-bar');
@@ -362,15 +548,18 @@ function uploadRawFile(file) {
     if (e.lengthComputable) {
       const p = Math.round((e.loaded / e.total) * 100);
       progBar.style.width = p + '%';
-      showStatus(`Yükleniyor: %${p} (${formatBytes(e.loaded)} / ${formatBytes(e.total)})`, 'info', true);
+      showStatus(`Yükleniyor: ${file.name} (%${p})`, 'info', true);
     }
   };
   xhr.onload = () => {
     progBg.style.display = 'none';
     if (xhr.status === 200) {
-      showStatus('Medya başarıyla yüklendi ve ekranda açıldı! 🎉', 'ok');
-      loadVideos();
-      setTimeout(hideStatus, 4000);
+      if (onDone) onDone();
+      else {
+        showStatus('Medya başarıyla yüklendi! 🎉', 'ok');
+        loadVideos();
+        setTimeout(hideStatus, 4000);
+      }
     } else {
       showStatus('Yükleme hatası: ' + xhr.responseText, 'err');
     }
@@ -382,7 +571,7 @@ function uploadRawFile(file) {
   xhr.send(formData);
 }
 
-// 1. FOTOĞRAF -> 240x240 MJPEG DÖNÜŞTÜRÜCÜ
+// 1. FOTOĞRAF DÖNÜŞTÜRÜCÜ
 function convertAndUploadPhoto(file) {
   showStatus('Fotoğraf işleniyor ve 240x240 boyutuna ölçekleniyor...', 'info', true);
   const img = new Image();
@@ -411,7 +600,6 @@ function convertAndUploadPhoto(file) {
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Fotoğrafı tek kare MJPEG olarak kodla (döngüde sabit kalır)
     canvas.toBlob((blob) => {
       const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
       const mjpegFile = new File([blob], outName, { type: 'video/x-motion-jpeg' });
@@ -421,7 +609,38 @@ function convertAndUploadPhoto(file) {
   };
 }
 
-// 2. VİDEO -> 240x240 MJPEG DÖNÜŞTÜRÜCÜ
+// 2. SES AYIKLAYICI (Web Audio API 16 kHz Mono PCM)
+async function extractPcm(file, maxDuration) {
+  try {
+    const ab = await file.arrayBuffer();
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const dec = await ac.decodeAudioData(ab);
+    ac.close();
+
+    const dur = Math.min(dec.duration, maxDuration);
+    const SR = 16000;
+    const len = Math.max(1, Math.floor(dur * SR));
+    const off = new OfflineAudioContext(1, len, SR);
+    const src = off.createBufferSource();
+    src.buffer = dec;
+    src.connect(off.destination);
+    src.start(0);
+
+    const rendered = await off.startRendering();
+    const ch = rendered.getChannelData(0);
+    const pcm = new Int16Array(ch.length);
+    for (let i = 0; i < ch.length; i++) {
+      let s = Math.max(-1, Math.min(1, ch[i]));
+      pcm[i] = s < 0 ? s * 32768 : s * 32767;
+    }
+    return new Blob([pcm.buffer], { type: 'application/octet-stream' });
+  } catch(e) {
+    console.warn("Ses ayrıştırılamadı veya video sessiz:", e);
+    return null;
+  }
+}
+
+// 3. VİDEO DÖNÜŞTÜRÜCÜ (Kareler + Ses)
 async function convertAndUploadVideo(file) {
   showStatus('Video inceleniyor ve karelere ayrılıyor...', 'info', true);
   const video = document.createElement('video');
@@ -434,7 +653,7 @@ async function convertAndUploadVideo(file) {
     video.onerror = rej;
   });
 
-  const duration = Math.min(video.duration, 45); // 45 saniyeye kadar video
+  const duration = Math.min(video.duration, 45); // Maksimum 45 saniye
   const fps = 20; // 20 FPS ideal
   const totalFrames = Math.floor(duration * fps);
   const canvas = document.getElementById('preview-canvas');
@@ -459,7 +678,7 @@ async function convertAndUploadVideo(file) {
       const sw = 240 / scale;
       const sh = 240 / scale;
       const sx = (video.videoWidth - sw) / 2;
-      const sy = (video.videoHeight - sh) / 2;
+      sy = (video.videoHeight - sh) / 2;
       ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 240, 240);
     } else {
       const scale = Math.min(240 / video.videoWidth, 240 / video.videoHeight);
@@ -478,13 +697,39 @@ async function convertAndUploadVideo(file) {
     showStatus(`Dönüştürülüyor: Kare ${i+1}/${totalFrames} (%${pct})`, 'info', true);
   }
 
+  // Ses ayıklama (seçiliyse)
+  let pcmFile = null;
+  const wantAudio = document.getElementById('chk-audio').checked;
+  if (wantAudio) {
+    showStatus('Videonun sesi 16 kHz mono formatına ayıklanıyor...', 'info', true);
+    const pcmBlob = await extractPcm(file, duration);
+    if (pcmBlob) {
+      const pcmName = file.name.substring(0, file.name.lastIndexOf('.')) + '.pcm';
+      pcmFile = new File([pcmBlob], pcmName, { type: 'application/octet-stream' });
+    }
+  }
+
   showStatus('Video SD karta paketleniyor...', 'info', true);
   const outName = file.name.substring(0, file.name.lastIndexOf('.')) + '.mjpeg';
   const mjpegBlob = new Blob(blobs, { type: 'video/x-motion-jpeg' });
   const mjpegFile = new File([mjpegBlob], outName, { type: 'video/x-motion-jpeg' });
-
   URL.revokeObjectURL(video.src);
-  uploadRawFile(mjpegFile);
+
+  if (pcmFile) {
+    uploadRawFile(pcmFile, () => {
+      uploadRawFile(mjpegFile, () => {
+        showStatus('Video ve Ses başarıyla yüklendi ve açıldı! 🎉', 'ok');
+        loadVideos();
+        setTimeout(hideStatus, 4000);
+      });
+    });
+  } else {
+    uploadRawFile(mjpegFile, () => {
+      showStatus('Video başarıyla yüklendi ve açıldı! 🎉', 'ok');
+      loadVideos();
+      setTimeout(hideStatus, 4000);
+    });
+  }
 }
 
 loadVideos();

@@ -40,8 +40,26 @@ Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD
 
 ---
 
-### C. Kontrol Butonu
-* **BOOT Butonu / Harici Buton:** `GPIO 0` (Kısa basış sonraki kanala/videoya geçer).
+### C. MAX98357A I2S 3W Ses Amfisi + Hoparlör ↔ ESP32-S3
+
+| MAX98357A Pini | ESP32-S3 Pini | Açıklama / Not |
+| :--- | :--- | :--- |
+| **VIN** | **5V (5U)** | 2.5V–5.5V besleme (ESP32 3.3V hattını yormaz, temiz ve gür ses verir) |
+| **GND** | **GND** | Ortak Toprak |
+| **BCLK** | **GPIO 7** | I2S Bit Clock (Saat) |
+| **LRC** | **GPIO 8** | I2S Word Select (Sol/Sağ Kanal) |
+| **DIN** | **GPIO 9** | I2S Data In (Ses Verisi) |
+| **`+` / `-`** | **Mini Hoparlör** | 8Ω 1W mini hoparlör uçlarına bağlanır |
+
+*(Not: Amfi üzerindeki `SD` ve `GAIN` pinleri boş bırakılır; varsayılan 9 dB ses kazancında çalışır).*
+
+---
+
+### D. Çok Fonksiyonlu Kontrol Butonu (`GPIO 0` - BOOT Butonu)
+
+* **Tek Kısa Basış:** Sonraki video / kanala geçiş (`nextChannel()`).
+* **Çift Tıklama (Hızlı 2 Basış):** **SESİ AÇ / KAPAT (MUTE TOGGLE)!** Ekranda anında kırmızı `[ SES KAPALI (MUTE) ]` veya yeşil `[ SES: %70 ]` OSD'si çıkar.
+* **Uzun Basış (> 1.2 saniye):** Ses kademesi döngüsü (`%25` $\rightarrow$ `%50` $\rightarrow$ `%75` $\rightarrow$ `%100` $\rightarrow$ `%0`). Ekranda canlı seviye çubuğu gösterilir.
 
 ---
 

@@ -16,14 +16,23 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
    - 16GB MicroSD modülü bağımsız `HSPI` (GPIO 10, 11, 12, 13) veriyolunda çalışır; CS çakışması sıfıra indirilmiştir.
    - 4096 baytlık RAM tamponlu (chunk-buffered) okuma motoru sayesinde takılma olmadan pürüzsüz 25 FPS oynatım sağlar.
 
-2. **✨ Tarayıcıdan Tek Tıkla Fotoğraf & Video Yükleme (Otomatik Dönüştürme):**
+2. **🔊 Gerçek Zamanlı Ses Kontrolü, Kısma ve Kapatma (MUTE):**
+   - **Web Panelinden Kontrol:** %0 – %100 ses kaydırıcısı, tek tıkla **"Sesi Kapat (MUTE)"** butonu ve hızlı ses kademeleri (%0, %25, %50, %75, %100).
+   - **Fiziksel Buton Kontrolü (Cihaz Üzerinden):**
+     - **Tek tık:** Sonraki kanala/videoya geçiş.
+     - **Çift tık (hızlı 2 basış):** **SESİ AÇ / KAPAT (MUTE TOGGLE)!**
+     - **Uzun basış (>1.2 sn):** Ses kademeleri arasında geçiş (%0 $\rightarrow$ %25 $\rightarrow$ %50 $\rightarrow$ %75 $\rightarrow$ %100).
+   - **Tüplü TV OSD Göstergesi (On-Screen Display):** Ses seviyesi değiştiğinde veya sessize alındığında ekranda 1.8 saniye boyunca canlı `[ 🔇 SES KAPALI (MUTE) ]` veya `[ 🔊 SES: %70 ████▒▒▒▒ ]` retro çubuğu belirir.
+   - **Kalıcı Hafıza (NVS):** Cihaz kapatılıp açılsa bile son ses seviyesi ve mute durumu otomatik hatırlanır.
+
+3. **✨ Tarayıcıdan Tek Tıkla Fotoğraf & Video (+Ses) Yükleme:**
    - Herhangi bir ek programa veya FFmpeg komutlarına ihtiyaç yoktur!
    - `CollectibleDisplay` Wi-Fi ağına bağlanıp tarayıcıdan `http://192.168.4.1` adresine girildiğinde:
-     - **İstediğiniz Fotoğrafı Seçin (JPG, PNG, WEBP, BMP):** Tarayıcı içinde anında 240×240 çözünürlüğe ölçeklenip formatlanır ve SD karta kaydedilerek ekranda gösterilir.
-     - **İstediğiniz Videoyu Seçin (MP4, MOV, WEBM):** Tarayıcı HTML5 Canvas motoru videoyu 20 FPS'de kare kare işler, 240×240 boyutuna getirir ve MJPEG formatında MicroSD karta yükler.
-     - **Kırpma Modları:** "Tam Ekran Doldur (Kırp)" veya "Sığdır (Siyah Çerçeve)" seçenekleriyle tam kontrol.
+     - **Fotoğraf:** JPG, PNG, WEBP, BMP anında 240×240'a dönüştürülüp ekranda sabit gösterilir.
+     - **Video + Ses:** MP4, MOV, WEBM seçildiğinde tarayıcı Web Audio API ile videonun sesini 16 kHz mono PCM formatına ayıklar, görüntüyü 240×240 20 FPS MJPEG yapar ve ikisini senkronize şekilde SD karta yükler.
+     - İsteğe bağlı olarak *"Videonun sesini de aktar"* seçeneği kapatılarak sadece sessiz video yüklenebilir.
 
-3. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
+4. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
    - 1.3" ST7789 ekranın sol kenarındaki 7-pin header ve dişi DuPont kablolar için sol taraftan **1 cm (10 mm) genişletildi** (`pcb_w = 59.0 mm`, toplam dış genişlik `65.9 mm`).
    - Ekran penceresi 1.3" kare aktif alan için `27.5 × 26.5 mm` olarak hassas ayarlandı.
    - Geçmeli kapak tasarımı sayesinde vidaya ihtiyaç duymaz.
