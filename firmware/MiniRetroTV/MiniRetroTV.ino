@@ -15,6 +15,7 @@
 #include <WebServer.h>
 #include <Preferences.h>
 #include <vector>
+#include "esp_private/brownout.h"
 
 #include "config.h"
 #include "web_page.h"
@@ -528,9 +529,10 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 //  SETUP
 // =========================================================================
 void setup() {
+  esp_brownout_disable(); // Pilde voltaj çöküşü resetlerini ve ekran titremesini engeller
   Serial.begin(115200);
   Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print kilitlenmesini engeller
-  delay(200);
+  delay(100);
   Serial.println("\n=============================================");
   Serial.println("   🎬 COLLECTIBLE DISPLAY - 16GB SD EDITION");
   Serial.println("=============================================");
@@ -604,8 +606,9 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi AP Başlat
+  // 4. Wi-Fi AP Başlat (Düşük güç modu - pilde voltaj dalgalanmasını engeller)
   WiFi.mode(WIFI_AP);
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
   WiFi.softAP(AP_SSID, AP_PASS);
   Serial.print("Wi-Fi AP: ");
   Serial.print(AP_SSID);

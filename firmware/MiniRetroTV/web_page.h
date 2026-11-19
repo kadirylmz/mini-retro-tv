@@ -348,6 +348,18 @@ h1 {
     <div class="crop-opt" id="opt-contain" onclick="setFitMode('contain')">Sığdır (Siyah Çerçeve)</div>
   </div>
 
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;background:rgba(0,0,0,0.2);padding:8px 12px;border-radius:6px;border:1px solid var(--border);">
+    <span style="font-size:13px;color:var(--text-dim);">Videonun Ne Kadarı Yüklensin?</span>
+    <select id="sel-duration" style="background:#151824;color:var(--accent2);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-weight:bold;outline:none;">
+      <option value="9999" selected>Tüm Video (Tamamı - Kesme Yok)</option>
+      <option value="30">İlk 30 Saniye (Kısa Klip)</option>
+      <option value="60">İlk 1 Dakika</option>
+      <option value="180">İlk 3 Dakika</option>
+      <option value="300">İlk 5 Dakika</option>
+      <option value="600">İlk 10 Dakika</option>
+    </select>
+  </div>
+
   <label class="chk-label">
     <input type="checkbox" id="chk-audio" checked>
     <span>🔊 Videonun sesini de dönüştür ve karta yükle (16 kHz PCM)</span>
@@ -653,7 +665,8 @@ async function convertAndUploadVideo(file) {
     video.onerror = rej;
   });
 
-  const duration = Math.min(video.duration, 45); // Maksimum 45 saniye
+  const maxDur = parseFloat(document.getElementById('sel-duration').value) || 9999;
+  const duration = Math.min(video.duration, maxDur); // Kullanıcının videosunun tamamını veya seçilen süreyi dönüştür
   const fps = 20; // 20 FPS ideal
   const totalFrames = Math.floor(duration * fps);
   const canvas = document.getElementById('preview-canvas');
