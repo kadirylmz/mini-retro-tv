@@ -853,13 +853,8 @@ void setup() {
   }
 
   // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
-  IPAddress apIP(192, 168, 4, 1);
-  IPAddress gateway(192, 168, 4, 1);
-  IPAddress subnet(255, 255, 255, 0);
-
   if (currentStaSsid.length() > 0) {
     WiFi.mode(WIFI_AP_STA);
-    WiFi.softAPConfig(apIP, gateway, subnet);
     WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
     Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
     WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
@@ -874,7 +869,6 @@ void setup() {
     }
   } else {
     WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(apIP, gateway, subnet);
     WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
   }
 
@@ -886,7 +880,7 @@ void setup() {
   Serial.println(WiFi.softAPIP());
 
   // DNS Server (Captive Portal - Telefonda otomatik giriş sayfasını tetikler)
-  dnsServer.start(DNS_PORT, "*", apIP);
+  dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
   Serial.println("DNS Sunucu (Captive Portal) aktif edildi.");
 
   // mDNS Başlat (http://collectibletv.local)
@@ -954,12 +948,42 @@ void handleButton() {
 }
 
 // =========================================================================
+//  SERIAL KOMUT YÖNETİMİ (USB üzerinden Wi-Fi ve Hızlı Ayarlar)
+// =========================================================================
+void handleSerialCommands() {
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd.startsWith("WIFI:")) {
+      int firstColon = cmd.indexOf(':');
+      int secondColon = cmd.indexOf(':', firstColon + 1);
+      if (secondColon > firstColon) {
+        String newSsid = cmd.substring(firstColon + 1, secondColon);
+        String newPass = cmd.substring(secondColon + 1);
+        Serial.printf("Serial uzerinden yeni Wi-Fi alindi: %s\n", newSsid.c_str());
+        prefs.putString("sta_ssid", newSsid);
+        prefs.putString("sta_pass", newPass);
+        Serial.println("Kaydedildi. Cihaz yeniden baslatiliyor...");
+        delay(800);
+        ESP.restart();
+      }
+    } else if (cmd == "RESET") {
+      prefs.clear();
+      Serial.println("Fabrika ayarlarina sifirlandi. Yeniden baslatiliyor...");
+      delay(800);
+      ESP.restart();
+    }
+  }
+}
+
+// =========================================================================
 //  LOOP
 // =========================================================================
 void loop() {
   dnsServer.processNextRequest();
   server.handleClient();
   handleButton();
+  handleSerialCommands();
 
   // Yükleme Zaman Aşımı Emniyeti (30 sn sessizlik olursa yarıda kalan yüklemeyi temizle)
   if (isUploading && uploadChunkFile && (millis() - lastUploadChunkTime > 30000)) {
