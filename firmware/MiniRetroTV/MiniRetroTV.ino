@@ -329,11 +329,11 @@ void refreshPlaylist() {
         if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
           size_t sz = f.size();
           Serial.printf("BULUNAN DOSYA: [%s] (%u bayt)\n", name.c_str(), sz);
-          if (sz == 0 || name.indexOf("WhatsApp") >= 0) {
+          if (sz == 0) {
             String delPath = name.startsWith("/") ? name : (String(VIDEO_DIR) + "/" + name);
             f.close();
             storage->remove(delPath);
-            Serial.printf("Gecersiz veya bozuk dosya silindi: %s\n", delPath.c_str());
+            Serial.printf("Gecersiz veya sifir bayt dosya silindi: %s\n", delPath.c_str());
             f = root.openNextFile();
             continue;
           }
@@ -903,12 +903,6 @@ void setup() {
     isSDActive = true;
     if (!storage->exists(VIDEO_DIR)) {
       storage->mkdir(VIDEO_DIR);
-    }
-    // Yarım/bozuk kalan eski dosyaları temizle
-    String corruptFile = String(VIDEO_DIR) + "/WhatsApp Image 2026-10-13 at 11.14.32.mjpeg";
-    if (storage->exists(corruptFile)) {
-      storage->remove(corruptFile);
-      Serial.println("Yarım kalan bozuk WhatsApp görseli SD karttan temizlendi.");
     }
   } else {
     Serial.println("SD Kart bulunamadi, Dahili Flash kullaniliyor.");
