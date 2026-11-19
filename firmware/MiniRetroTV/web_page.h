@@ -681,7 +681,10 @@ async function convertAndUploadVideo(file) {
   for (let i = 0; i < totalFrames; i++) {
     const time = i / fps;
     video.currentTime = time;
-    await new Promise(r => { video.onseeked = r; });
+    await Promise.race([
+      new Promise(r => { video.onseeked = r; }),
+      new Promise(r => setTimeout(r, 120))
+    ]);
 
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, 240, 240);

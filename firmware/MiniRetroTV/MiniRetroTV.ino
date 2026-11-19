@@ -279,7 +279,14 @@ void refreshPlaylist() {
       if (!f.isDirectory()) {
         String name = String(f.name());
         if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
-          playlist.push_back(name);
+          if (f.size() > 1024) {
+            playlist.push_back(name);
+          } else {
+            // 0 bayt veya bozuk dosyaları temizle
+            String delPath = String(VIDEO_DIR) + "/" + name;
+            storage->remove(delPath);
+            Serial.printf("Bozuk/bos dosya silindi: %s\n", name.c_str());
+          }
         }
       }
       f = root.openNextFile();
@@ -294,7 +301,9 @@ void refreshPlaylist() {
         if (!f.isDirectory()) {
           String name = String(f.name());
           if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
-            playlist.push_back(name);
+            if (f.size() > 1024) {
+              playlist.push_back(name);
+            }
           }
         }
         f = rootRoot.openNextFile();
@@ -331,8 +340,12 @@ void playVideoByIndex(int idx) {
 
   videoFile = storage->open(fullPath, "r");
 
-  if (!videoFile) {
-    Serial.printf("HATA: %s açılamadı!\n", fullPath.c_str());
+  if (!videoFile || videoFile.size() == 0) {
+    Serial.printf("HATA: %s açılamadı veya 0 bayt!\n", fullPath.c_str());
+    if (videoFile) {
+      videoFile.close();
+      storage->remove(fullPath);
+    }
     currentVideoIdx = -1;
     drawStandbyScreen();
   } else {
@@ -606,9 +619,8 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi AP Başlat (Düşük güç modu - pilde voltaj dalgalanmasını engeller)
+  // 4. Wi-Fi AP Başlat (Orijinal Güçlü Mod - Kesintisiz Bağlantı)
   WiFi.mode(WIFI_AP);
-  WiFi.setTxPower(WIFI_POWER_8_5dBm);
   WiFi.softAP(AP_SSID, AP_PASS);
   Serial.print("Wi-Fi AP: ");
   Serial.print(AP_SSID);
