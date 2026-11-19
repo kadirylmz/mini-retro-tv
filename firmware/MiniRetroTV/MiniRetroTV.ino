@@ -44,7 +44,14 @@ fs::FS *storage = &SD;
 bool isSDActive = false;
 
 // Video & Ses Yönetimi
-std::vector<String> playlist;
+struct MediaItem {
+  String name;
+  size_t size;
+  bool hasAudio;
+};
+std::vector<MediaItem> playlist;
+size_t cachedTotalBytes = 0;
+size_t cachedUsedBytes = 0;
 int currentVideoIdx = -1;
 File videoFile;
 bool isUploading = false;
@@ -329,8 +336,15 @@ void refreshPlaylist() {
       if (!f.isDirectory()) {
         String name = String(f.name());
         if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
-          if (f.size() > 1024) {
-            playlist.push_back(name);
+          size_t sz = f.size();
+          if (sz > 1024) {
+            String pcmPath = String(VIDEO_DIR) + "/" + name.substring(0, name.lastIndexOf('.')) + ".pcm";
+            bool hasAudio = storage->exists(pcmPath);
+            MediaItem item;
+            item.name = name;
+            item.size = sz;
+            item.hasAudio = hasAudio;
+            playlist.push_back(item);
           } else {
             // 0 bayt veya bozuk dosyaları temizle
             String delPath = String(VIDEO_DIR) + "/" + name;
@@ -343,22 +357,13 @@ void refreshPlaylist() {
     }
   }
 
-  if (playlist.empty()) {
-    File rootRoot = storage->open("/");
-    if (rootRoot) {
-      File f = rootRoot.openNextFile();
-      while (f) {
-        if (!f.isDirectory()) {
-          String name = String(f.name());
-          if (name.endsWith(".mjpeg") || name.endsWith(".MJPEG")) {
-            if (f.size() > 1024) {
-              playlist.push_back(name);
-            }
-          }
-        }
-        f = rootRoot.openNextFile();
-      }
-    }
+  // Kapasiteyi bir kez hafızaya al
+  if (isSDActive) {
+    cachedTotalBytes = SD.totalBytes();
+    cachedUsedBytes = SD.usedBytes();
+  } else {
+    cachedTotalBytes = LittleFS.totalBytes();
+    cachedUsedBytes = LittleFS.usedBytes();
   }
 
   Serial.printf("Oynatma listesi güncellendi: %d video bulundu. (Depolama: %s)\n", 
@@ -382,7 +387,7 @@ void playVideoByIndex(int idx) {
   }
 
   currentVideoIdx = idx;
-  String path = playlist[currentVideoIdx];
+  String path = playlist[currentVideoIdx].name;
   String fullPath = path.startsWith("/") ? path : (String(VIDEO_DIR) + "/" + path);
   if (!storage->exists(fullPath)) {
     fullPath = "/" + path;
@@ -409,7 +414,7 @@ void playVideoByIndex(int idx) {
       Serial.println("Bu videoya ait ses dosyası yok (Sessiz mod)");
     }
 #endif
-    drawCRTStatic(100);
+    drawCRTStatic(15);
   }
 }
 
@@ -447,17 +452,14 @@ void setupWebServer() {
   });
 
   server.on("/list", HTTP_GET, []() {
-    size_t total = isSDActive ? (SD.totalBytes()) : LittleFS.totalBytes();
-    size_t used = isSDActive ? (SD.usedBytes()) : LittleFS.usedBytes();
-
     bool staConn = (WiFi.status() == WL_CONNECTED);
     String staIp = staConn ? WiFi.localIP().toString() : "";
 
-    String json = "{\"total\":" + String(total) + 
-                  ",\"used\":" + String(used) + 
+    String json = "{\"total\":" + String(cachedTotalBytes) + 
+                  ",\"used\":" + String(cachedUsedBytes) + 
                   ",\"volume\":" + String(currentVolume) + 
                   ",\"muted\":" + (isMuted ? "true" : "false") + 
-                  ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx] : "") + "\"" +
+                  ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx].name : "") + "\"" +
                   ",\"wifi\":{" +
                     "\"ap_ssid\":\"" + currentApSsid + "\"," +
                     "\"ap_pass\":\"" + currentApPass + "\"," +
@@ -468,19 +470,9 @@ void setupWebServer() {
                   "}," +
                   "\"files\":[";
 
-    bool first = true;
-    for (const auto &name : playlist) {
-      String p = name.startsWith("/") ? name : (String(VIDEO_DIR) + "/" + name);
-      File f = storage->open(p, "r");
-      size_t s = f ? f.size() : 0;
-      if (f) f.close();
-
-      String pcmP = p.substring(0, p.lastIndexOf('.')) + ".pcm";
-      bool hasAudio = storage->exists(pcmP);
-
-      if (!first) json += ",";
-      first = false;
-      json += "{\"name\":\"" + name + "\",\"size\":" + String(s) + ",\"hasAudio\":" + (hasAudio ? "true" : "false") + "}";
+    for (size_t i = 0; i < playlist.size(); i++) {
+      if (i > 0) json += ",";
+      json += "{\"name\":\"" + playlist[i].name + "\",\"size\":" + String(playlist[i].size) + ",\"hasAudio\":" + (playlist[i].hasAudio ? "true" : "false") + "}";
     }
     json += "]}";
     server.send(200, "application/json", json);
@@ -490,9 +482,9 @@ void setupWebServer() {
     if (server.hasArg("file")) {
       String name = server.arg("file");
       for (size_t i = 0; i < playlist.size(); i++) {
-        if (playlist[i] == name) {
-          playVideoByIndex(i);
+        if (playlist[i].name == name) {
           server.send(200, "text/plain", "OK");
+          playVideoByIndex(i);
           return;
         }
       }
@@ -505,7 +497,7 @@ void setupWebServer() {
       String name = server.arg("file");
       String path = String(VIDEO_DIR) + "/" + name;
       if (storage->exists(path)) {
-        if (videoFile && currentVideoIdx >= 0 && playlist[currentVideoIdx] == name) {
+        if (videoFile && currentVideoIdx >= 0 && playlist[currentVideoIdx].name == name) {
           videoFile.close();
         }
         storage->remove(path);
@@ -520,9 +512,9 @@ void setupWebServer() {
         }
 
         refreshPlaylist();
+        server.send(200, "text/plain", "Silindi");
         if (playlist.empty()) drawStandbyScreen();
         else playVideoByIndex(0);
-        server.send(200, "text/plain", "Silindi");
         return;
       }
     }
@@ -671,7 +663,7 @@ void setupWebServer() {
     if (!playlist.empty()) {
       if (name.length() > 0) {
         for (size_t i = 0; i < playlist.size(); i++) {
-          if (playlist[i] == name) {
+          if (playlist[i].name == name) {
             playVideoByIndex(i);
             return;
           }
@@ -1097,4 +1089,7 @@ void loop() {
       if (audioFile) audioFile.seek(0);
 #endif
     }
+
+    // Her kare sonrasında Wi-Fi ve Web Sunucusuna nefes aldır
+    delay(10);
 }

@@ -791,9 +791,18 @@ async function loadVideos() {
 
 async function playVideo(name) {
   try {
-    await fetch('/play?file=' + encodeURIComponent(name));
-    loadVideos();
-  } catch(e) { alert('Hata: ' + e); }
+    const res = await fetch('/play?file=' + encodeURIComponent(name));
+    if (res.ok) {
+      document.querySelectorAll('.video-item').forEach(el => {
+        const titleEl = el.querySelector('.video-name');
+        if (titleEl && titleEl.innerText.includes(name)) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    }
+  } catch(e) { console.error('Play error:', e); }
 }
 
 async function deleteVideo(name) {
