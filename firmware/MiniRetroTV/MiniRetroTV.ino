@@ -15,8 +15,6 @@
 #include <WebServer.h>
 #include <Preferences.h>
 #include <vector>
-#include "soc/soc.h"
-#include "soc/rtc_cntl_reg.h"
 
 #include "config.h"
 #include "web_page.h"
@@ -530,10 +528,9 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 //  SETUP
 // =========================================================================
 void setup() {
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Pilde ani akım düşüşlerinde brownout resetini engeller
   Serial.begin(115200);
-  Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print fonksiyonlarının kilitlenmesini engeller!
-  delay(100);
+  Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print kilitlenmesini engeller
+  delay(200);
   Serial.println("\n=============================================");
   Serial.println("   🎬 COLLECTIBLE DISPLAY - 16GB SD EDITION");
   Serial.println("=============================================");
