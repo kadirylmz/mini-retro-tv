@@ -53,6 +53,9 @@ std::vector<MediaItem> playlist;
 size_t cachedTotalBytes = 0;
 size_t cachedUsedBytes = 0;
 int currentVideoIdx = -1;
+int nextVideoToPlay = -1;
+bool isStillImage = false;
+int currentFrameCount = 0;
 File videoFile;
 bool isUploading = false;
 
@@ -379,6 +382,8 @@ void playVideoByIndex(int idx) {
   if (audioFile) audioFile.close();
 #endif
   resetFastReader();
+  isStillImage = false;
+  currentFrameCount = 0;
 
   if (idx < 0 || idx >= (int)playlist.size()) {
     currentVideoIdx = -1;
@@ -484,7 +489,7 @@ void setupWebServer() {
       for (size_t i = 0; i < playlist.size(); i++) {
         if (playlist[i].name == name) {
           server.send(200, "text/plain", "OK");
-          playVideoByIndex(i);
+          nextVideoToPlay = (int)i;
           return;
         }
       }
@@ -514,7 +519,7 @@ void setupWebServer() {
         refreshPlaylist();
         server.send(200, "text/plain", "Silindi");
         if (playlist.empty()) drawStandbyScreen();
-        else playVideoByIndex(0);
+        else nextVideoToPlay = 0;
         return;
       }
     }
@@ -661,15 +666,16 @@ void setupWebServer() {
 
     refreshPlaylist();
     if (!playlist.empty()) {
+      int target = playlist.size() - 1;
       if (name.length() > 0) {
         for (size_t i = 0; i < playlist.size(); i++) {
           if (playlist[i].name == name) {
-            playVideoByIndex(i);
-            return;
+            target = (int)i;
+            break;
           }
         }
       }
-      playVideoByIndex(playlist.size() - 1);
+      nextVideoToPlay = target;
     }
   });
 
@@ -892,7 +898,7 @@ void setup() {
   // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
   if (currentStaSsid.length() > 0) {
     WiFi.mode(WIFI_AP_STA);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6, 0, 8);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
     Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
     WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
     unsigned long startConn = millis();
@@ -906,11 +912,11 @@ void setup() {
     }
   } else {
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6, 0, 8);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
   }
 
   WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gucunu ve hizi tavan yapar)
-  WiFi.setTxPower(WIFI_POWER_17dBm);    // Kararli donanimsal verici gucu (voltaj cokusunu onler)
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal sinyal gücü (19.5 dBm)
   Serial.print("Wi-Fi Hotspot: ");
   Serial.print(currentApSsid);
   Serial.print(" - IP: ");
@@ -1037,8 +1043,26 @@ void loop() {
     return;
   }
 
+  // Ertelenmiş Video Başlatma (HTTP yanıtı istemciye ulaştıktan hemen sonra oynatır)
+  if (nextVideoToPlay >= 0) {
+    int v = nextVideoToPlay;
+    nextVideoToPlay = -1;
+    delay(20);
+    playVideoByIndex(v);
+    return;
+  }
+
   if (!videoFile || currentVideoIdx < 0) {
     delay(2);
+    return;
+  }
+
+  // Tek karelik fotoğraf veya sabit görsel gösteriliyorsa SD kartı ve CPU'yu meşgul etme
+  if (isStillImage) {
+    if (millis() < osdUntil) {
+      drawVolumeOSD();
+    }
+    delay(25);
     return;
   }
 
@@ -1070,6 +1094,7 @@ void loop() {
     // 2. Video Kare Çizimi
     size_t frameSize = 0;
     if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
+      currentFrameCount++;
       if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
         jpeg.decode(0, 0, 0);
         jpeg.close();
@@ -1080,11 +1105,18 @@ void loop() {
         }
       }
     } else {
+      // Dosya sonuna (EOF) gelindiğinde kontrol:
+      if (currentFrameCount <= 1) {
+        // Tek karelik fotoğraf veya sabit görsel!
+        // ST7789 dahili ekran belleği (GRAM) görseli zaten ekranda tutuyor.
+        // SD kartı ve JPEG motorunu sürekli çalıştırmayı kes, Wi-Fi ve işlemciyi %100 serbest bırak!
+        isStillImage = true;
+        delay(20);
+        return;
+      }
       videoFile.seek(0);
       resetFastReader();
-      if (videoFile.size() < 100000) { // Küçük dosya veya fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
-        delay(60);
-      }
+      currentFrameCount = 0;
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
 #endif

@@ -42,5 +42,5 @@
 
 // ---- Video Oynatıcı Ayarları ----
 #define VIDEO_DIR       "/v"
-#define DEFAULT_FPS     25   // 25 FPS Akıcı Sinematik Kare Hızı
+#define DEFAULT_FPS     20   // 20 FPS Akıcı ve Dengeli Kare Hızı (Wi-Fi ve Web Sunucusuna tam öncelik sağlar)
 #define MAX_FRAME_SIZE  (64 * 1024)
