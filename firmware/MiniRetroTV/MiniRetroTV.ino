@@ -206,6 +206,7 @@ void toggleMute() {
 //  Bekleme Ekranı
 // =========================================================================
 void drawStandbyScreen() {
+  Serial.println(">>> [STANDBY] drawStandbyScreen BASLADI <<<");
   tft.fillScreen(ST77XX_BLACK);
   tft.fillRect(0, 0, SCREEN_W, 4, ST77XX_RED);
 
@@ -218,6 +219,7 @@ void drawStandbyScreen() {
   for (int i = 0; i < 7; i++) {
     tft.fillRect(i * barW, 6, barW + 1, 55, colors[i]);
   }
+  Serial.println(">>> [STANDBY] Renk barlari cizildi <<<");
 
   tft.fillRect(0, 64, SCREEN_W, 36, ST77XX_BLACK);
   tft.setTextSize(2);
@@ -304,6 +306,7 @@ void drawStandbyScreen() {
   tft.println("Web panelinden video yukleyin");
 
   tft.fillRect(0, SCREEN_H - 4, SCREEN_W, 4, ST77XX_RED);
+  Serial.println(">>> [STANDBY] drawStandbyScreen TAMAMLANDI <<<");
 }
 
 // =========================================================================
@@ -765,11 +768,17 @@ void setup() {
   delay(200);
 
   // 1. Ekranı Başlat (FSPI: SCK=4, MOSI=6)
+  Serial.println(">>> [EKRAN] SPI ve ST7789 baslatiliyor... <<<");
   SPI.begin(TFT_SCLK, -1, TFT_MOSI, -1);
   tft.init(SCREEN_W, SCREEN_H, SPI_MODE3);
   tft.setSPISpeed(SPI_SPEED);
   tft.setRotation(LCD_ROTATION);
+  tft.fillScreen(ST77XX_RED);
+  delay(150);
+  tft.fillScreen(ST77XX_BLUE);
+  delay(150);
   tft.fillScreen(ST77XX_BLACK);
+  Serial.println(">>> [EKRAN] ST7789 baslatildi ve renk testi yapildi! <<<");
 
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
 
@@ -938,6 +947,12 @@ void loop() {
   }
 
   if (!videoFile || currentVideoIdx < 0) {
+    static unsigned long lastStandbyTick = 0;
+    if (millis() - lastStandbyTick > 3000) {
+      lastStandbyTick = millis();
+      Serial.println(">>> [STANDBY] Video bekleniyor, bekleme ekrani tazeleniyor... <<<");
+      drawStandbyScreen();
+    }
     delay(20);
     return;
   }
