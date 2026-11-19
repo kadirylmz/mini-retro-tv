@@ -15,6 +15,8 @@
 #include <WebServer.h>
 #include <Preferences.h>
 #include <vector>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 #include "config.h"
 #include "web_page.h"
@@ -528,8 +530,10 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 //  SETUP
 // =========================================================================
 void setup() {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Pilde ani akım düşüşlerinde brownout resetini engeller
   Serial.begin(115200);
-  delay(1000);
+  Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print fonksiyonlarının kilitlenmesini engeller!
+  delay(100);
   Serial.println("\n=============================================");
   Serial.println("   🎬 COLLECTIBLE DISPLAY - 16GB SD EDITION");
   Serial.println("=============================================");
@@ -577,8 +581,18 @@ void setup() {
   // 3. SD Kartı Başlat (HSPI: SCK=12, MISO=13, MOSI=11, CS=10)
   Serial.println("SD Kart baslatiliyor (HSPI: 10, 11, 12, 13)...");
   sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  delay(100);
 
-  if (SD.begin(SD_CS, sdSPI, 20000000) || SD.begin(SD_CS, sdSPI, 4000000)) {
+  bool sdOk = false;
+  for (int r = 0; r < 3; r++) {
+    if (SD.begin(SD_CS, sdSPI, 20000000) || SD.begin(SD_CS, sdSPI, 4000000) || SD.begin(SD_CS, sdSPI, 1000000)) {
+      sdOk = true;
+      break;
+    }
+    delay(150);
+  }
+
+  if (sdOk) {
     uint64_t sizeMB = SD.cardSize() / (1024 * 1024);
     Serial.printf(">>> 16GB SD KART BASARIYLA BAGLANDI! (%llu MB) <<<\n", sizeMB);
     storage = &SD;
