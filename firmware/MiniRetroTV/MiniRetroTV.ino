@@ -54,8 +54,6 @@ size_t cachedTotalBytes = 0;
 size_t cachedUsedBytes = 0;
 int currentVideoIdx = -1;
 int nextVideoToPlay = -1;
-bool isStillImage = false;
-int currentFrameCount = 0;
 File videoFile;
 bool isUploading = false;
 
@@ -382,8 +380,6 @@ void playVideoByIndex(int idx) {
   if (audioFile) audioFile.close();
 #endif
   resetFastReader();
-  isStillImage = false;
-  currentFrameCount = 0;
 
   if (idx < 0 || idx >= (int)playlist.size()) {
     currentVideoIdx = -1;
@@ -791,7 +787,14 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
   while (true) {
     if (frameSize >= maxLimit - 2) return false;
     c = readFastByte(file);
-    if (c < 0) return false;
+    if (c < 0) {
+      if (frameSize > 100) {
+        buf[frameSize++] = 0xFF;
+        buf[frameSize++] = 0xD9;
+        return true;
+      }
+      return false;
+    }
     buf[frameSize++] = (uint8_t)c;
     if (c == 0xFF) {
       if (peekFastByte(file) == 0xD9) {
@@ -887,6 +890,12 @@ void setup() {
     isSDActive = true;
     if (!storage->exists(VIDEO_DIR)) {
       storage->mkdir(VIDEO_DIR);
+    }
+    // Yarım/bozuk kalan eski dosyaları temizle
+    String corruptFile = String(VIDEO_DIR) + "/WhatsApp Image 2026-10-13 at 11.14.32.mjpeg";
+    if (storage->exists(corruptFile)) {
+      storage->remove(corruptFile);
+      Serial.println("Yarım kalan bozuk WhatsApp görseli SD karttan temizlendi.");
     }
   } else {
     Serial.println("SD Kart bulunamadi, Dahili Flash kullaniliyor.");
@@ -1057,15 +1066,6 @@ void loop() {
     return;
   }
 
-  // Tek karelik fotoğraf veya sabit görsel gösteriliyorsa SD kartı ve CPU'yu meşgul etme
-  if (isStillImage) {
-    if (millis() < osdUntil) {
-      drawVolumeOSD();
-    }
-    delay(25);
-    return;
-  }
-
   unsigned long now = millis();
   if (now - lastFrameTime < frameDelayMs) {
     delay(2);
@@ -1094,29 +1094,30 @@ void loop() {
     // 2. Video Kare Çizimi
     size_t frameSize = 0;
     if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
-      currentFrameCount++;
       if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
-        jpeg.decode(0, 0, 0);
+        if (!jpeg.decode(0, 0, 0)) {
+          Serial.println("JPEG cozum hatasi! Sonraki videoya geciliyor...");
+          jpeg.close();
+          nextChannel();
+          return;
+        }
         jpeg.close();
 
         // OSD Gösterimi (Ses değiştirildiğinde veya Mute yapıldığında)
         if (millis() < osdUntil) {
           drawVolumeOSD();
         }
-      }
-    } else {
-      // Dosya sonuna (EOF) gelindiğinde kontrol:
-      if (currentFrameCount <= 1) {
-        // Tek karelik fotoğraf veya sabit görsel!
-        // ST7789 dahili ekran belleği (GRAM) görseli zaten ekranda tutuyor.
-        // SD kartı ve JPEG motorunu sürekli çalıştırmayı kes, Wi-Fi ve işlemciyi %100 serbest bırak!
-        isStillImage = true;
-        delay(20);
+      } else {
+        Serial.println("JPEG openRAM hatasi (Gecersiz JPEG)! Sonraki videoya geciliyor...");
+        nextChannel();
         return;
       }
+    } else {
       videoFile.seek(0);
       resetFastReader();
-      currentFrameCount = 0;
+      if (videoFile.size() < 100000) {
+        delay(80); // Küçük dosya/fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
+      }
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
 #endif
