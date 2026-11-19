@@ -14,6 +14,7 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <vector>
@@ -34,6 +35,8 @@ Adafruit_ST7789 tft(&SPI, TFT_CS, TFT_DC, TFT_RES);
 SPIClass sdSPI(HSPI);
 JPEGDEC jpeg;
 WebServer server(80);
+DNSServer dnsServer;
+const byte DNS_PORT = 53;
 Preferences prefs;
 
 // Depolama Aygıtı (SD Kart veya Dahili Flash Yedek)
@@ -703,6 +706,20 @@ void setupWebServer() {
     }
   });
 
+  server.enableCORS(true);
+
+  // Captive Portal için Android ve Apple tespit endpoint'leri
+  server.on("/generate_204", HTTP_GET, []() {
+    server.send_P(200, "text/html", INDEX_HTML);
+  });
+  server.on("/hotspot-detect.html", HTTP_GET, []() {
+    server.send_P(200, "text/html", INDEX_HTML);
+  });
+  server.onNotFound([]() {
+    server.sendHeader("Location", "http://192.168.4.1/", true);
+    server.send(302, "text/plain", "");
+  });
+
   server.begin();
 }
 
@@ -835,22 +852,19 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi AP + STA Başlat (Maksimum Çıkış Gücü ve Kesintisiz Çift Mod)
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gücünü ve hızı tavan yapar)
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal verici gücü (19.5 dBm)
-  WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6); // 6. Temiz Wi-Fi Kanalı
-  Serial.print("Wi-Fi Hotspot: ");
-  Serial.print(currentApSsid);
-  Serial.print(" - IP: ");
-  Serial.println(WiFi.softAPIP());
+  // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
+  IPAddress apIP(192, 168, 4, 1);
+  IPAddress gateway(192, 168, 4, 1);
+  IPAddress subnet(255, 255, 255, 0);
 
-  // Eğer kayıtlı ev ağı varsa bağlan
   if (currentStaSsid.length() > 0) {
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAPConfig(apIP, gateway, subnet);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
     Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
     WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
     unsigned long startConn = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startConn < 4000) {
+    while (WiFi.status() != WL_CONNECTED && millis() - startConn < 3000) {
       delay(100);
     }
     if (WiFi.status() == WL_CONNECTED) {
@@ -858,7 +872,22 @@ void setup() {
     } else {
       Serial.println("Ev Wi-Fi baglantisi arka planda denenmeye devam edecek.");
     }
+  } else {
+    WiFi.mode(WIFI_AP);
+    WiFi.softAPConfig(apIP, gateway, subnet);
+    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 6);
   }
+
+  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gücünü ve hızı tavan yapar)
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal verici gücü (19.5 dBm)
+  Serial.print("Wi-Fi Hotspot: ");
+  Serial.print(currentApSsid);
+  Serial.print(" - IP: ");
+  Serial.println(WiFi.softAPIP());
+
+  // DNS Server (Captive Portal - Telefonda otomatik giriş sayfasını tetikler)
+  dnsServer.start(DNS_PORT, "*", apIP);
+  Serial.println("DNS Sunucu (Captive Portal) aktif edildi.");
 
   // mDNS Başlat (http://collectibletv.local)
   if (MDNS.begin("collectibletv")) {
@@ -928,6 +957,7 @@ void handleButton() {
 //  LOOP
 // =========================================================================
 void loop() {
+  dnsServer.processNextRequest();
   server.handleClient();
   handleButton();
 
@@ -942,18 +972,12 @@ void loop() {
   }
 
   if (isUploading) {
-    delay(5);
+    delay(2);
     return;
   }
 
   if (!videoFile || currentVideoIdx < 0) {
-    static unsigned long lastStandbyTick = 0;
-    if (millis() - lastStandbyTick > 3000) {
-      lastStandbyTick = millis();
-      Serial.println(">>> [STANDBY] Video bekleniyor, bekleme ekrani tazeleniyor... <<<");
-      drawStandbyScreen();
-    }
-    delay(20);
+    delay(2);
     return;
   }
 
