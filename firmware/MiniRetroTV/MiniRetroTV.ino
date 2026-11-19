@@ -636,20 +636,20 @@ void setupWebServer() {
     isUploading = false;
     Serial.printf("Parçalı Yükleme Tamamlandı: %s\n", uploadChunkFilePath.c_str());
 
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
+
     refreshPlaylist();
     if (!playlist.empty()) {
       if (name.length() > 0) {
         for (size_t i = 0; i < playlist.size(); i++) {
           if (playlist[i] == name) {
             playVideoByIndex(i);
-            server.send(200, "application/json", "{\"status\":\"ok\"}");
             return;
           }
         }
       }
       playVideoByIndex(playlist.size() - 1);
     }
-    server.send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
   server.on("/upload_abort", HTTP_POST, []() {
