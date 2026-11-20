@@ -38,7 +38,7 @@
 
 // ---- MAX98357A I2S Ses Pinleri & Ayarları ----
 #define USE_AUDIO          1       // 1: I2S Ses Aktif, 0: Devre Dışı
-#define ENABLE_VOLUME_OSD  0       // 0: Temiz retro ekran (videonun önüne yazı/kutu çıkmaz, pırpır yapmaz), 1: OSD göster
+#define ENABLE_VOLUME_OSD  1       // 1: Dikişsiz flicker-free OSD gösterge açık, 0: Kapalı
 #define PIN_I2S_BCLK       7       // I2S Bit Clock (BCLK)
 #define PIN_I2S_LRC        8       // I2S Word Select (LRC / WS)
 #define PIN_I2S_DIN        9       // I2S Data Out (DIN)

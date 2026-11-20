@@ -114,6 +114,13 @@ uint8_t currentVolume = DEFAULT_VOLUME;
 bool isMuted = false;
 uint8_t lastUnmutedVolume = DEFAULT_VOLUME;
 unsigned long osdUntil = 0;
+#define OSD_W 160
+#define OSD_H 26
+#define OSD_X ((SCREEN_W - OSD_W) / 2)
+#define OSD_Y 12
+
+GFXcanvas16 osdCanvas(OSD_W, OSD_H);
+volatile bool osdActive = false;
 
 // Ekran Parlaklığı (LEDC PWM - Pil Tasarrufu: %70 varsayılan)
 uint8_t currentBrightness = 180;
@@ -164,7 +171,79 @@ static bool longPressHandled = false;
 // =========================================================================
 //  JPEGDEC Çizim Geri Çağrısı
 // =========================================================================
+//  FLICKER-FREE OSD RENDERER & EMBEDDED COMPOSITOR
+//  OSD doğrudan JPEG bloklarının üzerine bellekte bindirilir; video ile ekran
+//  arasında sıfır pırpır (flicker-free) dikişsiz görüntü elde edilir!
+// =========================================================================
+void renderOSDToCanvas() {
+#if ENABLE_VOLUME_OSD
+  if (isMuted || currentVolume == 0) {
+    osdCanvas.fillRoundRect(0, 0, OSD_W, OSD_H, 6, 0xF800); // Kırmızı
+    osdCanvas.drawRoundRect(0, 0, OSD_W, OSD_H, 6, 0xFFFF); // Beyaz kenarlık
+    osdCanvas.setTextSize(1);
+    osdCanvas.setTextColor(0xFFFF);
+    osdCanvas.setCursor(20, 9);
+    osdCanvas.print("SES KAPALI (MUTE)");
+  } else {
+    osdCanvas.fillRoundRect(0, 0, OSD_W, OSD_H, 6, 0x10A2); // Koyu retro lacivert
+    osdCanvas.drawRoundRect(0, 0, OSD_W, OSD_H, 6, 0x07E0); // Yeşil neon kenarlık
+    osdCanvas.setTextSize(1);
+    osdCanvas.setTextColor(0x07E0);
+    osdCanvas.setCursor(10, 9);
+    osdCanvas.printf("SES: %%%d", currentVolume);
+
+    // Ses İlerleme Çubuğu ve İmleç
+    int barX = 75;
+    int barY = 8;
+    int barMaxW = 75;
+    int barH = 10;
+    osdCanvas.drawRect(barX, barY, barMaxW, barH, 0xFFFF);
+    int fillW = map(currentVolume, 0, 100, 0, barMaxW - 2);
+    if (fillW > 0) {
+      osdCanvas.fillRect(barX + 1, barY + 1, fillW, barH - 2, 0x07E0);
+    }
+  }
+  osdUntil = millis() + 2200; // 2.2 saniye göster
+  osdActive = true;
+#endif
+}
+
+void triggerOSD() {
+  renderOSDToCanvas();
+}
+
 int JPEGDraw(JPEGDRAW *pDraw) {
+#if ENABLE_VOLUME_OSD
+  if (osdActive) {
+    if (millis() < osdUntil) {
+      int bx0 = pDraw->x;
+      int by0 = pDraw->y;
+      int bx1 = bx0 + pDraw->iWidth;
+      int by1 = by0 + pDraw->iHeight;
+
+      // OSD kutusuyla kesişim kontrolü (OSD_X=40, OSD_Y=12, W=160, H=26)
+      int ix0 = (bx0 > (int)OSD_X) ? bx0 : (int)OSD_X;
+      int ix1 = (bx1 < (int)(OSD_X + OSD_W)) ? bx1 : (int)(OSD_X + OSD_W);
+      int iy0 = (by0 > (int)OSD_Y) ? by0 : (int)OSD_Y;
+      int iy1 = (by1 < (int)(OSD_Y + OSD_H)) ? by1 : (int)(OSD_Y + OSD_H);
+
+      if (ix0 < ix1 && iy0 < iy1) {
+        uint16_t *pixels = (uint16_t *)pDraw->pPixels;
+        uint16_t *osdBuf = osdCanvas.getBuffer();
+        for (int y = iy0; y < iy1; y++) {
+          int dstRow = (y - by0) * pDraw->iWidth;
+          int srcRow = (y - OSD_Y) * OSD_W;
+          for (int x = ix0; x < ix1; x++) {
+            pixels[dstRow + (x - bx0)] = osdBuf[srcRow + (x - OSD_X)];
+          }
+        }
+      }
+    } else {
+      osdActive = false;
+    }
+  }
+#endif
+
   tft.drawRGBBitmap(pDraw->x, pDraw->y, pDraw->pPixels, pDraw->iWidth, pDraw->iHeight);
   return 1;
 }
@@ -173,48 +252,7 @@ int JPEGDraw(JPEGDRAW *pDraw) {
 //  Kanal Geçiş Efekti (Dikişsiz / Seamless Geçiş - Göz Kırpma Yok)
 // =========================================================================
 void drawCRTStatic(int ms) {
-  // Dikişsiz (seamless) geçiş için ekran temizlenmez, doğrudan yeni kare çizilir.
-}
-
-// =========================================================================
-//  OSD (On-Screen Display) Ses & Mute Göstergesi
-// =========================================================================
-void drawVolumeOSD() {
-  int boxW = 160;
-  int boxH = 26;
-  int boxX = (SCREEN_W - boxW) / 2;
-  int boxY = 10;
-
-  if (isMuted || currentVolume == 0) {
-    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_RED);
-    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_WHITE);
-    tft.setTextSize(1);
-    tft.setTextColor(ST77XX_WHITE);
-    tft.setCursor(boxX + 22, boxY + 9);
-    tft.print("SES KAPALI (MUTE)");
-  } else {
-    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, 0x10A2); // Koyu lacivert
-    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_GREEN);
-    tft.setTextSize(1);
-    tft.setTextColor(ST77XX_GREEN);
-    tft.setCursor(boxX + 10, boxY + 9);
-    tft.printf("SES: %%%d", currentVolume);
-
-    // Ses İlerleme Çubuğu
-    int barX = boxX + 75;
-    int barY = boxY + 8;
-    int barMaxW = 75;
-    int barH = 10;
-    tft.drawRect(barX, barY, barMaxW, barH, ST77XX_WHITE);
-    int fillW = map(currentVolume, 0, 100, 0, barMaxW - 2);
-    if (fillW > 0) {
-      tft.fillRect(barX + 1, barY + 1, fillW, barH - 2, ST77XX_GREEN);
-    }
-  }
-}
-
-void triggerOSD() {
-  osdUntil = millis() + 1800; // 1.8 saniye göster
+  // Dikişsiz geçiş: ekran karartılmaz.
 }
 
 void setVolume(uint8_t vol) {
@@ -1252,13 +1290,6 @@ void loop() {
       consecutiveDecodeErrors = 0;
       jpeg.close();
       currentMediaFrames++;
-
-#if ENABLE_VOLUME_OSD
-      // OSD Gösterimi (Sadece etkinse gösterilir - pırpır ve göz kırpmayı önler)
-      if (millis() < osdUntil) {
-        drawVolumeOSD();
-      }
-#endif
 
       // 2. Ses Çalma (20 FPS @ 16 kHz = Kare başına TAM 800 örnek / 50 ms)
       // Görüntü ekrana çizildiği an ses gönderilerek sesin görüntünün önüne geçmesi (audio lead) engellenir!
