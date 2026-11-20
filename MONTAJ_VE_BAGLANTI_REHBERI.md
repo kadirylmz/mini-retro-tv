@@ -1,14 +1,14 @@
 # 📺 Mini Retro TV — Montaj ve Çizim Rehberi
 
-Bu rehberde **Voltaj 1.69" 240×280 ST7789 IPS oval ekran**, ESP32-S3 / C3, 16GB MicroSD, MAX98357A 7-pin I2S amfi, hoparlör ve voltaj yükseltici şarj kartını içeren **nihai tam donanım montajının** detaylı çizimleri ve 3D kasa yerleşimleri yer almaktadır.
+Bu rehberde **1.3" / 1.69" ST7789 IPS ekran**, ESP32-S3 / C3, 16GB MicroSD, MAX98357A 7-pin I2S amfi, hoparlör ve voltaj yükseltici şarj kartını içeren **nihai tam donanım montajının** detaylı çizimleri ve 3D kasa yerleşimleri yer almaktadır.
 
 ---
 
-## 1. ⚡ Voltaj 1.69" ST7789 IPS (8-Pin) + ESP32-S3 Mini Montajı
+## 1. ⚡ 1.3" / 1.69" ST7789 IPS (8-Pin) + ESP32-S3 Mini Montajı
 
 Kablo geçişlerini kolaylaştırmak ve karmaşayı önlemek için ekranın tüm pinleri **ESP32-S3'ün sol kenarındaki pin sırasına (GPIO 1 – 9)** birebir 1'e 1 eşleştirilmiştir:
 
-| # | Ekran Pini (1.69" IPS) | ESP32-S3 Mini Pini | Kablo | Açıklama / Görevi |
+| # | Ekran Pini (ST7789 IPS) | ESP32-S3 Mini Pini | Kablo | Açıklama / Görevi |
 |:---:|:---|:---|:---:|:---|
 | **1** | **GND** | **GND** | Siyah | Ortak toprak hattı |
 | **2** | **VCC** | **3V3 (3.3V)** | Kırmızı | ⚠️ **Sadece 3.3V'a bağlayın. Asla 5V vermeyin!** |
