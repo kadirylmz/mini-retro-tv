@@ -413,13 +413,13 @@
       <circle cx="1420" cy="400" r="8" fill="#06b6d4" stroke="#fff" stroke-width="2.5"/>
       <text x="1438" y="405" fill="#67e8f9">MISO (Pin 13)</text>
 
-      <!-- 4. SCK (y=460) -> EXACT ALIGNMENT WITH ESP32 GPIO 12 -->
-      <circle cx="1420" cy="460" r="8" fill="#eab308" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="465" fill="#fde047">SCK (Pin 12)</text>
+      <!-- 4. MOSI (y=460) -> Kart üzerindeki 4. pin! (ESP32 GPIO 11) -->
+      <circle cx="1420" cy="460" r="8" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="465" fill="#86efac">MOSI (Pin 11)</text>
 
-      <!-- 5. MOSI (y=520) -> EXACT ALIGNMENT WITH ESP32 GPIO 11 -->
-      <circle cx="1420" cy="520" r="8" fill="#22c55e" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="525" fill="#86efac">MOSI (Pin 11)</text>
+      <!-- 5. SCK (y=520) -> Kart üzerindeki 5. pin! (ESP32 GPIO 12) -->
+      <circle cx="1420" cy="520" r="8" fill="#eab308" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="525" fill="#fde047">SCK (Pin 12)</text>
 
       <!-- 6. CS (y=580) -> EXACT ALIGNMENT WITH ESP32 GPIO 10 -->
       <circle cx="1420" cy="580" r="8" fill="#f59e0b" stroke="#fff" stroke-width="2.5"/>
@@ -467,25 +467,25 @@
     <!-- 7 Pins on the Left Edge (x = 1420, facing ESP32) -->
     <!-- Pins 3, 1, 2 directly face GPIO 9, 8, 7 for 100% straight horizontal lines -->
     <g font-family="Consolas" font-size="13" font-weight="800">
-      <!-- 3. DIN (y=640) -> EXACT HORIZONTAL ALIGNMENT WITH ESP32 GPIO 9 -->
-      <circle cx="1420" cy="640" r="8" fill="#f43f5e" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="645" fill="#fda4af">3. DIN (Pin 9)</text>
+      <!-- 1. LRC (y=640) -> Kart üzerindeki 1. ayak! (ESP32 GPIO 8) -->
+      <circle cx="1420" cy="640" r="8" fill="#10b981" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="645" fill="#6ee7b7">1. LRC (Pin 8)</text>
 
-      <!-- 1. LRC (y=700) -> EXACT HORIZONTAL ALIGNMENT WITH ESP32 GPIO 8 -->
-      <circle cx="1420" cy="700" r="8" fill="#10b981" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="705" fill="#6ee7b7">1. LRC (Pin 8)</text>
+      <!-- 2. BCLK (y=700) -> Kart üzerindeki 2. ayak! (ESP32 GPIO 7) -->
+      <circle cx="1420" cy="700" r="8" fill="#3b82f6" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="705" fill="#93c5fd">2. BCLK (Pin 7)</text>
 
-      <!-- 2. BCLK (y=760) -> EXACT HORIZONTAL ALIGNMENT WITH ESP32 GPIO 7 -->
-      <circle cx="1420" cy="760" r="8" fill="#3b82f6" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="765" fill="#93c5fd">2. BCLK (Pin 7)</text>
+      <!-- 3. DIN (y=760) -> Kart üzerindeki 3. ayak! (ESP32 GPIO 9) -->
+      <circle cx="1420" cy="760" r="8" fill="#f43f5e" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="765" fill="#fda4af">3. DIN (Pin 9)</text>
 
       <!-- 4. GAIN (y=810) -->
       <circle cx="1420" cy="810" r="8" fill="#334155" stroke="#94a3b8" stroke-width="2" stroke-dasharray="2 2"/>
       <text x="1438" y="815" fill="#94a3b8">4. GAIN <tspan fill="#f59e0b">[BOŞ]</tspan></text>
 
-      <!-- 5. SD (y=850) -->
-      <circle cx="1420" cy="850" r="8" fill="#334155" stroke="#ef4444" stroke-width="2" stroke-dasharray="2 2"/>
-      <text x="1438" y="855" fill="#fca5a5">5. SD <tspan fill="#ef4444">[BOŞ!]</tspan></text>
+      <!-- 5. SD (y=850) -> Jumper to VIN! -->
+      <circle cx="1420" cy="850" r="8" fill="#eab308" stroke="#fff" stroke-width="2.5"/>
+      <text x="1438" y="855" fill="#fef08a">5. SD <tspan fill="#facc15">➔ VIN'e Köprüle!</tspan></text>
 
       <!-- 6. GND (y=890) -->
       <circle cx="1420" cy="890" r="8" fill="#94a3b8" stroke="#fff" stroke-width="2.5"/>
@@ -586,26 +586,29 @@
     <!-- ESP32 Pin 13 MISO (1200, 400) -> SD Pin 3 MISO (1420, 400) -->
     <path d="M 1200 400 L 1420 400" stroke="#06b6d4" stroke-width="4.5"/>
 
-    <!-- ESP32 Pin 12 SCK (1200, 460) -> SD Pin 4 SCK (1420, 460) -->
-    <path d="M 1200 460 L 1420 460" stroke="#eab308" stroke-width="4.5"/>
+    <!-- ESP32 Pin 12 SCK (1200, 460) -> SD Pin 5 SCK (1420, 520) -->
+    <path d="M 1200 460 L 1280 460 L 1280 520 L 1420 520" stroke="#eab308" stroke-width="4.5"/>
 
-    <!-- ESP32 Pin 11 MOSI (1200, 520) -> SD Pin 5 MOSI (1420, 520) -->
-    <path d="M 1200 520 L 1420 520" stroke="#22c55e" stroke-width="4.5"/>
+    <!-- ESP32 Pin 11 MOSI (1200, 520) -> SD Pin 4 MOSI (1420, 460) -->
+    <path d="M 1200 520 L 1250 520 L 1250 460 L 1420 460" stroke="#22c55e" stroke-width="4.5"/>
 
     <!-- ESP32 Pin 10 CS (1200, 580) -> SD Pin 6 CS (1420, 580) -->
     <path d="M 1200 580 L 1420 580" stroke="#f59e0b" stroke-width="4.5"/>
 
     <!-- 7. MAX98357A I2S SES HATLARI (ESP32 Sağ <-> Amfi Sol) -->
-    <!-- ALL 3 AUDIO LINES ARE 100% PURE STRAIGHT HORIZONTAL LINES! -->
+    <!-- Exact physical pin mapping: Pin 1 LRC, Pin 2 BCLK, Pin 3 DIN -->
 
-    <!-- ESP32 Pin 9 DIN (1200, 640) -> Amfi Pin 3 DIN (1420, 640) -->
-    <path d="M 1200 640 L 1420 640" stroke="#f43f5e" stroke-width="4.5"/>
+    <!-- ESP32 Pin 9 DIN (1200, 640) -> Amfi Pin 3 DIN (1420, 760) -->
+    <path d="M 1200 640 L 1230 640 L 1230 760 L 1420 760" stroke="#f43f5e" stroke-width="4.5"/>
 
-    <!-- ESP32 Pin 8 LRC (1200, 700) -> Amfi Pin 1 LRC (1420, 700) -->
-    <path d="M 1200 700 L 1420 700" stroke="#10b981" stroke-width="4.5"/>
+    <!-- ESP32 Pin 8 LRC (1200, 700) -> Amfi Pin 1 LRC (1420, 640) -->
+    <path d="M 1200 700 L 1270 700 L 1270 640 L 1420 640" stroke="#10b981" stroke-width="4.5"/>
 
-    <!-- ESP32 Pin 7 BCLK (1200, 760) -> Amfi Pin 2 BCLK (1420, 760) -->
-    <path d="M 1200 760 L 1420 760" stroke="#3b82f6" stroke-width="4.5"/>
+    <!-- ESP32 Pin 7 BCLK (1200, 760) -> Amfi Pin 2 BCLK (1420, 700) -->
+    <path d="M 1200 760 L 1300 760 L 1300 700 L 1420 700" stroke="#3b82f6" stroke-width="4.5"/>
+
+    <!-- SD to VIN Hardware Jumper Wire (Wakes up amplifier!) -->
+    <path d="M 1420 850 C 1370 850, 1370 930, 1420 930" stroke="#facc15" stroke-width="4" stroke-dasharray="4 3"/>
 
     <!-- 8. MAX98357A OUTPUT TO SPEAKER -->
     <!-- PURE STRAIGHT HORIZONTAL LINES! -->

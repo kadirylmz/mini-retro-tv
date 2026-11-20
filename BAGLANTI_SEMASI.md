@@ -58,7 +58,7 @@ Fiziksel kart üzerindeki 7 pinin sırasıyla bağlantı durumu:
 | **2** | **BCLK** | **GPIO 7** | Bağlı | I2S Bit Clock (Ses Saat Sinyali) |
 | **3** | **DIN** | **GPIO 9** | Bağlı | I2S Data In (Sayısal Ses Verisi) |
 | **4** | **GAIN** | *(Boş)* | **BOŞ** | **Bağlanmaz!** Boş bırakıldığında varsayılan 9 dB temiz kazançta çalışır |
-| **5** | **SD** | *(Boş)* | **BOŞ** | **Bağlanmaz!** Boş bırakıldığında amfi açık kalır ve stereo sesi mono olarak birleştirir `(L+R)/2` |
+| **5** | **SD** | *(Boş veya VIN)* | **BOŞ / VIN KÖPRÜSÜ** | Standartta boştur `(L+R)/2 mono`. **Eğer ses gelmiyorsa:** Klon kartlarda dahili pull-up direnci eksik olduğundan amfi otomatik uyku moduna geçer. **5. SD pinini hemen yanındaki 7. VIN (5V) pinine küçük bir kabloyla köprüleyin!** Böylece amfi anında uyanır ve sol kanal sesi basar. |
 | **6** | **GND** | **GND** | Bağlı | Ortak Toprak Hattı |
 | **7** | **VIN** | **5V (5U)** | Bağlı | 5V Güç Beslemesi (Hoparlörden 3W tam ve net güç almak için) |
 | — | **`+` / `−`** | **Hoparlör** | Bağlı | 8Ω 1W mini hoparlör uçlarına lehimlenir (+ Kırmızı, − Siyah) |
