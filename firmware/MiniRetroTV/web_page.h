@@ -403,6 +403,20 @@ h1 {
     <button class="btn-vol" onclick="setQuickVol(75)">🔊 %75</button>
     <button class="btn-vol" onclick="setQuickVol(100)">🔊 %100</button>
   </div>
+
+  <!-- Ekran Parlaklığı (Pil Tasarruf Kontrolü) -->
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;">
+      <span style="color:var(--text-dim);">💡 Ekran Parlaklığı (Pil Tasarrufu):</span>
+      <span id="disp-bright" style="font-weight:bold;color:var(--accent);">%70</span>
+    </div>
+    <input type="range" id="bright-slider" min="20" max="255" value="180" oninput="onBrightChange(this.value)" style="width:100%;accent-color:var(--accent);cursor:pointer;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:2px;">
+      <span>%10 (Eko Pil)</span>
+      <span>%70 (Önerilen)</span>
+      <span>%100 (Maksimum)</span>
+    </div>
+  </div>
 </div>
 
 <!-- WI-FI & AĞ AYARLARI KARTI -->
@@ -638,6 +652,19 @@ async function toggleMute() {
   } catch(e) { console.error(e); }
 }
 
+// ---- PARLAKLIK KONTROLÜ (PİL TASARRUFU) ----
+let brightDebounce = null;
+function onBrightChange(val) {
+  const pct = Math.round((val / 255) * 100);
+  document.getElementById('disp-bright').innerText = '%' + pct;
+  clearTimeout(brightDebounce);
+  brightDebounce = setTimeout(async () => {
+    try {
+      await fetch('/brightness?val=' + val);
+    } catch(e) {}
+  }, 120);
+}
+
 // ---- WI-FI YÖNETİMİ ----
 async function scanWifiNetworks() {
   const btn = document.getElementById('btn-scan');
@@ -757,6 +784,12 @@ async function loadVideos() {
 
     if (data.volume !== undefined) {
       updateVolUI(data.volume, data.muted);
+    }
+    if (data.brightness !== undefined) {
+      const bSlider = document.getElementById('bright-slider');
+      const bDisp = document.getElementById('disp-bright');
+      if (bSlider) bSlider.value = data.brightness;
+      if (bDisp) bDisp.innerText = '%' + Math.round((data.brightness / 255) * 100);
     }
     if (data.loop_all !== undefined) {
       updateLoopModeUI(data.loop_all);

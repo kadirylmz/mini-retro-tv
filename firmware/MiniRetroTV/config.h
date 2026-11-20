@@ -23,7 +23,7 @@
 #define PIN_I2S_LRC     8       // I2S Word Select (LRC / WS)
 #define PIN_I2S_DIN     9       // I2S Data Out (DIN)
 #define AUDIO_RATE      16000   // 16 kHz Mono 16-bit PCM
-#define DEFAULT_VOLUME  70      // Başlangıç Ses Seviyesi (%70)
+#define DEFAULT_VOLUME  45      // Pilde tasarruf ve temiz ses için %45 (Amfi akımını yarıya indirir)
 
 // ---- Buton Pini ----
 #define PIN_BUTTON  0   // Tek tık: Sonraki video | Çift tık: Sesi Kapat/Aç (Mute) | Uzun bas: Ses Seviyesi

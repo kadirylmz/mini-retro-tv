@@ -77,6 +77,9 @@ bool isMuted = false;
 uint8_t lastUnmutedVolume = DEFAULT_VOLUME;
 unsigned long osdUntil = 0;
 
+// Ekran Parlaklığı (LEDC PWM - Pil Tasarrufu: %70 varsayılan)
+uint8_t currentBrightness = 180;
+
 // Kare Tamponu
 uint8_t *frameBuffer = nullptr;
 size_t frameBufferSize = MAX_FRAME_SIZE;
@@ -458,6 +461,22 @@ void setupWebServer() {
     server.send(200, "application/json", json);
   });
 
+  server.on("/brightness", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    if (server.hasArg("val")) {
+      int val = server.arg("val").toInt();
+      if (val >= 20 && val <= 255) {
+        currentBrightness = (uint8_t)val;
+        ledcWrite(TFT_BL, currentBrightness);
+        prefs.putUChar("bright", currentBrightness);
+        Serial.printf("Parlaklık Değiştirildi: %d/255 (%%%d)\n", currentBrightness, currentBrightness * 100 / 255);
+        server.send(200, "application/json", "{\"status\":\"ok\",\"brightness\":" + String(currentBrightness) + "}");
+        return;
+      }
+    }
+    server.send(400, "application/json", "{\"error\":\"Geçersiz parlaklık\"}");
+  });
+
   server.on("/list", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     bool staConn = (WiFi.status() == WL_CONNECTED);
@@ -467,6 +486,7 @@ void setupWebServer() {
                   ",\"used\":" + String(cachedUsedBytes) + 
                   ",\"volume\":" + String(currentVolume) + 
                   ",\"muted\":" + (isMuted ? "true" : "false") + 
+                  ",\"brightness\":" + String(currentBrightness) + 
                   ",\"loop_all\":" + (loopAll ? "true" : "false") + 
                   ",\"photo_duration\":" + String(photoDurationMs / 1000) + 
                   ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx].name : "") + "\"" +
@@ -839,7 +859,8 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 //  SETUP
 // =========================================================================
 void setup() {
-  esp_brownout_disable(); // Pilde voltaj çöküşü resetlerini ve ekran titremesini engeller
+  esp_brownout_disable(); // Pilde voltaj çöküşü resetlerini engeller
+  setCpuFrequencyMhz(160); // 240 MHz -> 160 MHz (%35 pil tasarrufu, serin çalışma ve voltaj stabilitesi)
   Serial.begin(115200);
   Serial.setTimeout(10);
   Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print kilitlenmesini engeller
@@ -849,8 +870,9 @@ void setup() {
   Serial.println("=============================================");
 
   pinMode(PIN_BUTTON, INPUT_PULLUP);
-  pinMode(TFT_BL, OUTPUT);
-  digitalWrite(TFT_BL, HIGH);
+  // Arka ışığı PWM (LEDC) ile başlat (%70 parlaklık - pil tüketimini yarıya indirir)
+  ledcAttach(TFT_BL, 5000, 8);
+  ledcWrite(TFT_BL, currentBrightness);
 
   // Donanımsal Reset
   pinMode(TFT_RES, OUTPUT);
@@ -883,6 +905,8 @@ void setup() {
   currentVolume = prefs.getUChar("vol", DEFAULT_VOLUME);
   isMuted = prefs.getBool("muted", false);
   lastUnmutedVolume = (currentVolume > 0) ? currentVolume : DEFAULT_VOLUME;
+  currentBrightness = prefs.getUChar("bright", 180);
+  ledcWrite(TFT_BL, currentBrightness);
   loopAll = prefs.getBool("loop_all", true);
   photoDurationMs = prefs.getULong("photo_dur", 5000);
 
@@ -980,7 +1004,7 @@ void setup() {
   }
 
   WiFi.setSleep(false);                 // Modem uykusunu kapat
-  WiFi.setTxPower(WIFI_POWER_15dBm);    // Kararlı 15 dBm (voltaj düşüşü ve RF parazitini önler)
+  WiFi.setTxPower(WIFI_POWER_13dBm);    // 13 dBm: Anlık akım piklerini 450mA'dan 140mA'ya indirir, 603035 pilde voltaj çöküşünü önler
   Serial.printf("Wi-Fi Hotspot Aktif: [%s] (%s) - IP: %s [Kanal %d]\n", 
                 currentApSsid.c_str(), apPass ? "Şifreli (WPA2)" : "ŞİFRESİZ / AÇIK AĞ (Kolay Bağlantı)", 
                 WiFi.softAPIP().toString().c_str(), apChannel);
