@@ -455,14 +455,15 @@
     <text x="1725" y="765" fill="#cbd5e1" font-size="11" font-weight="900" text-anchor="end">SPK -</text>
 
     <!-- Physical Pinout Reference Box (Right side of PCB) -->
-    <rect x="1560" y="785" width="165" height="150" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5"/>
+    <rect x="1560" y="785" width="165" height="170" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5"/>
     <text x="1642" y="805" fill="#a5b4fc" font-size="10" font-weight="900" text-anchor="middle">📌 KARTTAKİ FİZİKSEL SIRA</text>
     <text x="1570" y="825" fill="#6ee7b7" font-size="10" font-weight="700">1. LRC  → ESP32 GPIO 8</text>
     <text x="1570" y="845" fill="#93c5fd" font-size="10" font-weight="700">2. BCLK → ESP32 GPIO 7</text>
     <text x="1570" y="865" fill="#fda4af" font-size="10" font-weight="700">3. DIN  → ESP32 GPIO 9</text>
-    <text x="1570" y="885" fill="#94a3b8" font-size="10">4. GAIN → BOŞ (9dB)</text>
-    <text x="1570" y="905" fill="#fca5a5" font-size="10" font-weight="700">5. SD   → BOŞ (Kapatma)</text>
+    <text x="1570" y="885" fill="#94a3b8" font-size="10">4. GAIN → BOŞTA (9dB)</text>
+    <text x="1570" y="905" fill="#94a3b8" font-size="10">5. SD   → BOŞTA (Açık)</text>
     <text x="1570" y="925" fill="#cbd5e1" font-size="10">6. GND  → Ortak GND</text>
+    <text x="1570" y="945" fill="#fca5a5" font-size="10" font-weight="700">7. VIN  → 5V Besleme</text>
 
     <!-- 7 Pins on the Left Edge (x = 1420, facing ESP32) -->
     <!-- Pins 3, 1, 2 directly face GPIO 9, 8, 7 for 100% straight horizontal lines -->
@@ -483,9 +484,9 @@
       <circle cx="1420" cy="810" r="8" fill="#334155" stroke="#94a3b8" stroke-width="2" stroke-dasharray="2 2"/>
       <text x="1438" y="815" fill="#94a3b8">4. GAIN <tspan fill="#f59e0b">[BOŞ]</tspan></text>
 
-      <!-- 5. SD (y=850) -> Jumper to VIN! -->
-      <circle cx="1420" cy="850" r="8" fill="#eab308" stroke="#fff" stroke-width="2.5"/>
-      <text x="1438" y="855" fill="#fef08a">5. SD <tspan fill="#facc15">➔ VIN'e Köprüle!</tspan></text>
+      <!-- 5. SD (y=850) -> KESİNLİKLE BOŞTA (Köprü Yapmayın!) -->
+      <circle cx="1420" cy="850" r="8" fill="#334155" stroke="#ef4444" stroke-width="2" stroke-dasharray="2 2"/>
+      <text x="1438" y="855" fill="#fca5a5">5. SD <tspan fill="#ef4444">[BOŞ - KÖPRÜ YAPMAYIN!]</tspan></text>
 
       <!-- 6. GND (y=890) -->
       <circle cx="1420" cy="890" r="8" fill="#94a3b8" stroke="#fff" stroke-width="2.5"/>
@@ -607,8 +608,7 @@
     <!-- ESP32 Pin 7 BCLK (1200, 760) -> Amfi Pin 2 BCLK (1420, 700) -->
     <path d="M 1200 760 L 1300 760 L 1300 700 L 1420 700" stroke="#3b82f6" stroke-width="4.5"/>
 
-    <!-- SD to VIN Hardware Jumper Wire (Wakes up amplifier!) -->
-    <path d="M 1420 850 C 1370 850, 1370 930, 1420 930" stroke="#facc15" stroke-width="4" stroke-dasharray="4 3"/>
+    <!-- SD Pini Kesinlikle Boş Bırakılır (Kısa devre riskini önlemek için köprü yapılmaz) -->
 
     <!-- 8. MAX98357A OUTPUT TO SPEAKER -->
     <!-- PURE STRAIGHT HORIZONTAL LINES! -->
@@ -649,21 +649,21 @@
       <text x="0" y="195" fill="#fda4af" font-size="12" font-weight="700">• Amfi Pin 3 (DIN) → ESP32 GPIO 9</text>
     </g>
 
-    <!-- Column 3: KRİTİK UYARILAR -->
+    <!-- Column 3: KRİTİK GÜVENLİK VE YANMAYI ÖNLEME UYARILARI -->
     <g transform="translate(870, 850)">
-      <text x="0" y="20" fill="#ef4444" font-size="16" font-weight="900">⚠️ ÇOK KRİTİK 3 DONANIM KURALI</text>
+      <text x="0" y="20" fill="#ef4444" font-size="15" font-weight="900">🚨 YANMA & KISA DEVRE ÖNLEME KURALLARI</text>
       
       <rect x="0" y="35" width="390" height="48" rx="8" fill="#450a0a" stroke="#ef4444"/>
-      <text x="12" y="55" fill="#fca5a5" font-size="11" font-weight="800">1. AMFİ SD PİNİ BOŞTA KALMALIDIR!</text>
-      <text x="12" y="72" fill="#fecaca" font-size="10">"SD" kapatma pinidir, GND'ye bağlarsanız amfi susar!</text>
+      <text x="12" y="55" fill="#fca5a5" font-size="11" font-weight="800">1. AMFİDE KÖPRÜ YAPMAYIN! (SD & GAIN BOŞ)</text>
+      <text x="12" y="72" fill="#fecaca" font-size="10">GND ve 5V yan yanadır! Köprü kablosu takmak kısa devre yaptırır!</text>
 
       <rect x="0" y="93" width="390" height="48" rx="8" fill="#451a03" stroke="#f59e0b"/>
-      <text x="12" y="113" fill="#fde68a" font-size="11" font-weight="800">2. LRC (8) İLE BCLK (7) TERS BAĞLANMAMALIDIR!</text>
-      <text x="12" y="130" fill="#fef3c7" font-size="10">Amfinin 1. ayağı GPIO 8'e, 2. ayağı GPIO 7'ye gitmelidir.</text>
+      <text x="12" y="113" fill="#fde68a" font-size="11" font-weight="800">2. EKRAN VCC SADECE 3.3V! (ASLA 5V VERMEYİN)</text>
+      <text x="12" y="130" fill="#fef3c7" font-size="10">Ekran VCC'ye 5V verilirse ST7789 çipi kalıcı olarak yanar!</text>
 
       <rect x="0" y="151" width="390" height="48" rx="8" fill="#1e1b4b" stroke="#6366f1"/>
-      <text x="12" y="171" fill="#c7d2fe" font-size="11" font-weight="800">3. TRİMPOT 5.0V AYARI YAPILMADAN BAĞLAMAYIN!</text>
-      <text x="12" y="188" fill="#e0e7ff" font-size="10">Boost çıkışını multimetre ile tam 5.0V'a ayarlayıp bağlayın.</text>
+      <text x="12" y="171" fill="#c7d2fe" font-size="11" font-weight="800">3. USB TAKILIYKEN PİLİ AYNI ANDA BAĞLAMAYIN!</text>
+      <text x="12" y="188" fill="#e0e7ff" font-size="10">Çift besleme çakışması ESP32'yi veya bilgisayar portunu yakabilir.</text>
     </g>
   </g>
 

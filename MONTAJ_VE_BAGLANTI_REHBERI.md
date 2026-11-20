@@ -38,7 +38,7 @@ Kart üzerinde yan yana dizili bulunan 7 pinin sırasıyla montaj durumu:
 * **2. BCLK** $\rightarrow$ ESP32-S3 `GPIO 7` *(Bit Clock)*
 * **3. DIN** $\rightarrow$ ESP32-S3 `GPIO 9` *(Data In / Ses Verisi)*
 * **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz)** *(Varsayılan 9 dB temiz kazanç)*
-* **5. SD** $\rightarrow$ **BOŞ veya VIN'E KÖPRÜ** *(Eğer hoparlörden hiç ses gelmiyorsa, klon kartların otomatik uyku modundan çıkması için 5. SD pinini 7. VIN pinine bir kablo parçasıyla köprüleyin!)*
+* **5. SD** $\rightarrow$ **BOŞ (KESİNLİKLE BAĞLANMAZ / KÖPRÜ YAPMAYIN!)** *(Yanındaki 6. GND ve 7. 5V uçları kısa devre olmasın diye SD pini kesinlikle boş bırakılmalıdır. Çip boşken otomatik açıktır).*
 * **6. GND** $\rightarrow$ Ortak `GND`
 * **7. VIN** $\rightarrow$ **`5V (5U)`** *(3W ses gücü için 5V hattına bağlanır)*
 * **Hoparlör Klemensleri (`+` / `−`):** 8Ω 1W mini hoparlör uçlarına lehimlenir (+ Kırmızı, − Siyah).
