@@ -242,7 +242,12 @@ void drawStandbyScreen() {
   tft.setCursor(22, 90);
   if (isSDActive) {
     uint64_t sizeMB = SD.cardSize() / (1024 * 1024);
-    tft.printf("[ 16GB SD KART: %llu MB ]\n", sizeMB);
+    uint32_t approxGB = (uint32_t)round((double)SD.cardSize() / 1e9);
+    if (approxGB >= 1) {
+      tft.printf("[ %uGB SD KART: %llu MB ]\n", approxGB, sizeMB);
+    } else {
+      tft.printf("[ SD KART: %llu MB ]\n", sizeMB);
+    }
   } else {
     tft.println("[ DAHILI FLASH AKTIF ]");
   }
@@ -868,7 +873,6 @@ void setup() {
   setCpuFrequencyMhz(160); // 240 MHz -> 160 MHz (%35 pil tasarrufu, serin çalışma ve voltaj stabilitesi)
   Serial.begin(115200);
   Serial.setTimeout(10);
-  Serial.setTxTimeoutMs(0); // USB bağlı değilken Serial.print kilitlenmesini engeller
   delay(100);
   Serial.println("\n=============================================");
   Serial.println("   🎬 COLLECTIBLE DISPLAY - 16GB SD EDITION");
@@ -950,7 +954,12 @@ void setup() {
 
   if (sdOk) {
     uint64_t sizeMB = SD.cardSize() / (1024 * 1024);
-    Serial.printf(">>> 16GB SD KART BASARIYLA BAGLANDI! (%llu MB) <<<\n", sizeMB);
+    uint32_t approxGB = (uint32_t)round((double)SD.cardSize() / 1e9);
+    if (approxGB >= 1) {
+      Serial.printf(">>> %uGB SD KART BASARIYLA BAGLANDI! (%llu MB) <<<\n", approxGB, sizeMB);
+    } else {
+      Serial.printf(">>> SD KART BASARIYLA BAGLANDI! (%llu MB) <<<\n", sizeMB);
+    }
     storage = &SD;
     isSDActive = true;
     if (!storage->exists(VIDEO_DIR)) {

@@ -488,7 +488,7 @@ h1 {
 
 <!-- HAFIZA KARTI -->
 <div class="card">
-  <h2><span>16 GB SD Kart Hafıza Durumu</span><span id="conn-badge" style="font-size:11px;color:var(--success);">● Yayında</span></h2>
+  <h2><span id="storage-title">SD Kart Hafıza Durumu</span><span id="conn-badge" style="font-size:11px;color:var(--success);">● Yayında</span></h2>
   <div class="stat-grid">
     <div class="stat-box">
       <div class="stat-label">BOŞ ALAN</div>
@@ -781,6 +781,19 @@ async function loadVideos() {
     document.getElementById('video-count').innerText = data.files.length;
     const pct = totalBytes > 0 ? (usedBytes / totalBytes) * 100 : 0;
     document.getElementById('space-bar').style.width = pct + '%';
+
+    const storageTitleEl = document.getElementById('storage-title');
+    if (storageTitleEl) {
+      if (totalBytes > 1024 * 1024 * 1024) {
+        const approxGb = Math.round(totalBytes / 1e9);
+        storageTitleEl.innerText = `${approxGb} GB SD Kart Hafıza Durumu`;
+      } else if (totalBytes > 0) {
+        const mb = Math.round(totalBytes / (1024 * 1024));
+        storageTitleEl.innerText = `${mb} MB SD Kart Hafıza Durumu`;
+      } else {
+        storageTitleEl.innerText = 'SD Kart Hafıza Durumu';
+      }
+    }
 
     if (data.volume !== undefined) {
       updateVolUI(data.volume, data.muted);
