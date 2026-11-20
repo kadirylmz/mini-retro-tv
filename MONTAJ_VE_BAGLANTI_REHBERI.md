@@ -37,7 +37,12 @@ Kablo geçişlerini kolaylaştırmak ve karmaşayı önlemek için ekranın tüm
 Tüm donanım bir araya getirildiğinde (1.3" ST7789 Ekran + ESP32-S3 + 16GB MicroSD + MAX98357A I2S Amfi + TP4056 5V Boost Kartı + Hoparlör + 3.7V Li-Po Pil) kullanılacak tam montaj şeması:
 
 <p align="center">
-  <img src="docs/tam_baglanti_semasi_13inch.png" alt="Tam Proje Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png" alt="Tam Proje Şeması 1.3 inç" width="100%">
+</p>
+
+### Alternatif 1.69" Kompakt Donanım Şeması (ESP32-C3 SuperMini)
+<p align="center">
+  <img src="docs/baglanti_semasi.png" alt="Orijinal 1.69 inç Şema" width="100%">
 </p>
 
 ---

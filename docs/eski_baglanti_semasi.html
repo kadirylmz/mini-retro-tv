@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1800px;
+    height: 1150px;
+    background: #14171f;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1150" viewBox="0 0 1800 1150">
+  <defs>
+    <!-- Subtle schematic grid -->
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e2430" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <linearGradient id="screenGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1c2738"/>
+      <stop offset="100%" stop-color="#0b0f17"/>
+    </linearGradient>
+    <linearGradient id="batGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d5dbe6"/>
+      <stop offset="50%" stop-color="#b4becf"/>
+      <stop offset="100%" stop-color="#8e99ad"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1800" height="1150" fill="#131720"/>
+  <rect width="1800" height="1150" fill="url(#grid)"/>
+
+  <!-- Header Banner -->
+  <rect x="30" y="22" width="1740" height="76" rx="14" fill="#1c2230" stroke="#2f3a4f" stroke-width="2"/>
+  <text x="56" y="57" fill="#f8fafc" font-size="28" font-weight="800" letter-spacing="0.5">📺 MINI RETRO TV — TAM BAĞLANTI ŞEMASI (SESLİ + MicroSD + ŞARJLI)</text>
+  <text x="56" y="83" fill="#94a3b8" font-size="16" font-weight="500">ESP32-C3 SuperMini  •  Voltaj 1.69" 240×280 ST7789 IPS  •  MAX98357A I2S Amfi + 8Ω 1W Hoparlör  •  MicroSD (SPI)  •  TP4056 + 603035 600mAh LiPo</text>
+  <rect x="1485" y="38" width="260" height="44" rx="10" fill="#291d1c" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="1615" y="65" fill="#fca5a5" font-size="15" font-weight="700" text-anchor="middle">⚠️ EKRAN VCC = SADECE 3.3V</text>
+
+  <!-- ==================== WIRE LAYER (drawn underneath pins/labels) ==================== -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- BATTERY -> TP4056 -->
+    <path d="M 270 220 L 340 220" stroke="#ef4444" stroke-width="5"/> <!-- B+ -->
+    <path d="M 270 270 L 340 270" stroke="#64748b" stroke-width="5"/> <!-- B- -->
+
+    <!-- TP4056 OUT+ (5V/BAT) -> ESP32 5V & MAX98357A VIN -->
+    <!-- TP4056 OUT+ is at (590, 215). Route to ESP32 right-side 5V (1010, 310) via top bus -->
+    <path d="M 590 215 L 650 215 L 650 155 L 1110 155 L 1110 310 L 1010 310" stroke="#ef4444" stroke-width="4.5"/>
+    <!-- Branch down from 5V rail to MAX98357A VIN (1220, 745) -->
+    <path d="M 1110 310 L 1110 745 L 1220 745" stroke="#ef4444" stroke-width="4.5"/>
+    <circle cx="1110" cy="310" r="6" fill="#ef4444"/>
+
+    <!-- TP4056 OUT- (GND) -> Common GND rail -->
+    <!-- TP4056 OUT- is at (590, 275). Route to ESP32 right-side GND (1010, 355) -->
+    <path d="M 590 275 L 632 275 L 632 175 L 1090 175 L 1090 355 L 1010 355" stroke="#94a3b8" stroke-width="4.5"/>
+    <!-- GND branch to Screen GND (1250, 215) -->
+    <path d="M 1090 215 L 1250 215" stroke="#94a3b8" stroke-width="4"/>
+    <circle cx="1090" cy="215" r="5.5" fill="#94a3b8"/>
+    <!-- GND branch to MAX98357A GND (1220, 790) -->
+    <path d="M 1090 355 L 1090 790 L 1220 790" stroke="#94a3b8" stroke-width="4"/>
+    <circle cx="1090" cy="355" r="6" fill="#94a3b8"/>
+    <!-- GND branch to MicroSD GND (420, 710) -->
+    <path d="M 632 275 L 632 710 L 420 710" stroke="#94a3b8" stroke-width="4"/>
+    <circle cx="632" cy="275" r="5.5" fill="#94a3b8"/>
+
+    <!-- ESP32 3V3 (1010, 400) -> Screen VCC (1250, 260) & MicroSD VCC (420, 755) -->
+    <path d="M 1010 400 L 1130 400 L 1130 260 L 1250 260" stroke="#f97316" stroke-width="4"/>
+    <!-- 3.3V dashed/labeled branch to MicroSD VCC -->
+    <path d="M 1010 400 L 1065 400 L 1065 660 L 580 660 L 580 755 L 420 755" stroke="#f97316" stroke-width="3.5" stroke-dasharray="10,5"/>
+    <circle cx="1065" cy="400" r="5.5" fill="#f97316"/>
+
+    <!-- SHARED SPI SCK: ESP32 GPIO4 (1010, 445) -> Screen SCL (1250, 305) & MicroSD SCK (420, 890) -->
+    <path d="M 1010 445 L 1150 445 L 1150 305 L 1250 305" stroke="#eab308" stroke-width="4"/>
+    <path d="M 1050 445 L 1050 676 L 605 676 L 605 890 L 420 890" stroke="#eab308" stroke-width="3.5"/>
+    <circle cx="1050" cy="445" r="5.5" fill="#eab308"/>
+
+    <!-- SHARED SPI MOSI: ESP32 GPIO6 (790, 355) -> Screen SDA (1250, 350) & MicroSD MOSI (420, 845) -->
+    <path d="M 790 355 L 690 355 L 690 845 L 420 845" stroke="#22c55e" stroke-width="4"/>
+    <path d="M 690 355 L 690 193 L 1170 193 L 1170 350 L 1250 350" stroke="#22c55e" stroke-width="4"/>
+    <circle cx="690" cy="355" r="6" fill="#22c55e"/>
+
+    <!-- LCD RST: ESP32 GPIO2 (1010, 535) -> Screen RES (1250, 395) -->
+    <path d="M 1010 535 L 1190 535 L 1190 395 L 1250 395" stroke="#38bdf8" stroke-width="4"/>
+
+    <!-- LCD DC: ESP32 GPIO3 (1010, 490) -> Screen DC (1250, 440) -->
+    <path d="M 1010 490 L 1170 490 L 1170 440 L 1250 440" stroke="#a855f7" stroke-width="4"/>
+
+    <!-- LCD CS: ESP32 GPIO7 (790, 400) -> Screen CS (1250, 485) -->
+    <path d="M 790 400 L 712 400 L 712 642 L 1210 642 L 1210 485 L 1250 485" stroke="#ec4899" stroke-width="4"/>
+
+    <!-- LCD BL: ESP32 GPIO1 (1010, 580) -> Screen BLK (1250, 530) -->
+    <path d="M 1010 580 L 1230 580 L 1230 530 L 1250 530" stroke="#f8fafc" stroke-width="4"/>
+
+    <!-- MicroSD MISO: ESP32 GPIO5 (790, 310) -> MicroSD MISO (420, 800) -->
+    <path d="M 790 310 L 668 310 L 668 800 L 420 800" stroke="#06b6d4" stroke-width="4"/>
+
+    <!-- MicroSD CS: ESP32 GPIO20 (790, 580) -> MicroSD CS (420, 935) -->
+    <path d="M 790 580 L 732 580 L 732 935 L 420 935" stroke="#f59e0b" stroke-width="4"/>
+
+    <!-- I2S BCLK: ESP32 GPIO0 (1010, 625) -> MAX98357A BCLK (1220, 835) -->
+    <path d="M 1010 625 L 1035 625 L 1035 835 L 1220 835" stroke="#3b82f6" stroke-width="4"/>
+
+    <!-- I2S LRC: ESP32 GPIO10 (790, 535) -> MAX98357A LRC (1220, 880) -->
+    <path d="M 790 535 L 754 535 L 754 880 L 1220 880" stroke="#10b981" stroke-width="4"/>
+
+    <!-- I2S DIN: ESP32 GPIO21 (790, 625) -> MAX98357A DIN (1220, 925) -->
+    <path d="M 790 625 L 772 625 L 772 925 L 1220 925" stroke="#f43f5e" stroke-width="4"/>
+
+    <!-- MAX98357A +/- -> SPEAKER -->
+    <path d="M 1455 815 L 1545 815" stroke="#ef4444" stroke-width="5"/>
+    <path d="M 1455 865 L 1545 865" stroke="#64748b" stroke-width="5"/>
+  </g>
+
+  <!-- ==================== 1. POWERMASTER 603035 LiPo BATTERY ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="145" width="230" height="195" rx="16" fill="url(#batGrad)" stroke="#64748b" stroke-width="2.5"/>
+    <rect x="248" y="165" width="16" height="155" rx="4" fill="#d97706" opacity="0.85"/>
+    <text x="145" y="195" fill="#0f172a" font-size="18" font-weight="800" text-anchor="middle">POWERMASTER</text>
+    <text x="145" y="222" fill="#1e293b" font-size="22" font-weight="900" text-anchor="middle">603035 LiPo</text>
+    <text x="145" y="252" fill="#334155" font-size="16" font-weight="700" text-anchor="middle">3.7V  •  600 mAh</text>
+    <text x="145" y="278" fill="#475569" font-size="13" font-weight="600" text-anchor="middle">6 × 30 × 35 mm</text>
+    <text x="145" y="318" fill="#0f172a" font-size="12" font-weight="700" text-anchor="middle">~4–6 Saat Sesli Çalışma</text>
+    <!-- Terminals -->
+    <circle cx="270" cy="220" r="8" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <text x="242" y="225" fill="#991b1b" font-size="15" font-weight="900" text-anchor="end">+</text>
+    <circle cx="270" cy="270" r="8" fill="#475569" stroke="#fff" stroke-width="2"/>
+    <text x="242" y="275" fill="#0f172a" font-size="17" font-weight="900" text-anchor="end">−</text>
+  </g>
+
+  <!-- ==================== 2. TP4056 TYPE-C CHARGER ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="160" width="250" height="165" rx="12" fill="#1d4ed8" stroke="#60a5fa" stroke-width="2.5"/>
+    <!-- USB-C Connector -->
+    <rect x="328" y="218" width="22" height="50" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+    <text x="465" y="192" fill="#ffffff" font-size="19" font-weight="800" text-anchor="middle">TP4056 Type-C</text>
+    <text x="465" y="214" fill="#bfdbfe" font-size="13" font-weight="600" text-anchor="middle">Korumalı (BMS) Şarj Devresi</text>
+    <!-- IC chip -->
+    <rect x="425" y="232" width="76" height="44" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="463" y="259" fill="#cbd5e1" font-size="12" font-family="Consolas" font-weight="700" text-anchor="middle">TP4056</text>
+    <text x="465" y="308" fill="#fde047" font-size="12" font-weight="700" text-anchor="middle">🔌 Şarj sadece buradan!</text>
+    <!-- Pads -->
+    <circle cx="340" cy="220" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <text x="355" y="225" fill="#fff" font-size="13" font-family="Consolas" font-weight="800">B+</text>
+    <circle cx="340" cy="270" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
+    <text x="355" y="275" fill="#fff" font-size="13" font-family="Consolas" font-weight="800">B-</text>
+    <circle cx="590" cy="215" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <text x="576" y="220" fill="#fff" font-size="13" font-family="Consolas" font-weight="800" text-anchor="end">OUT+</text>
+    <circle cx="590" cy="275" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+    <text x="576" y="280" fill="#fff" font-size="13" font-family="Consolas" font-weight="800" text-anchor="end">OUT-</text>
+  </g>
+
+  <!-- ==================== 3. ESP32-C3 SUPERMINI (CENTER - EXACT PHYSICAL PINOUT) ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="790" y="220" width="220" height="445" rx="16" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+    <!-- USB-C Port on top -->
+    <rect x="862" y="206" width="76" height="32" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+    <text x="900" y="227" fill="#0f172a" font-size="12" font-weight="800" text-anchor="middle">USB-C</text>
+    <!-- Ceramic Wi-Fi Antenna -->
+    <rect x="806" y="232" width="38" height="26" rx="4" fill="#dc2626" stroke="#fca5a5" stroke-width="1.5"/>
+    <text x="825" y="249" fill="#fff" font-size="10" font-weight="800" text-anchor="middle">WiFi</text>
+    <!-- ESP32-C3 Chip -->
+    <rect x="855" y="340" width="90" height="90" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+    <text x="900" y="376" fill="#f8fafc" font-size="15" font-weight="900" text-anchor="middle">ESP32-C3</text>
+    <text x="900" y="396" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">SuperMini</text>
+    <text x="900" y="416" fill="#94a3b8" font-size="11" text-anchor="middle">(Lehimsiz)</text>
+    <!-- BOOT button callout -->
+    <rect x="862" y="468" width="76" height="34" rx="6" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="900" y="489" fill="#fde047" font-size="12" font-weight="800" text-anchor="middle">BOOT (9)</text>
+    <text x="900" y="520" fill="#94a3b8" font-size="11" text-anchor="middle">Kısa: Kanal</text>
+    <text x="900" y="536" fill="#94a3b8" font-size="11" text-anchor="middle">1.5sn: Wi-Fi</text>
+    <text x="900" y="552" fill="#94a3b8" font-size="11" text-anchor="middle">4sn: Uyku</text>
+
+    <!-- LEFT 8 PINS: 5, 6, 7, 8, 9, 10, 20, 21 -->
+    <!-- y = 310, 355, 400, 445, 490, 535, 580, 625 -->
+    <g font-family="Consolas" font-size="14" font-weight="800">
+      <circle cx="790" cy="310" r="7" fill="#06b6d4" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="315" fill="#67e8f9">5</text>
+
+      <circle cx="790" cy="355" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="360" fill="#86efac">6</text>
+
+      <circle cx="790" cy="400" r="7" fill="#ec4899" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="405" fill="#f9a8d4">7</text>
+
+      <circle cx="790" cy="445" r="7" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
+      <text x="805" y="450" fill="#64748b">8 (boş)</text>
+
+      <circle cx="790" cy="490" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="495" fill="#fde047">9 (BTN)</text>
+
+      <circle cx="790" cy="535" r="7" fill="#10b981" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="540" fill="#6ee7b7">10</text>
+
+      <circle cx="790" cy="580" r="7" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="585" fill="#fcd34d">20 RX</text>
+
+      <circle cx="790" cy="625" r="7" fill="#f43f5e" stroke="#fff" stroke-width="2"/>
+      <text x="805" y="630" fill="#fda4af">21 TX</text>
+    </g>
+
+    <!-- RIGHT 8 PINS: 5V, G, 3V3, 4, 3, 2, 1, 0 -->
+    <g font-family="Consolas" font-size="14" font-weight="800" text-anchor="end">
+      <circle cx="1010" cy="310" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="315" fill="#fca5a5">5V</text>
+
+      <circle cx="1010" cy="355" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="360" fill="#e2e8f0">GND</text>
+
+      <circle cx="1010" cy="400" r="7" fill="#f97316" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="405" fill="#fdba74">3V3</text>
+
+      <circle cx="1010" cy="445" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="450" fill="#fde047">4</text>
+
+      <circle cx="1010" cy="490" r="7" fill="#a855f7" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="495" fill="#d8b4fe">3</text>
+
+      <circle cx="1010" cy="535" r="7" fill="#38bdf8" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="540" fill="#7dd3fc">2</text>
+
+      <circle cx="1010" cy="580" r="7" fill="#f8fafc" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="585" fill="#f8fafc">1</text>
+
+      <circle cx="1010" cy="625" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+      <text x="995" y="630" fill="#93c5fd">0</text>
+    </g>
+  </g>
+
+  <!-- ==================== 4. 1.69" 240x280 ST7789 IPS DISPLAY ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="1250" y="155" width="510" height="425" rx="18" fill="#1e293b" stroke="#475569" stroke-width="3"/>
+    <!-- Rounded IPS Screen Glass -->
+    <rect x="1365" y="190" width="365" height="315" rx="34" fill="url(#screenGrad)" stroke="#64748b" stroke-width="3"/>
+    <!-- Retro SMPTE Bars Preview inside Screen -->
+    <g clip-path="inset(0 round 26px)" opacity="0.88">
+      <rect x="1385" y="210" width="46" height="190" fill="#f8fafc"/>
+      <rect x="1431" y="210" width="46" height="190" fill="#facc15"/>
+      <rect x="1477" y="210" width="46" height="190" fill="#22d3ee"/>
+      <rect x="1523" y="210" width="46" height="190" fill="#4ade80"/>
+      <rect x="1569" y="210" width="46" height="190" fill="#e879f9"/>
+      <rect x="1615" y="210" width="46" height="190" fill="#f87171"/>
+      <rect x="1661" y="210" width="49" height="190" fill="#3b82f6"/>
+      <rect x="1385" y="400" width="325" height="82" fill="#090c12"/>
+      <text x="1548" y="432" fill="#4ade80" font-size="22" font-family="Consolas" font-weight="900" text-anchor="middle">CH1  MINI TV</text>
+      <text x="1548" y="462" fill="#cbd5e1" font-size="14" font-family="Consolas" text-anchor="middle">1.69" 280×240 IPS • ST7789</text>
+    </g>
+    <text x="1548" y="545" fill="#f8fafc" font-size="18" font-weight="800" text-anchor="middle">Voltaj 1.69" ST7789 SPI Ekran</text>
+    <text x="1548" y="566" fill="#94a3b8" font-size="13" text-anchor="middle">(8-Pin Header — 3.3V Besleme)</text>
+
+    <!-- 8 Pins on left of screen board -->
+    <g font-family="Consolas" font-size="14" font-weight="800">
+      <circle cx="1250" cy="215" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="220" fill="#e2e8f0">GND</text>
+
+      <circle cx="1250" cy="260" r="7" fill="#f97316" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="265" fill="#fdba74">VCC (3.3V)</text>
+
+      <circle cx="1250" cy="305" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="310" fill="#fde047">SCL (SCK)</text>
+
+      <circle cx="1250" cy="350" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="355" fill="#86efac">SDA (MOSI)</text>
+
+      <circle cx="1250" cy="395" r="7" fill="#38bdf8" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="400" fill="#7dd3fc">RES (RST)</text>
+
+      <circle cx="1250" cy="440" r="7" fill="#a855f7" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="445" fill="#d8b4fe">DC</text>
+
+      <circle cx="1250" cy="485" r="7" fill="#ec4899" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="490" fill="#f9a8d4">CS</text>
+
+      <circle cx="1250" cy="530" r="7" fill="#f8fafc" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="535" fill="#f8fafc">BLK (BL)</text>
+    </g>
+  </g>
+
+  <!-- ==================== 5. MICROSD SPI MODULE (BOTTOM-LEFT) ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="670" width="380" height="305" rx="14" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2.5"/>
+    <!-- Metal SD Card Holder -->
+    <rect x="65" y="715" width="185" height="175" rx="10" fill="#cbd5e1" stroke="#64748b" stroke-width="2.5"/>
+    <rect x="52" y="750" width="20" height="105" rx="3" fill="#334155"/>
+    <text x="158" y="795" fill="#0f172a" font-size="22" font-weight="900" text-anchor="middle">MicroSD</text>
+    <text x="158" y="822" fill="#334155" font-size="14" font-weight="700" text-anchor="middle">FAT32  •  /v/</text>
+    <text x="158" y="846" fill="#475569" font-size="12" font-weight="700" text-anchor="middle">.mjpeg + .pcm</text>
+    <text x="158" y="920" fill="#ffffff" font-size="17" font-weight="800" text-anchor="middle">SPI MicroSD Kart Modülü</text>
+    <text x="158" y="944" fill="#fde047" font-size="12" font-weight="700" text-anchor="middle">⚠️ 5V regülatörlü modül pilde görmezse</text>
+    <text x="158" y="961" fill="#fde047" font-size="12" font-weight="700" text-anchor="middle">AMS1117 çıkışına 3V3 köprüleyin</text>
+
+    <!-- 6 Pins on right of SD module -->
+    <g font-family="Consolas" font-size="14" font-weight="800" text-anchor="end">
+      <circle cx="420" cy="710" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="715" fill="#e2e8f0">GND</text>
+
+      <circle cx="420" cy="755" r="7" fill="#f97316" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="760" fill="#fdba74">VCC (3V3)</text>
+
+      <circle cx="420" cy="800" r="7" fill="#06b6d4" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="805" fill="#67e8f9">MISO</text>
+
+      <circle cx="420" cy="845" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="850" fill="#86efac">MOSI</text>
+
+      <circle cx="420" cy="890" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="895" fill="#fde047">SCK</text>
+
+      <circle cx="420" cy="935" r="7" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+      <text x="404" y="940" fill="#fcd34d">CS</text>
+    </g>
+  </g>
+
+  <!-- ==================== 6. MAX98357A I2S AMP + SPEAKER (BOTTOM-RIGHT) ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="1220" y="700" width="235" height="270" rx="14" fill="#4c1d95" stroke="#a78bfa" stroke-width="2.5"/>
+    <text x="1342" y="732" fill="#ffffff" font-size="18" font-weight="800" text-anchor="middle">MAX98357A</text>
+    <text x="1342" y="752" fill="#ddd6fe" font-size="12" font-weight="600" text-anchor="middle">I2S 3W Dijital Ses Amfisi</text>
+    <!-- Amp IC -->
+    <rect x="1325" y="800" width="55" height="55" rx="6" fill="#1e1b4b" stroke="#c4b5fd" stroke-width="1.5"/>
+    <text x="1352" y="832" fill="#e9d5ff" font-size="11" font-family="Consolas" font-weight="700" text-anchor="middle">98357</text>
+    <text x="1342" y="954" fill="#c4b5fd" font-size="11" text-anchor="middle">SD &amp; GAIN pinleri boş kalır</text>
+
+    <!-- Left 5 Pins -->
+    <g font-family="Consolas" font-size="14" font-weight="800">
+      <circle cx="1220" cy="745" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="750" fill="#fca5a5">VIN (5V)</text>
+
+      <circle cx="1220" cy="790" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="795" fill="#e2e8f0">GND</text>
+
+      <circle cx="1220" cy="835" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="840" fill="#93c5fd">BCLK</text>
+
+      <circle cx="1220" cy="880" r="7" fill="#10b981" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="885" fill="#6ee7b7">LRC</text>
+
+      <circle cx="1220" cy="925" r="7" fill="#f43f5e" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="930" fill="#fda4af">DIN</text>
+    </g>
+
+    <!-- Speaker output terminals -->
+    <circle cx="1455" cy="815" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <text x="1442" y="820" fill="#fff" font-size="16" font-weight="900" text-anchor="end">+</text>
+    <circle cx="1455" cy="865" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
+    <text x="1442" y="870" fill="#fff" font-size="18" font-weight="900" text-anchor="end">−</text>
+  </g>
+
+  <!-- Mini Speaker (8 Ohm 1W) -->
+  <g filter="url(#shadow)">
+    <rect x="1545" y="730" width="215" height="220" rx="20" fill="#1f2937" stroke="#64748b" stroke-width="2.5"/>
+    <circle cx="1652" cy="825" r="68" fill="#111827" stroke="#9ca3af" stroke-width="4"/>
+    <circle cx="1652" cy="825" r="48" fill="#1f2937" stroke="#4b5563" stroke-width="2"/>
+    <circle cx="1652" cy="825" r="22" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+    <text x="1652" y="920" fill="#f8fafc" font-size="16" font-weight="800" text-anchor="middle">🔊 Mini Hoparlör</text>
+    <text x="1652" y="940" fill="#94a3b8" font-size="13" text-anchor="middle">8Ω 1W (20mm / 14×20)</text>
+    <circle cx="1545" cy="815" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <circle cx="1545" cy="865" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
+  </g>
+
+  <!-- ==================== BOTTOM SUMMARY / SAFETY BAR ==================== -->
+  <rect x="30" y="1008" width="1740" height="114" rx="14" fill="#1c2230" stroke="#2f3a4f" stroke-width="2"/>
+
+  <!-- Col 1: Shared SPI Note -->
+  <text x="58" y="1040" fill="#fde047" font-size="16" font-weight="800">⚡ PAYLAŞIMLI SPI HATTI (Ekran + MicroSD)</text>
+  <text x="58" y="1066" fill="#cbd5e1" font-size="14" font-family="Consolas">GPIO 4 (SCK)  → Ekran SCL  + MicroSD SCK</text>
+  <text x="58" y="1089" fill="#cbd5e1" font-size="14" font-family="Consolas">GPIO 6 (MOSI) → Ekran SDA  + MicroSD MOSI</text>
+  <text x="58" y="1110" fill="#94a3b8" font-size="13">Ekran CS = GPIO 7  |  MicroSD CS = GPIO 20 (RX)  |  MISO = GPIO 5</text>
+
+  <!-- Col 2: Audio I2S -->
+  <line x1="635" y1="1024" x2="635" y2="1108" stroke="#334155" stroke-width="2"/>
+  <text x="665" y="1040" fill="#c4b5fd" font-size="16" font-weight="800">🔊 SES HATTI (MAX98357A I2S)</text>
+  <text x="665" y="1066" fill="#cbd5e1" font-size="14" font-family="Consolas">GPIO 0  → BCLK   |   GPIO 10 → LRC</text>
+  <text x="665" y="1089" fill="#cbd5e1" font-size="14" font-family="Consolas">GPIO 21 → DIN    |   VIN → TP4056 OUT+</text>
+  <text x="665" y="1110" fill="#94a3b8" font-size="13">16 kHz Mono PCM (.pcm) + Kanal değiştirme parazit sesi</text>
+
+  <!-- Col 3: Safety Rules -->
+  <line x1="1150" y1="1024" x2="1150" y2="1108" stroke="#334155" stroke-width="2"/>
+  <text x="1180" y="1040" fill="#fca5a5" font-size="16" font-weight="800">🛡️ KRİTİK MONTAJ KURALLARI</text>
+  <text x="1180" y="1065" fill="#e2e8f0" font-size="14">1. İlk kod yüklerken ESP32-C3 USB'sini kullanın (pili bağlamadan!).</text>
+  <text x="1180" y="1088" fill="#e2e8f0" font-size="14">2. Günlük şarjı sadece TP4056 Type-C portundan yapın.</text>
+  <text x="1180" y="1110" fill="#e2e8f0" font-size="14">3. Kasa içinde tüm kartların arkasına elektrik/kapton bant yapıştırın.</text>
+</svg>
+</body>
+</html>

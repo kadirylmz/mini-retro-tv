@@ -62,10 +62,10 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 ## 2. 🔌 Doğrulanmış Çalışan Pin Bağlantıları (1.3" ST7789 + ESP32-S3)
 
 <p align="center">
-  <img src="docs/tam_baglanti_semasi_13inch.png" alt="Mini Retro TV Tam Donanım ve Kablo Bağlantı Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
 </p>
 
-### Ekran (FSPI Veriyolu)
+### Ekran (FSPI Veriyolu - Sol Pin Sırası)
 * **GND** $\rightarrow$ `GND`
 * **VCC** $\rightarrow$ `3.3V` *(⚠️ Asla 5V vermeyin!)*
 * **SCL** $\rightarrow$ `GPIO 4`
@@ -74,7 +74,7 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 * **DC**  $\rightarrow$ `GPIO 3`
 * **BLK** $\rightarrow$ `GPIO 1` *(PWM Parlaklık Kontrolü)*
 
-### 16GB MicroSD Kart Modülü (HSPI Veriyolu)
+### 16GB MicroSD Kart Modülü (HSPI Veriyolu - Sağ Pin Sırası)
 * **VCC** $\rightarrow$ **`5V (5U)`** *(Dahili AMS1117 regülatörün sağlıklı çalışması için 5V şarttır)*
 * **GND** $\rightarrow`GND`
 * **CS**  $\rightarrow`GPIO 10`
@@ -94,6 +94,14 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 * **BAT+ / BAT-** $\rightarrow$ 3.7V Li-Po Pil (603035 / 703048)
 * **VOUT+** $\rightarrow$ ESP32-S3 `5V (5U)` *(⚠️ ESP32'ye bağlamadan önce trimpottan multimetreyle 5.0V'a ayarlayın!)*
 * **VOUT-** $\rightarrow$ ESP32-S3 `GND`
+
+---
+
+### 🎨 Orijinal Alternatif Kompakt Sistem Şeması (1.69" + ESP32-C3 SuperMini)
+
+<p align="center">
+  <img src="docs/baglanti_semasi.png" alt="Mini Retro TV 1.69 inç Orijinal Görsel Devre Şeması" width="100%">
+</p>
 
 ---
 

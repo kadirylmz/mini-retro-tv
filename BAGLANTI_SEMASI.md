@@ -11,7 +11,7 @@
 Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD** ile **25 FPS akıcı video oynatımı** doğrulanmıştır. Ekran ile SD kart birbirinden bağımsız çift donanımsal SPI veriyolu (`FSPI` ve `HSPI`) üzerinden çalışır, böylece sıfır veri çakışması ve maksimum hız elde edilir.
 
 <p align="center">
-  <img src="docs/tam_baglanti_semasi_13inch.png" alt="Mini Retro TV Tam Donanım ve Kablo Bağlantı Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
 </p>
 
 ### A. 1.3" ST7789 IPS Ekran ↔ ESP32-S3 (FSPI Veriyolu - Sol Sıra)
@@ -86,6 +86,10 @@ Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD
 ---
 
 ## 2. Alternatif Kompakt Yapılandırma (1.69" + ESP32-C3 SuperMini)
+
+<p align="center">
+  <img src="docs/baglanti_semasi.png" alt="Mini Retro TV 1.69 inç Orijinal Görsel Devre Şeması" width="100%">
+</p>
 
 | 1.69" ST7789 Ekran | ESP32-C3 SuperMini | Not |
 | :--- | :--- | :--- |
