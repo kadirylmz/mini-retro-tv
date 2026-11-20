@@ -656,7 +656,7 @@ async function testBeep() {
   try {
     const res = await fetch('/beep');
     const data = await res.json();
-    alert('🔔 Test sinyali (Bip-Bip) hoparlöre gönderildi!\n\nEğer ses duyamadıysan:\n1. MAX98357A LRC (GPIO 8) ve BCLK (GPIO 7) pinlerini kontrol et.\n2. SD pini BOŞta olmalı.\n3. VIN pini 5V\'a bağlı olmalı.\n4. Hoparlör klemens vidalarını kontrol et.');
+    alert('🔔 Test sinyali (Bip-Bip) hoparlöre gönderildi!\n\nEğer ses duyamadıysan:\n1. MAX98357A LRC (GPIO 8) ve BCLK (GPIO 7) pinlerini kontrol et.\n2. SD pini normalde boştur; klon kartlarda ses gelmiyorsa SD pinini hemen yanındaki VIN (5V) pinine küçük bir kabloyla köprüleyin!\n3. VIN pini 5V Boost\'a bağlı olmalı.\n4. Hoparlör klemens vidalarını kontrol et.');
   } catch(e) {
     alert('Hata: ' + e);
   }
