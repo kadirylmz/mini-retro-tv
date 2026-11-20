@@ -37,12 +37,13 @@
 #define SD_CS      10   // Sağ sıra 10
 
 // ---- MAX98357A I2S Ses Pinleri & Ayarları ----
-#define USE_AUDIO       1       // 1: I2S Ses Aktif, 0: Devre Dışı
-#define PIN_I2S_BCLK    7       // I2S Bit Clock (BCLK)
-#define PIN_I2S_LRC     8       // I2S Word Select (LRC / WS)
-#define PIN_I2S_DIN     9       // I2S Data Out (DIN)
-#define AUDIO_RATE      16000   // 16 kHz Mono 16-bit PCM
-#define DEFAULT_VOLUME  45      // Pilde tasarruf ve temiz ses için %45 (Amfi akımını yarıya indirir)
+#define USE_AUDIO          1       // 1: I2S Ses Aktif, 0: Devre Dışı
+#define ENABLE_VOLUME_OSD  0       // 0: Temiz retro ekran (videonun önüne yazı/kutu çıkmaz, pırpır yapmaz), 1: OSD göster
+#define PIN_I2S_BCLK       7       // I2S Bit Clock (BCLK)
+#define PIN_I2S_LRC        8       // I2S Word Select (LRC / WS)
+#define PIN_I2S_DIN        9       // I2S Data Out (DIN)
+#define AUDIO_RATE         16000   // 16 kHz Mono 16-bit PCM
+#define DEFAULT_VOLUME     45      // Pilde tasarruf ve temiz ses için %45 (Amfi akımını yarıya indirir)
 
 // ---- Buton Pini ----
 #define PIN_BUTTON  0   // Tek tık: Sonraki video | Çift tık: Sesi Kapat/Aç (Mute) | Uzun bas: Ses Seviyesi

@@ -170,10 +170,10 @@ int JPEGDraw(JPEGDRAW *pDraw) {
 }
 
 // =========================================================================
-//  Kanal Geçiş Efekti (Hızlı ve Güvenli Ekran Temizleme)
+//  Kanal Geçiş Efekti (Dikişsiz / Seamless Geçiş - Göz Kırpma Yok)
 // =========================================================================
 void drawCRTStatic(int ms) {
-  tft.fillScreen(ST77XX_BLACK);
+  // Dikişsiz (seamless) geçiş için ekran temizlenmez, doğrudan yeni kare çizilir.
 }
 
 // =========================================================================
@@ -465,7 +465,7 @@ void playVideoByIndex(int idx) {
       Serial.println("Bu videoya ait ses dosyası yok (Sessiz mod)");
     }
 #endif
-    drawCRTStatic(15);
+    // Dikişsiz geçiş: video başlarken ekran karartılmaz
   }
 }
 
@@ -946,12 +946,8 @@ void setup() {
   tft.init(SCREEN_W, SCREEN_H, SPI_MODE3);
   tft.setSPISpeed(SPI_SPEED);
   tft.setRotation(LCD_ROTATION);
-  tft.fillScreen(ST77XX_RED);
-  delay(150);
-  tft.fillScreen(ST77XX_BLUE);
-  delay(150);
   tft.fillScreen(ST77XX_BLACK);
-  Serial.println(">>> [EKRAN] ST7789 baslatildi ve renk testi yapildi! <<<");
+  Serial.println(">>> [EKRAN] ST7789 baslatildi! <<<");
 
   jpeg.setPixelType(RGB565_LITTLE_ENDIAN);
 
@@ -1237,25 +1233,7 @@ void loop() {
   }
   lastFrameTime = now;
 
-  // 1. Ses Çalma (16 kHz Mono PCM Senkronizasyonu)
-#if USE_AUDIO
-  if (audioReady && audioFile && audioFile.available()) {
-    int16_t audioBuf[640]; // 40 ms @ 16 kHz = 640 örnek
-    int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
-    if (nBytes > 0) {
-      int samples = nBytes / 2;
-      int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
-      for (int i = 0; i < samples; i++) {
-        audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
-      }
-      i2s.write((uint8_t *)audioBuf, nBytes);
-    }
-  } else if (audioFile && !loopAll) {
-    audioFile.seek(0); // Tek medya tekrar modundaysa ses başa sarar
-  }
-#endif
-
-  // 2. Video Kare Çizimi
+  // 1. Video Kare Çizimi
   server.handleClient(); // Web ve Wi-Fi isteklerini anında işle
   size_t frameSize = 0;
   if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
@@ -1275,10 +1253,31 @@ void loop() {
       jpeg.close();
       currentMediaFrames++;
 
-      // OSD Gösterimi (Ses değiştirildiğinde veya Mute yapıldığında)
+#if ENABLE_VOLUME_OSD
+      // OSD Gösterimi (Sadece etkinse gösterilir - pırpır ve göz kırpmayı önler)
       if (millis() < osdUntil) {
         drawVolumeOSD();
       }
+#endif
+
+      // 2. Ses Çalma (20 FPS @ 16 kHz = Kare başına TAM 800 örnek / 50 ms)
+      // Görüntü ekrana çizildiği an ses gönderilerek sesin görüntünün önüne geçmesi (audio lead) engellenir!
+#if USE_AUDIO
+      if (audioReady && audioFile && audioFile.available()) {
+        int16_t audioBuf[800]; // 50 ms @ 16 kHz = 800 örnek (20 FPS ile %100 tam senkron)
+        int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
+        if (nBytes > 0) {
+          int samples = nBytes / 2;
+          int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
+          for (int i = 0; i < samples; i++) {
+            audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
+          }
+          i2s.write((uint8_t *)audioBuf, nBytes);
+        }
+      } else if (audioFile && !loopAll) {
+        audioFile.seek(0);
+      }
+#endif
     } else {
       static int consecutiveOpenErrors = 0;
       consecutiveOpenErrors++;
@@ -1307,14 +1306,11 @@ void loop() {
       nextChannel();
       return;
     } else {
-      // Tek medya tekrar modundaysa veya listede tek dosya varsa başa sar
+      // Tek medya tekrar modundaysa veya listede tek dosya varsa başa sar (Dikişsiz Loop - Göz kırpma yok)
       videoFile.seek(0);
       resetFastReader();
       mediaStartTime = millis();
       currentMediaFrames = 0;
-      if (videoFile.size() < 100000) {
-        delay(200);
-      }
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
 #endif
