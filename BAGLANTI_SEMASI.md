@@ -13,7 +13,7 @@
 Bu bağlantı TLS Robotik ESP32-C3 SuperMini'nin 16 pinlik kompakt pin dizilimine tam uyarlanmıştır. SPI veriyolu (Saat ve Veri hatları) ekran ile MicroSD kart arasında paylaştırılmıştır.
 
 <p align="center">
-  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV TLS Robotik ESP32-C3 SuperMini Görsel Devre Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png?v=c3_final" alt="Mini Retro TV TLS Robotik ESP32-C3 SuperMini Görsel Devre Şeması" width="100%">
 </p>
 
 ---

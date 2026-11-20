@@ -73,7 +73,7 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **canlı IPS
 Cihazınızı güvenle çalıştırmak ve bileşenlerin zarar görmesini engellemek için test edilmiş bağlantı şemasını uygulayınız:
 
 <p align="center">
-  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png?v=c3_final" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
 </p>
 
 ### ⚠️ HAYATİ GÜVENLİK VE MONTAJ KURALLARI (DİKKATLE OKUYUN!)
