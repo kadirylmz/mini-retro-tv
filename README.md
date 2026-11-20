@@ -54,35 +54,53 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 | **Kasa** | **3D Baskı (OpenSCAD Parametrik)** | 1 cm kablo geçiş paylı, 65.9 × 36.4 × 28.8 mm |
 
 👉 **Orijinal Satın Alma Listesi:** [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md) *(Değiştirilmeden korunmuştur)*  
-👉 **Ayrıntılı Pin Bağlantı Tablosu:** [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md)
+👉 **Ayrıntılı Pin Bağlantı Tablosu:** [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md)  
+👉 **Görsel Montaj ve Bağlantı Rehberi:** [MONTAJ_VE_BAGLANTI_REHBERI.md](MONTAJ_VE_BAGLANTI_REHBERI.md)
 
 ---
 
 ## 2. 🔌 Doğrulanmış Çalışan Pin Bağlantıları (1.3" ST7789 + ESP32-S3)
 
+<p align="center">
+  <img src="docs/tam_baglanti_semasi_13inch.png" alt="Mini Retro TV Tam Donanım ve Kablo Bağlantı Şeması" width="100%">
+</p>
+
 ### Ekran (FSPI Veriyolu)
 * **GND** $\rightarrow$ `GND`
-* **VCC** $\rightarrow$ `3.3V`
+* **VCC** $\rightarrow$ `3.3V` *(⚠️ Asla 5V vermeyin!)*
 * **SCL** $\rightarrow$ `GPIO 4`
 * **SDA** $\rightarrow$ `GPIO 6`
 * **RES** $\rightarrow$ `GPIO 2`
 * **DC**  $\rightarrow$ `GPIO 3`
-* **BLK** $\rightarrow$ `GPIO 1`
+* **BLK** $\rightarrow$ `GPIO 1` *(PWM Parlaklık Kontrolü)*
 
 ### 16GB MicroSD Kart Modülü (HSPI Veriyolu)
 * **VCC** $\rightarrow$ **`5V (5U)`** *(Dahili AMS1117 regülatörün sağlıklı çalışması için 5V şarttır)*
-* **GND** $\rightarrow$ `GND`
-* **CS**  $\rightarrow$ `GPIO 10`
-* **MOSI** $\rightarrow$ `GPIO 11`
-* **SCK** $\rightarrow$ `GPIO 12`
-* **MISO** $\rightarrow$ `GPIO 13`
+* **GND** $\rightarrow`GND`
+* **CS**  $\rightarrow`GPIO 10`
+* **MOSI** $\rightarrow`GPIO 11`
+* **SCK** $\rightarrow`GPIO 12`
+* **MISO** $\rightarrow`GPIO 13`
+
+### MAX98357A I2S 3W Ses Amfisi & Hoparlör
+* **VIN** $\rightarrow`5V (5U)`
+* **GND** $\rightarrow`GND`
+* **BCLK** $\rightarrow`GPIO 7`
+* **LRC** $\rightarrow`GPIO 8`
+* **DIN** $\rightarrow`GPIO 9`
+* **`+` / `-`** $\rightarrow$ 8Ω 1W-2W Mini Hoparlör
+
+### TP4056 + 5V Boost Voltaj Yükseltici & Li-Po Pil
+* **BAT+ / BAT-** $\rightarrow$ 3.7V Li-Po Pil (603035 / 703048)
+* **VOUT+** $\rightarrow$ ESP32-S3 `5V (5U)` *(⚠️ ESP32'ye bağlamadan önce trimpottan multimetreyle 5.0V'a ayarlayın!)*
+* **VOUT-** $\rightarrow$ ESP32-S3 `GND`
 
 ---
 
 ## 3. 🌐 Kablosuz Web Arayüzü Kullanımı
 
 1. Cihaza güç verdiğinizde **`CollectibleDisplay`** Wi-Fi erişim noktası yayınlanır.
-2. Telefon veya bilgisayarınızdan bu ağa bağlanın *(Şifre: **`display1234`**)*.
+2. Telefon veya bilgisayarınızdan bu ağa bağlanın *(Şifresiz / Açık Ağ - İsteğe bağlı panelden şifre atanabilir)*.
 3. Tarayıcınızda **`http://192.168.4.1`** adresine gidin.
 4. Karşınıza gelen modern panelde:
    - 16GB SD kartınızın kalan ve kullanılan alanını canlı olarak görebilirsiniz.

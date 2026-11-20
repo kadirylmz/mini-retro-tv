@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Mini Retro TV - Tam Donanım ve Kablo Bağlantı Şeması</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+  body { background: #0b0f19; color: #f1f5f9; padding: 30px; width: 1400px; }
+  
+  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 25px; }
+  .title-group h1 { font-size: 26px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 12px; }
+  .title-group p { font-size: 14px; color: #94a3b8; margin-top: 5px; }
+  .badge { background: #0369a1; color: #e0f2fe; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid #38bdf8; }
+  
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 25px; }
+  
+  .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .card-header { padding: 14px 18px; font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; }
+  .card-header.cyan { background: linear-gradient(90deg, #0369a1, #0f172a); color: #7dd3fc; }
+  .card-header.emerald { background: linear-gradient(90deg, #047857, #0f172a); color: #6ee7b7; }
+  .card-header.purple { background: linear-gradient(90deg, #6d28d9, #0f172a); color: #c4b5fd; }
+  .card-header.amber { background: linear-gradient(90deg, #b45309, #0f172a); color: #fde68a; }
+  
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #0f172a; color: #94a3b8; text-align: left; padding: 10px 14px; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e293b; }
+  td { padding: 9px 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(56, 189, 248, 0.04); }
+  
+  .pin-badge { font-family: 'Consolas', monospace; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+  .pin-s3 { background: #1e293b; color: #38bdf8; border: 1px solid #0284c7; }
+  .pin-mod { background: #1e1b4b; color: #a5b4fc; border: 1px solid #4338ca; }
+  .pin-5v { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; font-weight: bold; }
+  .pin-3v3 { background: #78350f; color: #fde68a; border: 1px solid #d97706; font-weight: bold; }
+  .pin-gnd { background: #1e293b; color: #94a3b8; border: 1px solid #475569; }
+  
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 8px; border: 1px solid rgba(255,255,255,0.2); }
+  .c-black { background: #000; }
+  .c-red { background: #ef4444; }
+  .c-orange { background: #f97316; }
+  .c-blue { background: #3b82f6; }
+  .c-green { background: #22c55e; }
+  .c-purple { background: #a855f7; }
+  .c-yellow { background: #eab308; }
+  .c-white { background: #fff; }
+  .c-gray { background: #64748b; }
+  
+  .notice-box { grid-column: span 2; background: #1e1b4b; border: 1px solid #4338ca; border-radius: 12px; padding: 18px 22px; display: flex; gap: 20px; align-items: center; }
+  .notice-icon { font-size: 34px; }
+  .notice-content h3 { font-size: 15px; color: #c7d2fe; margin-bottom: 4px; font-weight: 700; }
+  .notice-content p { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+  .warn-text { color: #fca5a5; font-weight: 700; }
+  
+  .button-bar { grid-column: span 2; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-around; align-items: center; }
+  .btn-action { text-align: center; }
+  .btn-action .mode { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
+  .btn-action .action { font-size: 14px; font-weight: 700; color: #38bdf8; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title-group">
+      <h1>📺 Mini Retro TV — Tam Donanım ve Kablo Bağlantı Şeması</h1>
+      <p>ESP32-S3 Mini + 1.3" IPS TFT + 16GB MicroSD + MAX98357A I2S Amfi + 5V Boost Şarj Modülü</p>
+    </div>
+    <div class="badge">Doğrulanmış & Çalışan Donanım</div>
+  </div>
+
+  <div class="grid">
+
+    <!-- 1. EKRAN (FSPI) -->
+    <div class="card">
+      <div class="card-header cyan">
+        <span>1. 1.3" ST7789 IPS Ekran (FSPI Veriyolu)</span>
+        <span style="font-size: 11px; opacity: 0.85;">Sol Pin Sırası</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ekran Pini</th>
+            <th>Kablo</th>
+            <th>ESP32-S3 Pini</th>
+            <th>Görevi / Açıklama</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pin-badge pin-mod">GND</span></td>
+            <td><span class="color-dot c-black"></span>Siyah</td>
+            <td><span class="pin-badge pin-gnd">GND</span></td>
+            <td>Ortak Toprak Hattı</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">VCC</span></td>
+            <td><span class="color-dot c-red"></span>Kırmızı</td>
+            <td><span class="pin-badge pin-3v3">3V3 (3.3V)</span></td>
+            <td style="color: #fde68a;">⚠️ Asla 5V vermeyin! Sadece 3.3V</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">SCL (CLK)</span></td>
+            <td><span class="color-dot c-orange"></span>Turuncu</td>
+            <td><span class="pin-badge pin-s3">GPIO 4</span></td>
+            <td>FSPI Donanımsal Saat</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">SDA (MOSI)</span></td>
+            <td><span class="color-dot c-blue"></span>Mavi</td>
+            <td><span class="pin-badge pin-s3">GPIO 6</span></td>
+            <td>FSPI Donanımsal Veri</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">RES</span></td>
+            <td><span class="color-dot c-green"></span>Yeşil</td>
+            <td><span class="pin-badge pin-s3">GPIO 2</span></td>
+            <td>Donanımsal Sıfırlama (Reset)</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">DC</span></td>
+            <td><span class="color-dot c-purple"></span>Mor</td>
+            <td><span class="pin-badge pin-s3">GPIO 3</span></td>
+            <td>Veri / Komut Seçimi</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">BLK</span></td>
+            <td><span class="color-dot c-yellow"></span>Sarı</td>
+            <td><span class="pin-badge pin-s3">GPIO 1</span></td>
+            <td>Arka Işık PWM Parlaklık (%70)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. MICROSD KART (HSPI) -->
+    <div class="card">
+      <div class="card-header emerald">
+        <span>2. 16GB MicroSD Kart Modülü (HSPI Veriyolu)</span>
+        <span style="font-size: 11px; opacity: 0.85;">Sağ Pin Sırası</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>MicroSD Pini</th>
+            <th>Kablo</th>
+            <th>ESP32-S3 Pini</th>
+            <th>Görevi / Açıklama</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pin-badge pin-mod">VCC</span></td>
+            <td><span class="color-dot c-red"></span>Kırmızı</td>
+            <td><span class="pin-badge pin-5v">5V (5U)</span></td>
+            <td style="color: #fca5a5; font-weight: 600;">Dahili LDO için 5V besleme şart</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">GND</span></td>
+            <td><span class="color-dot c-black"></span>Siyah</td>
+            <td><span class="pin-badge pin-gnd">GND</span></td>
+            <td>Ortak Toprak Hattı</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">CS</span></td>
+            <td><span class="color-dot c-white"></span>Beyaz</td>
+            <td><span class="pin-badge pin-s3">GPIO 10</span></td>
+            <td>HSPI Bağımsız Çip Seçimi</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">MOSI</span></td>
+            <td><span class="color-dot c-blue"></span>Mavi</td>
+            <td><span class="pin-badge pin-s3">GPIO 11</span></td>
+            <td>HSPI Veri Gönderme (10 MHz)</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">SCK (CLK)</span></td>
+            <td><span class="color-dot c-yellow"></span>Sarı</td>
+            <td><span class="pin-badge pin-s3">GPIO 12</span></td>
+            <td>HSPI Donanımsal Saat</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">MISO</span></td>
+            <td><span class="color-dot c-green"></span>Yeşil</td>
+            <td><span class="pin-badge pin-s3">GPIO 13</span></td>
+            <td>HSPI Hızlı Veri Okuma Motoru</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. I2S SES AMFİSİ (MAX98357A) -->
+    <div class="card">
+      <div class="card-header purple">
+        <span>3. MAX98357A I2S 3W Dijital Ses Amfisi + Hoparlör</span>
+        <span style="font-size: 11px; opacity: 0.85;">Dahili DAC/I2S</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Amfi Pini</th>
+            <th>Kablo</th>
+            <th>ESP32-S3 Pini</th>
+            <th>Görevi / Açıklama</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pin-badge pin-mod">VIN</span></td>
+            <td><span class="color-dot c-red"></span>Kırmızı</td>
+            <td><span class="pin-badge pin-5v">5V (5U)</span></td>
+            <td>Güçlü ve parazitsiz 5V besleme</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">GND</span></td>
+            <td><span class="color-dot c-black"></span>Siyah</td>
+            <td><span class="pin-badge pin-gnd">GND</span></td>
+            <td>Ortak Toprak Hattı</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">BCLK</span></td>
+            <td><span class="color-dot c-orange"></span>Turuncu</td>
+            <td><span class="pin-badge pin-s3">GPIO 7</span></td>
+            <td>I2S Bit Clock (Saat)</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">LRC</span></td>
+            <td><span class="color-dot c-yellow"></span>Sarı</td>
+            <td><span class="pin-badge pin-s3">GPIO 8</span></td>
+            <td>I2S Word Select (Kanal Seçimi)</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">DIN</span></td>
+            <td><span class="color-dot c-purple"></span>Mor</td>
+            <td><span class="pin-badge pin-s3">GPIO 9</span></td>
+            <td>I2S Seri Ses Veri Hattı</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">+ / - Çıkış</span></td>
+            <td><span class="color-dot c-gray"></span>2 Tel</td>
+            <td><span class="pin-badge pin-mod">Mini Hoparlör</span></td>
+            <td>8Ω 1W-2W Retro Mini Hoparlör</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. GÜÇ & VOLTAJ YÜKSELTİCİ ŞARJ KARTI -->
+    <div class="card">
+      <div class="card-header amber">
+        <span>4. TP4056 + 5V Boost Ayarlı Şarj ve Yükseltici Modülü</span>
+        <span style="font-size: 11px; opacity: 0.85;">Pil & Güç Katı</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Modül Pini</th>
+            <th>Bağlantı Hedefi</th>
+            <th>Voltaj</th>
+            <th>Önemli Kurulum Kuralı</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pin-badge pin-mod">BAT +</span></td>
+            <td>Li-Po Pil Kırmızı (+) Kablo</td>
+            <td><span class="pin-badge pin-3v3">3.7V Pil</span></td>
+            <td>603035 / 703048 Lityum Pil Artı Ucu</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">BAT -</span></td>
+            <td>Li-Po Pil Siyah (-) Kablo</td>
+            <td><span class="pin-badge pin-gnd">GND</span></td>
+            <td>Pil Eksi Ucu (Dahili Koruma Devreli)</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-5v">VOUT +</span></td>
+            <td>ESP32-S3 <strong>5V (5U)</strong> Pini</td>
+            <td><span class="pin-badge pin-5v">5.0V Sabit</span></td>
+            <td class="warn-text">⚠️ ESP32'ye bağlamadan önce trimpottan 5.0V'a ayarlayın!</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-gnd">VOUT -</span></td>
+            <td>ESP32-S3 <strong>GND</strong> Pini</td>
+            <td><span class="pin-badge pin-gnd">GND</span></td>
+            <td>Ana Sistem Toprak Hattı</td>
+          </tr>
+          <tr>
+            <td><span class="pin-badge pin-mod">Type-C Port</span></td>
+            <td>5V Telefon Şarj Kablosu</td>
+            <td><span class="pin-badge pin-5v">5V Giriş</span></td>
+            <td>Pili otomatik şarj eder (Kırmızı: Şarj, Mavi: Dolu)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- BUTON VE KONTROL BİLGİSİ -->
+    <div class="button-bar">
+      <div class="btn-action">
+        <div class="mode">Dahili BOOT Butonu (GPIO 0)</div>
+        <div class="action">Tek Tık ➔ Sonraki Video / Kanal</div>
+      </div>
+      <div style="height: 30px; width: 1px; background: #334155;"></div>
+      <div class="btn-action">
+        <div class="mode">Hızlı Çift Tıklama</div>
+        <div class="action" style="color: #ec4899;">🔊 Sesi Aç / Kapat (MUTE TOGGLE)</div>
+      </div>
+      <div style="height: 30px; width: 1px; background: #334155;"></div>
+      <div class="btn-action">
+        <div class="mode">Uzun Basış (&gt; 1.2 sn)</div>
+        <div class="action" style="color: #10b981;">Ses Kademesi (%0 ➔ %25 ➔ %50 ➔ %75 ➔ %100)</div>
+      </div>
+    </div>
+
+    <!-- GÜVENLİK NOTU -->
+    <div class="notice-box">
+      <div class="notice-icon">⚡</div>
+      <div class="notice-content">
+        <h3>Hayati Montaj Kuralı (Voltaj Yükseltici Kart Ayarı)</h3>
+        <p>Satın aldığınız voltaj yükseltici şarj kartı fabrikadan 9V veya 12V ayarlı gelir. <strong>ESP32'ye lehimlemeden önce</strong> pili karta bağlayın, çıkış uçlarını multimetre ile ölçerek mavi trimpot vidasını çevirip voltajı <strong>TAM 5.0V</strong> seviyesine sabitleyin. 5V'a sabitledikten sonra ESP32'nin 5V pinine lehimleyin.</p>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

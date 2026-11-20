@@ -10,7 +10,15 @@
 
 Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD** ile **25 FPS akıcı video oynatımı** doğrulanmıştır. Ekran ile SD kart birbirinden bağımsız çift donanımsal SPI veriyolu (`FSPI` ve `HSPI`) üzerinden çalışır, böylece sıfır veri çakışması ve maksimum hız elde edilir.
 
+<p align="center">
+  <img src="docs/tam_baglanti_semasi_13inch.png" alt="Mini Retro TV Tam Donanım ve Kablo Bağlantı Şeması" width="100%">
+</p>
+
 ### A. 1.3" ST7789 IPS Ekran ↔ ESP32-S3 (FSPI Veriyolu - Sol Sıra)
+
+<p align="center">
+  <img src="docs/test_baglanti_semasi_13inch.png" alt="1.3 inç ST7789 ve ESP32-S3 Prototip Bağlantı Şeması" width="90%">
+</p>
 
 | Ekran Pini | Ekran Kablo Rengi | ESP32-S3 Pini | Görevi / Not |
 | :--- | :--- | :--- | :--- |
@@ -60,6 +68,20 @@ Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD
 * **Tek Kısa Basış:** Sonraki video / kanala geçiş (`nextChannel()`).
 * **Çift Tıklama (Hızlı 2 Basış):** **SESİ AÇ / KAPAT (MUTE TOGGLE)!** Ekranda anında kırmızı `[ SES KAPALI (MUTE) ]` veya yeşil `[ SES: %70 ]` OSD'si çıkar.
 * **Uzun Basış (> 1.2 saniye):** Ses kademesi döngüsü (`%25` $\rightarrow$ `%50` $\rightarrow$ `%75` $\rightarrow$ `%100` $\rightarrow$ `%0`). Ekranda canlı seviye çubuğu gösterilir.
+
+---
+
+### E. TP4056 + 5V Boost Ayarlı Voltaj Yükseltici & Li-Po Pil
+
+> ⚠️ **HAYATİ AYAR UYARISI:** Kart fabrikadan 9V - 12V ayarlı gelir. **ESP32'ye bağlamadan önce** pili karta lehimleyin, bir multimetre ile `VOUT+` ve `VOUT-` uçlarını ölçerek üzerindeki mavi trimpot vidasını çevirip voltajı **TAM 5.0V** seviyesine sabitleyin!
+
+| Modül Pini | Bağlantı Hedefi | Kablo Rengi / Voltaj | Açıklama / Not |
+| :--- | :--- | :--- | :--- |
+| **BAT +** | 3.7V Li-Po Pil (+) | Kırmızı (3.7V Nominal) | 603035 / 703048 Lityum Polimer Pil Artı Ucu |
+| **BAT -** | 3.7V Li-Po Pil (-) | Siyah (GND) | Lityum Pil Eksi Ucu |
+| **VOUT +** | ESP32-S3 **5V (5U)** Pini | Kırmızı (**5.0V Sabit**) | Yükseltilmiş ve filtrelenmiş kararlı 5V güç |
+| **VOUT -** | ESP32-S3 **GND** Pini | Siyah (GND) | Ana sistem toprak hattı |
+| **Type-C** | 5V Telefon Şarj Kablosu | 5V DC Giriş | Pili şarj eder (Kırmızı: Şarjda, Mavi: Dolu) |
 
 ---
 
