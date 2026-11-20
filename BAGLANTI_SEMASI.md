@@ -18,39 +18,41 @@ Bu bağlantı TLS Robotik ESP32-C3 SuperMini'nin 16 pinlik kompakt pin dizilimin
 
 ---
 
-## 📌 ESP32-C3 SuperMini (16-Pin) Fiziksel Pin Haritası
+## 📌 ESP32-C3 SuperMini (16-Pin) Gerçek Fiziksel Pin Haritası
+
+*(Kartın ön yüzüne, butonlar ve USB girişi YUKARIDA olacak şekilde bakıldığında)*
 
 ```
-                  ┌───────────┐
-                  │   USB-C   │
-                  │ [B]   [R] │  (B = GPIO 9 BOOT, R = RESET)
-     5V (5.0V)  [1]           [16]  GPIO 21 (TX / Amfi DIN)
-     GND        [2]           [15]  GPIO 20 (RX / MicroSD CS)
-     3V3        [3]           [14]  GPIO 10 (Amfi LRC / WS)
-  GPIO 0        [4]           [13]  GPIO 9  (BOOT / Kasa Butonu)
-  GPIO 1        [5]           [12]  GPIO 8  (Dahili Mavi LED)
-  GPIO 2        [6]           [11]  GPIO 7  (1.3"te BOŞ / 1.69" CS)
-  GPIO 3        [7]           [10]  GPIO 6  (SPI MOSI / SDA Ortak)
-  GPIO 4        [8]           [9]   GPIO 5  (MicroSD MISO)
-                  └───────────┘
+                 ┌───────────┐
+                 │   USB-C   │
+                 │ [B]   [R] │  (B = GPIO 9 BOOT, R = RESET)
+     GPIO 5  [1] │           │ [16]  5V (5.0V Güç Girişi)
+     GPIO 6  [2] │           │ [15]  GND (Ortak Toprak)
+     GPIO 7  [3] │           │ [14]  3V3 (3.3V Ekran Gücü)
+     GPIO 8  [4] │           │ [13]  GPIO 4 (TFT SCL + SD SCK)
+     GPIO 9  [5] │           │ [12]  GPIO 3 (TFT DC)
+    GPIO 10  [6] │           │ [11]  GPIO 2 (TFT RES)
+  GPIO 20/RX [7] │           │ [10]  GPIO 1 (TFT BLK PWM)
+  GPIO 21/TX [8] │  [WiFi]   │ [9]   GPIO 0 (Amfi I2S BCLK)
+                 └───────────┘
 ```
 
 ---
 
-### A. 1.3" IPS 240×240 ST7789 Ekran (7-Pin) ↔ ESP32-C3 (Sol Sıra)
+### A. 1.3" IPS 240×240 ST7789 Ekran (7-Pin) ↔ ESP32-C3
 
-| # | Ekran Pini (1.3") | ESP32-C3 Pini | Header Konumu | Görevi / Açıklama |
+| # | Ekran Pini (1.3") | ESP32-C3 Pini | Karttaki Konumu | Görevi / Açıklama |
 |:---:|:---|:---|:---|:---|
-| **1** | **GND** | **GND** | Sol Sıra 2 | Ortak Toprak |
-| **2** | **VCC** | **3.3V (3V3)** | Sol Sıra 3 | ⚠️ **Sadece 3.3V! Asla 5V vermeyin!** |
-| **3** | **SCL (CLK)** | **GPIO 4** | Sol Sıra 8 | Donanımsal SPI Saat Sinyali (SD ile ortak) |
-| **4** | **SDA (MOSI)**| **GPIO 6** | Sağ Sıra 10 | Donanımsal SPI Veri Hattı (SD ile ortak) |
-| **5** | **RES (RST)** | **GPIO 2** | Sol Sıra 6 | Donanımsal Ekran Sıfırlama |
-| **6** | **DC** | **GPIO 3** | Sol Sıra 7 | Veri / Komut Seçimi (Data/Command) |
-| **7** | **BLK (BL)** | **GPIO 1** | Sol Sıra 5 | PWM Arka Aydınlatma & Parlaklık Kontrolü |
+| **1** | **GND** | **GND** | Sağ Sıra 2 | Ortak Toprak |
+| **2** | **VCC** | **3.3V (3V3)** | Sağ Sıra 3 | ⚠️ **Sadece 3.3V! Asla 5V vermeyin!** |
+| **3** | **SCL (CLK)** | **GPIO 4** | Sağ Sıra 4 | Donanımsal SPI Saat Sinyali (SD ile ortak) |
+| **4** | **SDA (MOSI)**| **GPIO 6** | Sol Sıra 2 | Donanımsal SPI Veri Hattı (SD ile ortak) |
+| **5** | **RES (RST)** | **GPIO 2** | Sağ Sıra 6 | Donanımsal Ekran Sıfırlama |
+| **6** | **DC** | **GPIO 3** | Sağ Sıra 5 | Veri / Komut Seçimi (Data/Command) |
+| **7** | **BLK (BL)** | **GPIO 1** | Sağ Sıra 7 | PWM Arka Aydınlatma & Parlaklık Kontrolü |
 | — | *(CS Pini)* | *(Dahili GND)* | — | 1.3" 7 pinli ekranda CS pini yoktur (kart içinde GND'ye bağlıdır). |
 
-*(Not: Eğer 8 pinli 1.69" ekran kullanıyorsanız, ekrandaki CS pinini **GPIO 7**'ye bağlayın).*
+*(Not: Eğer 8 pinli 1.69" ekran kullanıyorsanız, ekrandaki CS pinini **GPIO 7** (Sol Sıra 3)'e bağlayın).*
 
 ---
 
@@ -58,14 +60,14 @@ Bu bağlantı TLS Robotik ESP32-C3 SuperMini'nin 16 pinlik kompakt pin dizilimin
 
 > ⚠️ **KRİTİK GÜÇ NOTU:** Arduino MicroSD modülleri üzerinde dahili `AMS1117-3.3V` regülatör bulunur. Modülün `VCC` pinini **5V** hattına bağlayın.
 
-| MicroSD Modülü | ESP32-C3 Pini | Header Konumu | Görevi / Açıklama |
+| MicroSD Modülü | ESP32-C3 Pini | Karttaki Konumu | Görevi / Açıklama |
 | :--- | :--- | :--- | :--- |
-| **VCC** | **5V** | Sol Sıra 1 | 5V Güç Beslemesi (Modül üstü regülatör için) |
-| **GND** | **GND** | Sol Sıra 2 | Ortak Toprak |
-| **CS** | **GPIO 20 (RX)**| Sağ Sıra 15 | Bağımsız MicroSD Kart Seçim Pini |
-| **MOSI** | **GPIO 6** | Sağ Sıra 10 | Donanımsal SPI Veri Gönderme (Ekran SDA ile ortak) |
-| **SCK (CLK)**| **GPIO 4** | Sol Sıra 8 | Donanımsal SPI Saat Sinyali (Ekran SCL ile ortak) |
-| **MISO** | **GPIO 5** | Sağ Sıra 9 | Donanımsal SPI Veri Okuma Hattı |
+| **VCC** | **5V** | Sağ Sıra 1 | 5V Güç Beslemesi (Modül üstü regülatör için) |
+| **GND** | **GND** | Sağ Sıra 2 | Ortak Toprak |
+| **CS** | **GPIO 20 (RX)**| Sol Sıra 7 | Bağımsız MicroSD Kart Seçim Pini |
+| **MOSI** | **GPIO 6** | Sol Sıra 2 | Donanımsal SPI Veri Gönderme (Ekran SDA ile ortak) |
+| **SCK (CLK)**| **GPIO 4** | Sağ Sıra 4 | Donanımsal SPI Saat Sinyali (Ekran SCL ile ortak) |
+| **MISO** | **GPIO 5** | Sol Sıra 1 | Donanımsal SPI Veri Okuma Hattı |
 
 ---
 
@@ -73,15 +75,15 @@ Bu bağlantı TLS Robotik ESP32-C3 SuperMini'nin 16 pinlik kompakt pin dizilimin
 
 Fiziksel kart üzerindeki 7 pinin sırasıyla bağlantı durumu:
 
-| # | MAX98357A Pini | ESP32-C3 Pini | Durum | Açıklama / Görevi |
-|:---:|:---|:---|:---:|:---|
-| **1** | **LRC** | **GPIO 10** | Bağlı | I2S Word Select / Sol-Sağ Kanal Sinyali |
-| **2** | **BCLK** | **GPIO 0** | Bağlı | I2S Bit Clock (Ses Saat Sinyali) |
-| **3** | **DIN** | **GPIO 21 (TX)** | Bağlı | I2S Data In (Sayısal Ses Verisi) |
+| # | MAX98357A Pini | ESP32-C3 Pini | Karttaki Konumu | Açıklama / Görevi |
+|:---:|:---|:---|:---|:---|
+| **1** | **LRC** | **GPIO 10** | Sol Sıra 6 | I2S Word Select / Sol-Sağ Kanal Sinyali |
+| **2** | **BCLK** | **GPIO 0** | Sağ Sıra 8 | I2S Bit Clock (Ses Saat Sinyali) |
+| **3** | **DIN** | **GPIO 21 (TX)** | Sol Sıra 8 | I2S Data In (Sayısal Ses Verisi) |
 | **4** | **GAIN** | *(Boş)* | **BOŞ** | **Bağlanmaz!** Boş bırakıldığında varsayılan 9 dB temiz kazançta çalışır. |
-| **5** | **SD** | *(Boş)* | **BOŞ (ASLA KÖPRÜ YAPMAYIN!)** | 🚨 **ASLA KÖPRÜ YAPMAYIN!** Hemen yanındaki 6. pin GND, 7. pin ise 5V'tur. Araya köprü teli takmaya çalışmak 5V ile GND'yi kısa devre yaptırıp **kartı yakabilir ve pili patlatabilir!** MAX98357A çipi SD pini boş bırakıldığında zaten varsayılan olarak AÇIKTIR ve stereo sesi mono olarak hoparlöre verir `(L+R)/2`. |
-| **6** | **GND** | **GND** | Bağlı | Ortak Toprak Hattı |
-| **7** | **VIN** | **5V** | Bağlı | 5V Güç Beslemesi (Hoparlörden 3W tam ve net ses almak için) |
+| **5** | **SD** | *(Boş)* | **BOŞ (ASLA KÖPRÜ YAPMAYIN!)** | 🚨 **ASLA KÖPRÜ YAPMAYIN!** Yanındaki GND ve 5V ile kısa devre riskini önlemek için boş bırakılır. |
+| **6** | **GND** | **GND** | Sağ Sıra 2 | Ortak Toprak Hattı |
+| **7** | **VIN** | **5V** | Sağ Sıra 1 | 5V Güç Beslemesi (Hoparlörden 3W tam ses için) |
 | — | **`+` / `−`** | **Hoparlör** | Bağlı | 8Ω 1W mini hoparlör uçlarına lehimlenir (+ Kırmızı, − Siyah) |
 
 ---
@@ -92,8 +94,8 @@ ESP32-C3 SuperMini üzerindeki dahili **BOOT** butonu `GPIO 9` pinine bağlıdı
 
 | Buton Bacağı | ESP32-C3 Bağlantısı | Notlar |
 |:---:|:---|:---|
-| **1. Bacak** | **GPIO 9 (BOOT Pini)** | Sinyal hattı (Sağ Sıra 13) |
-| **2. Bacak** | **GND (Ortak Toprak)** | Toprak hattı (Sol Sıra 2) |
+| **1. Bacak** | **GPIO 9 (BOOT Pini)** | Sinyal hattı (Sol Sıra 5) |
+| **2. Bacak** | **GND (Ortak Toprak)** | Toprak hattı (Sağ Sıra 2) |
 
 * **Direnç Gerekmez:** Yazılımda ESP32-C3'ün dahili çekme direnci (`pinMode(PIN_BUTTON, INPUT_PULLUP)`) aktiftir.
 * **3D Buton Pimi (`button_cap.stl`):** Baskı tablasından çıkan T-şekilli şapkalı buton pimi, kasanın üstündeki delikten içeri bırakılır. Alttaki mikro butona parmakla mekanik basım sağlar.

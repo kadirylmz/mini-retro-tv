@@ -94,37 +94,37 @@ Cihazınızı güvenle çalıştırmak ve bileşenlerin zarar görmesini engelle
 
 ### Pin Bağlantı Listesi (TLS Robotik ESP32-C3 SuperMini)
 
-#### 1. IPS ST7789 Ekran (1.3" 7-Pin / 1.69" 8-Pin - Sol Sıra)
-* **GND** $\rightarrow$ `GND` (Sol Sıra 2)
-* **VCC** $\rightarrow$ `3.3V (3V3)` (Sol Sıra 3) *(⚠️ Kesinlikle 3.3V! 5V vermeyin!)*
-* **SCL** $\rightarrow$ `GPIO 4` (Sol Sıra 8 - SD ile ortak SPI Saat)
-* **SDA** $\rightarrow$ `GPIO 6` (Sağ Sıra 10 - SD ile ortak SPI Veri MOSI)
-* **RES** $\rightarrow$ `GPIO 2` (Sol Sıra 6)
-* **DC**  $\rightarrow$ `GPIO 3` (Sol Sıra 7)
-* **CS**  $\rightarrow$ 1.3"te Dahili GND (Pin yok) / 1.69"te `GPIO 7`
-* **BLK** $\rightarrow$ `GPIO 1` (Sol Sıra 5 - PWM Ekran Parlaklığı)
+#### 1. IPS ST7789 Ekran (1.3" 7-Pin / 1.69" 8-Pin)
+* **GND** $\rightarrow$ `GND` (Sağ Sıra 2)
+* **VCC** $\rightarrow$ `3.3V (3V3)` (Sağ Sıra 3) *(⚠️ Kesinlikle 3.3V! 5V vermeyin!)*
+* **SCL** $\rightarrow$ `GPIO 4` (Sağ Sıra 4 - SD ile ortak SPI Saat)
+* **SDA** $\rightarrow$ `GPIO 6` (Sol Sıra 2 - SD ile ortak SPI Veri MOSI)
+* **RES** $\rightarrow$ `GPIO 2` (Sağ Sıra 6)
+* **DC**  $\rightarrow$ `GPIO 3` (Sağ Sıra 5)
+* **CS**  $\rightarrow$ 1.3"te Dahili GND (Pin yok) / 1.69"te `GPIO 7` (Sol Sıra 3)
+* **BLK** $\rightarrow$ `GPIO 1` (Sağ Sıra 7 - PWM Ekran Parlaklığı)
 
 #### 2. MicroSD Kart Modülü (Paylaşımlı Donanımsal SPI)
-* **VCC** $\rightarrow$ `5V` (Sol Sıra 1 - Modül üstü 3.3V regülatör için 5V şarttır)
-* **GND** $\rightarrow$ `GND` (Sol Sıra 2)
-* **CS**  $\rightarrow$ `GPIO 20 (RX)` (Sağ Sıra 15 - SD Seçim Pini)
-* **MOSI** $\rightarrow$ `GPIO 6` (Sağ Sıra 10 - Ekran SDA ile ortak)
-* **SCK**  $\rightarrow$ `GPIO 4` (Sol Sıra 8 - Ekran SCL ile ortak)
-* **MISO** $\rightarrow$ `GPIO 5` (Sağ Sıra 9 - Veri Okuma)
+* **VCC** $\rightarrow$ `5V` (Sağ Sıra 1 - Modül üstü 3.3V regülatör için 5V şarttır)
+* **GND** $\rightarrow$ `GND` (Sağ Sıra 2)
+* **CS**  $\rightarrow$ `GPIO 20 (RX)` (Sol Sıra 7 - SD Seçim Pini)
+* **MOSI** $\rightarrow$ `GPIO 6` (Sol Sıra 2 - Ekran SDA ile ortak)
+* **SCK**  $\rightarrow$ `GPIO 4` (Sağ Sıra 4 - Ekran SCL ile ortak)
+* **MISO** $\rightarrow$ `GPIO 5` (Sol Sıra 1 - Veri Okuma)
 
 #### 3. MAX98357A I2S 3W Ses Amfisi (7-Pin)
-* **1. LRC**  $\rightarrow$ `GPIO 10` (Sağ Sıra 14 - Word Select)
-* **2. BCLK** $\rightarrow$ `GPIO 0` (Sol Sıra 4 - Bit Clock)
-* **3. DIN**  $\rightarrow$ `GPIO 21 (TX)` (Sağ Sıra 16 - Data In)
+* **1. LRC**  $\rightarrow$ `GPIO 10` (Sol Sıra 6 - Word Select)
+* **2. BCLK** $\rightarrow$ `GPIO 0` (Sağ Sıra 8 - Bit Clock)
+* **3. DIN**  $\rightarrow$ `GPIO 21 (TX)` (Sol Sıra 8 - Data In)
 * **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz! 9dB)**
 * **5. SD**   $\rightarrow$ **BOŞ (Bağlanmaz! Köprü yapmayın)**
-* **6. GND**  $\rightarrow$ `GND` (Sol Sıra 2)
-* **7. VIN**  $\rightarrow$ `5V` (Sol Sıra 1 - Tam 3W ses gücü için 5V)
+* **6. GND**  $\rightarrow$ `GND` (Sağ Sıra 2)
+* **7. VIN**  $\rightarrow$ `5V` (Sağ Sıra 1 - Tam 3W ses gücü için 5V)
 * **Hoparlör Klemensleri (`+` / `−`)** $\rightarrow$ 8Ω 1W Mini Hoparlör
 
 #### 4. Çok Fonksiyonlu Buton (Dahili & Kasa Butonu)
-* **1. Bacak** $\rightarrow$ `GPIO 9 (BOOT)` (Sağ Sıra 13)
-* **2. Bacak** $\rightarrow$ `GND` (Sol Sıra 2)
+* **1. Bacak** $\rightarrow$ `GPIO 9 (BOOT)` (Sol Sıra 5)
+* **2. Bacak** $\rightarrow$ `GND` (Sağ Sıra 2)
 * *Yazılımda dahili pull-up direnci aktiftir; harici direnç gerekmez.*
 
 #### 5. Güç & Şarj Katı
