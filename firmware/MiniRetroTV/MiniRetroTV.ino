@@ -47,8 +47,8 @@ struct MediaItem {
   bool hasAudio;
 };
 std::vector<MediaItem> playlist;
-size_t cachedTotalBytes = 0;
-size_t cachedUsedBytes = 0;
+uint64_t cachedTotalBytes = 0;
+uint64_t cachedUsedBytes = 0;
 int currentVideoIdx = -1;
 int nextVideoToPlay = -1;
 File videoFile;
@@ -359,13 +359,13 @@ void refreshPlaylist() {
 
   // Kapasiteyi anında hafızaya al (FAT taraması yapmadan anında biter)
   if (isSDActive) {
-    cachedTotalBytes = (size_t)SD.cardSize();
+    cachedTotalBytes = (uint64_t)SD.cardSize();
   } else {
-    cachedTotalBytes = LittleFS.totalBytes();
+    cachedTotalBytes = (uint64_t)LittleFS.totalBytes();
   }
-  size_t used = 0;
+  uint64_t used = 0;
   for (const auto &item : playlist) {
-    used += item.size;
+    used += (uint64_t)item.size;
   }
   cachedUsedBytes = used;
 
@@ -482,8 +482,13 @@ void setupWebServer() {
     bool staConn = (WiFi.status() == WL_CONNECTED);
     String staIp = staConn ? WiFi.localIP().toString() : "";
 
-    String json = "{\"total\":" + String(cachedTotalBytes) + 
-                  ",\"used\":" + String(cachedUsedBytes) + 
+    char totalBuf[32];
+    snprintf(totalBuf, sizeof(totalBuf), "%llu", (unsigned long long)cachedTotalBytes);
+    char usedBuf[32];
+    snprintf(usedBuf, sizeof(usedBuf), "%llu", (unsigned long long)cachedUsedBytes);
+
+    String json = "{\"total\":" + String(totalBuf) + 
+                  ",\"used\":" + String(usedBuf) + 
                   ",\"volume\":" + String(currentVolume) + 
                   ",\"muted\":" + (isMuted ? "true" : "false") + 
                   ",\"brightness\":" + String(currentBrightness) + 
