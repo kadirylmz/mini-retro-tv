@@ -1,31 +1,26 @@
 # 🛒 Mini Retro TV — Kesinleşen Sepet / Malzeme Listesi (Hepsiburada)
 
-Sipariş verilen 4 parça birbiriyle ve 3D kasa (`55.9 × 36.2 × 23.3 mm`) ile tam uyumludur:
+Proje için belirlenen ve birbiriyle %100 uyumlu tam donanım satın alma listesi:
 
-| # | Parça | Seçilen Ürün (Hepsiburada) | Ölçü / Özellik |
-|---|---|---|---|
-| 1 | **Ekran** | [Voltaj 1.69" 240×280 SPI IPS TFT LCD — ST7789](https://www.hepsiburada.com/voltaj-1-69-renkli-tft-display-modulu-hd-ips-lcd-led-ekran-240x280-spi-st7789-p-HBCV0000FYBBU8?magaza=Voltaj%20Elektronik) | 1.69" yuvarlak köşe IPS, 240×280, ST7789, 8-pin SPI |
-| 2 | **Wi-Fi Kartı** | [TLS Robotik ESP32-C3 SuperMini (Lehimsiz)](https://www.hepsiburada.com/tls-robotik-esp32-c3-super-mini-gelistirme-karti-lehimsiz--p-HBCV0000BI75NO?magaza=TLS%20Robotik) | 18 × 22.5 mm, Wi-Fi, 4 MB Flash, Type-C |
-| 3 | **Pil** | [Powermaster 603035 3.7V 600mAh Li-Po Pil (Zemheri)](https://www.hepsiburada.com/powermaster-603035-3-7-volt-600-mah-l-tyum-pol-mer-p-l-p-HBCV000061OAP8?magaza=zemheri) | **6 × 30 × 35 mm**, 600 mAh (~5–6 saat oynatma) |
-| 4 | **Şarj Devresi** | **TP4056 Type-C Ters Akım Korumalı Şarj Devresi (10 Adet)** — [Robocombo](https://www.hepsiburada.com/magaza/robocombo) | 26 × 17 mm, USB-C + BMS korumalı |
+| # | Parça | Seçilen Ürün (Hepsiburada Doğrudan Bağlantı) | Ölçü / Temel Özellikler |
+|:---:|:---|:---|:---|
+| **1** | **Ekran** | [Voltaj 1.69” Renkli Tft Display Modülü Hd IPS LCD LED Ekran 240X280 Spı ST7789 - 1 Adet](https://www.hepsiburada.com/voltaj-169-renkli-tft-display-modulu-hd-ips-lcd-led-ekran-240x280-spi-st7789--p-HBCV0000FYBBU8?magaza=Voltaj%20Elektronik) | 1.69" IPS, 240×280 piksel, canlı renkler, ST7789 SPI (3.3V) |
+| **2** | **İşlemci Kartı** | [TLS Robotik ESP32-C3 Super Mini Geliştirme Kartı (Lehimsiz) - 1 Adet](https://www.hepsiburada.com/tls-robotik-esp32-c3-super-mini-gelitirme-karti-lehimsiz--p-HBCV0000BI75NO?magaza=TLS%20Robotik) | 18 × 22.5 mm ultra kompakt boyut, dahili Wi-Fi & BLE, Type-C |
+| **3** | **Yüksek Kapasiteli Pil** | [Powermaster 703048 3.7 Volt 1200 Mah Lityum Polimer Pil - 1 Adet](https://www.hepsiburada.com/powermaster-703048-37-volt-1200-mah-lityum-polimer-pil--p-HBCV00009MIVEB?magaza=zemheri) | **703048** (7 × 30 × 48 mm), 3.7V, **1200 mAh** (~3.5 – 4 saat kesintisiz oynatma!) |
+| **4** | **Voltaj Yükseltici (Boost)** | [Robo Dünya Ayarlanabilir Voltaj Yükseltici Kart - MT3608 2-24V Giriş Gerilimi ile 2A Çıkış Akımı](https://www.hepsiburada.com/robo-dunya-ayarlanabilir-voltaj-yukseltici-kart-mt3608-2-24v-giri-gerilimi-ile-2a-iki-akimi--p-HBCV00003Z3XGB?magaza=RoboD%C3%BCnya) | MT3608 DC-DC Step-Up; pili kararlı **5.0V**'a yükselterek titreşimi ve SD kart hatalarını önler |
+| **5** | **Dijital Ses Amfisi** | [Sensör Modül MAX98357A I2S 3W Class-D Dijital Amplifikatör Modülü Lehimli Mono Amfi Arduino ESP32](https://www.hepsiburada.com/sensor-modul-max98357a-i2s-3w-class-d-dijital-amplifikator-modulu-lehimli-mono-amfi-arduino-esp32--p-HBCV0000AY022T?magaza=Sens%C3%B6r%20Modul) | MAX98357A I2S 3W Class-D dahili DAC, lehimli pinler, kristal netliğinde ses |
+| **6** | **Mini Hoparlör** | [Robiz Hoparlör 1W 8ohm 20MM Yuvarlak 10CM Kablolu Mini 2cm Speaker Ses Müzik Amfi Ürün Müze Otomobil](https://www.hepsiburada.com/robiz-hoparlor-1w-8ohm-20mm-yuvarlak-10cm-kablolu-mini-2cm-speaker-ses-muzik-amfi-run-muze-otomobil--p-HBCV0000698PRA?magaza=RobizStore) | 8Ω 1W, 20 mm yuvarlak, kablolu hazır montaj, 3D TV kasası ön ızgarasına tam oturan boyut |
+| **7** | **Depolama Modülü** | [Arduino Micro Sd Kart Modülü](https://www.hepsiburada.com/arduino-micro-sd-kart-modulu--p-HBCV0000IX3AM4?magaza=Robotnom) | SPI MicroSD kart yuvası, FAT32 formatında saatlerce video ve müzik depolama |
 
 ---
 
-### 🔊 Ses Eklemek İsterseniz (İsteğe Bağlı Ek Parçalar)
-1. **I2S Mini Dijital Amfi (`MAX98357A`, 18×19 mm):**
-   * [Hepsiburada — MAX98357A I2S 3W Amfi Modülü (Seçenek 1)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHPhGZ3UlT8nn7LGu_Lx0rHr0T16KlyEgscadQHM6DXQYKkCuqJ8pcuEYq33ZVbkgxtwCiGiRbzlxOQrSGcw7PErNhW69DzT8Xg9jN1iZVa4BSGecLiPfwW2U9R29VNzKJq_dpyMuYTTWr4IcHFQRZpG6mXZBsg0h1dmRWtp_dXPjRtzdyWa7itRLeHQFXc__k-XCiuLdzJwCp_5-H0260liphma2anQYd8FBlJbYz9LtLJj6R-WxgJmE4CYnpwxPvyjKb_k0jMbIonnk85uxg=)
-   * [Hepsiburada — MAX98357A I2S 3W Amfi Modülü (Seçenek 2)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG1p6HyMLr_N7GKCP749Oe4lJEKqpXersVxTijnL24qIFs7ccWwabDUfmQRyKx-b20kmzvBfVsS9RT8EOaADKuXgd6peACQfX2dO9KaW9-8ltanLN1_h9t6fcdk52e7K64bZaqzHMwkjZQJ5ts3Wq39RaWGvy5CDDzvbLO5rspecaHPwGoHne2Ozjw1z5DYoVmFY9D3vyL9cXvDuQxDGA-SKSazLmjkmnHOV1k7hiw=)
-   * [Hepsiburada — MAX98357A Tüm Satıcılar](https://www.hepsiburada.com/ara?q=MAX98357A)
-2. **İnce Mini Hoparlör (8Ω 1W — max 20 mm / 14×20 mm — kasaya sığan boy):**
-   * [Hepsiburada — 20mm Yuvarlak 8 Ohm 1W Mini Hoparlör (Seçenek 1)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHONyHCxYOWbp2S0_0AilRV10A9njNuNTRFE2vG3jAIUcuomxz0LsBhmMxcFQScd-JvpNIZJ0oRiLw5QnV03mZtiUq_wfSxA6Nj7s3Hj_Ro71tVJRZvp5vCZtCtiU7OJwYz0BhU5plGEw==)
-   * [Hepsiburada — 20mm Kablolu 8 Ohm 1W Mini Hoparlör (Seçenek 2)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4h9OG4XIAB_NW0CJxDW4z9K9o2qiL3pwxLaPdrY0wxT78iq-VR_S_RcvtqGsFwdEc54YIujws5L5ouApw2lhPR9ETPyjPIgApcLjFKJC_z7DLArB65Ik13GYv4wReD4rQ8JwdGCW4G15Zj43XdubRdia_lXZtEg8u-vioxoCicOLkvFcX3ueWg7MS270fUnz0QJOeI0fHu12DzYurzN_UkHD9CIG9sB8-aSfHqDNQOl8cziEUHDtEEj1uygL7HEVohWRMp6l4)
-   * [Hepsiburada — 14×20 mm İnce Mini Hoparlör (Seçenek 3)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFGq5mu-I-b9cLa6_O_LG5DBQL30LilT62hOmmW2YGUHAcADrCDezq80NR24Klx9sHb2Hhu15bpYNYOQaVtIaB0GG4ZDIJ5sQjKS26DRH0f8DV8uhT48SqRFJ9075nAdOm4zpy16Dlf02fH-wFK6gUH0xuhPOnCJtFe1GNwL7ZoqzSz4xnhztWuIyQJePKPgGayM0hXmtsOXOM4zK7VeHX3T3MRHyCEsndPl3fiK98KiDe_YeqZiUKLO6KGZH4DinjtVqaTTaWLda3OSuaqK6Q97hKyqsmDuaizCNkFnTsAw3agHudIUtpCEtLHj34D0w==)
-3. *(Sadece dakikalarca uzun sesli video isterseniz)* **Micro SD Kart Modülü (SPI):**
-   * [Hepsiburada — Micro SD Kart Modülü SPI (Seçenek 1)](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFvOZ9HGVstvX_mF0M8iHQMcelusOB1CuL-4Yvy4Ug2VnvZIdPUjW06T_yKturT0VsgPrXHG0G1Lj4mPmmKsQH47t7lyPSUmhtbUjtjAyJ_YsJ1WtcHk6dBh3mMdUnB8b_jenCS678z7fKJ6tRqg9prfokjs5-YNXiAGoHE1nxf)
-   * [Hepsiburada — Micro SD Kart Modülü Tüm Satıcılar](https://www.hepsiburada.com/ara?q=Micro+SD+Kart+Modulu+SPI)
+### 🔋 Şarj Modülü Notu
+* Pil şarjı için standart **TP4056 Type-C Korumalı Şarj Devresi** kullanılır.
+* Bağlantı Sırası: `[3.7V LiPo Pil]` $\rightarrow$ `[TP4056 Şarj Modülü]` $\rightarrow$ `[MT3608 Voltaj Yükseltici (5.0V)]` $\rightarrow$ `[ESP32 / SD / Amfi 5V Hattı]`.
 
-### 💡 Montaj İçin Evde Gerekecek Küçük Malzemeler
-* İnce esnek kablo (26–30 AWG — eski bir USB kablosunun iç telleri ideal)
-* Elektrik bandı veya kapton bant (kartların arkasını yalıtmak için)
-* 1 adet standart metal ataş (tavşan kulağı anten telleri için, 2 × 24 mm kesilecek)
-* *(Opsiyonel)* TP4056 üzerindeki `R3` (`1.2 kΩ`) direnci `2.2 kΩ` (~540 mA) veya `2.7 kΩ` (~450 mA) ile değiştirilirse 600 mAh pil daha serin ve uzun ömürlü şarj olur.
+---
+
+### 💡 Montaj İçin Gerekli Yardımcı Malzemeler
+* İnce esnek montaj kablosu (26–30 AWG jumper kablo)
+* Yalıtım için elektrik bandı veya kapton bant
+* 1 adet standart metal ataş (retro TV anteni için, 2 × 24 mm boyunda kesilir)
