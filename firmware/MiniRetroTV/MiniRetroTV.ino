@@ -67,9 +67,8 @@ void playBootTone() {
 }
 #endif
 
-// Donanım Nesneleri (Çift Donanımsal SPI)
+// Donanım Nesneleri (Paylaşımlı Donanımsal SPI: ESP32-C3)
 Adafruit_ST7789 tft(&SPI, TFT_CS, TFT_DC, TFT_RES);
-SPIClass sdSPI(HSPI);
 JPEGDEC jpeg;
 WebServer server(80);
 Preferences prefs;
@@ -940,9 +939,12 @@ void setup() {
   digitalWrite(TFT_RES, HIGH);
   delay(200);
 
-  // 1. Ekranı Başlat (FSPI: SCK=4, MOSI=6)
-  Serial.println(">>> [EKRAN] SPI ve ST7789 baslatiliyor... <<<");
-  SPI.begin(TFT_SCLK, -1, TFT_MOSI, -1);
+  // 1. Ekran ve SD için Donanımsal SPI Başlat (ESP32-C3 FSPI)
+  pinMode(SD_CS, OUTPUT);
+  digitalWrite(SD_CS, HIGH); // SD kartı pasife al (ekran açılışında çakışma olmasın)
+
+  Serial.println(">>> [EKRAN] Donanımsal SPI ve ST7789 baslatiliyor... <<<");
+  SPI.begin(TFT_SCLK, SD_MISO, TFT_MOSI);
   tft.init(SCREEN_W, SCREEN_H, SPI_MODE3);
   tft.setSPISpeed(SPI_SPEED);
   tft.setRotation(LCD_ROTATION);
@@ -983,14 +985,11 @@ void setup() {
   }
 #endif
 
-  // 3. SD Kartı Başlat (HSPI: SCK=12, MISO=13, MOSI=11, CS=10)
-  Serial.println("SD Kart baslatiliyor (HSPI: 10, 11, 12, 13)...");
-  sdSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-  delay(100);
-
+  // 3. SD Kartı Başlat (Paylaşımlı Donanımsal SPI: SCK=4, MOSI=6, MISO=5, CS=20)
+  Serial.println("SD Kart baslatiliyor (Paylasimli SPI: CS=20)...");
   bool sdOk = false;
   for (int r = 0; r < 3; r++) {
-    if (SD.begin(SD_CS, sdSPI, 10000000) || SD.begin(SD_CS, sdSPI, 4000000) || SD.begin(SD_CS, sdSPI, 1000000)) {
+    if (SD.begin(SD_CS, SPI, 16000000) || SD.begin(SD_CS, SPI, 8000000) || SD.begin(SD_CS, SPI, 4000000)) {
       sdOk = true;
       break;
     }

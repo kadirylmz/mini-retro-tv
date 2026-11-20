@@ -1,7 +1,9 @@
 # 📺 Mini Retro TV
-### (ESP32-S3 / C3 | 1.3" & 1.69" IPS ST7789 | 16GB MicroSD | I2S 3W Ses | 25 FPS Akıcı Video Motoru | Wi-Fi Web Arayüzü)
+### (TLS Robotik ESP32-C3 SuperMini | 1.3" & 1.69" IPS ST7789 | MicroSD | I2S 3W Ses | 20 FPS Akıcı Video | Wi-Fi Web Arayüzü)
 
-Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **canlı IPS ekranlı**, **16GB MicroSD kart destekli**, **DMA tamponlu 25 FPS akıcı video motorlu**, **I2S 3W berrak ses çıkışlı** ve tarayıcı üzerinden otomatik medya dönüştürüp yükleyen kablosuz retro televizyon projesi.
+Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **canlı IPS ekranlı**, **MicroSD kart destekli**, **20 FPS akıcı video motorlu**, **I2S 3W berrak ses çıkışlı** ve tarayıcı üzerinden otomatik medya dönüştürüp yükleyen kablosuz retro televizyon projesi.
+
+> 🛒 **Projede Kullanılan Kart:** [TLS Robotik ESP32-C3 SuperMini Geliştirme Kartı (Lehimsiz)](https://www.hepsiburada.com/tls-robotik-esp32-c3-super-mini-gelistirme-karti-lehimsiz-p-HBCV0000BI75NO?magaza=TLS%20Robotik)
 
 <p align="center">
   <img src="enclosure/preview.png" alt="Mini Retro TV Ön Görünüm" width="32%">
@@ -50,8 +52,8 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **canlı IPS
 
 | Parça | Tercih Edilen Model | Alternatif Model | Açıklama / Görev |
 |---|---|---|---|
-| **Ana İşlemci** | **ESP32-S3 SuperMini** | ESP32-C3 SuperMini / S3 Mini | Çift çekirdek 240 MHz, Wi-Fi, Çift Donanımsal SPI, I2S |
-| **Ekran** | **1.3" IPS 240×240 (ST7789, 8-Pin)** | 1.69" IPS 240×280 (ST7789, 8-Pin) | Canlı renkler, geniş IPS görüş açısı, donanımsal SPI |
+| **Ana İşlemci** | **[TLS Robotik ESP32-C3 SuperMini (Lehimsiz)](https://www.hepsiburada.com/tls-robotik-esp32-c3-super-mini-gelistirme-karti-lehimsiz-p-HBCV0000BI75NO?magaza=TLS%20Robotik)** | ESP32-S3 SuperMini | 16-Pin ultra kompakt RISC-V 160 MHz, Wi-Fi, Donanımsal SPI, I2S |
+| **Ekran** | **1.3" IPS 240×240 (ST7789, 7-Pin)** | 1.69" IPS 240×280 (ST7789, 8-Pin) | Canlı renkler, geniş IPS görüş açısı, donanımsal SPI |
 | **Ses Amfisi** | **MAX98357A I2S 3W Class-D (7-Pin)** | - | Dahili DAC, gürültüsüz dijital I2S 16 kHz ses |
 | **Hoparlör** | **8Ω 1W 20mm Mini Hoparlör** | 4-8Ω 14×20mm Mini Hoparlör | Ön ızgara yuvasına tam oturan akustik sürücü |
 | **Depolama** | **16GB MicroSD Kart + SPI Modülü** | 8GB - 32GB MicroSD | Onlarca video ve fotoğraf için harici depolama |
@@ -90,40 +92,45 @@ Cihazınızı güvenle çalıştırmak ve bileşenlerin zarar görmesini engelle
 
 ---
 
-### Pin Bağlantı Listesi
+### Pin Bağlantı Listesi (TLS Robotik ESP32-C3 SuperMini)
 
-#### 1. IPS ST7789 Ekran (8-Pin SPI - FSPI Veriyolu)
-* **GND** $\rightarrow$ `GND`
-* **VCC** $\rightarrow$ `3.3V` *(⚠️ Kesinlikle 3.3V)*
-* **SCL** $\rightarrow$ `GPIO 4`
-* **SDA** $\rightarrow$ `GPIO 6`
-* **RES** $\rightarrow$ `GPIO 2`
-* **DC**  $\rightarrow$ `GPIO 3`
-* **CS**  $\rightarrow$ `GPIO 5` *(veya doğrudan GND)*
-* **BLK** $\rightarrow$ `GPIO 1` *(PWM Ekran Parlaklığı)*
+#### 1. IPS ST7789 Ekran (1.3" 7-Pin / 1.69" 8-Pin - Sol Sıra)
+* **GND** $\rightarrow$ `GND` (Sol Sıra 2)
+* **VCC** $\rightarrow$ `3.3V (3V3)` (Sol Sıra 3) *(⚠️ Kesinlikle 3.3V! 5V vermeyin!)*
+* **SCL** $\rightarrow$ `GPIO 4` (Sol Sıra 8 - SD ile ortak SPI Saat)
+* **SDA** $\rightarrow$ `GPIO 6` (Sağ Sıra 10 - SD ile ortak SPI Veri MOSI)
+* **RES** $\rightarrow$ `GPIO 2` (Sol Sıra 6)
+* **DC**  $\rightarrow$ `GPIO 3` (Sol Sıra 7)
+* **CS**  $\rightarrow$ 1.3"te Dahili GND (Pin yok) / 1.69"te `GPIO 7`
+* **BLK** $\rightarrow$ `GPIO 1` (Sol Sıra 5 - PWM Ekran Parlaklığı)
 
-#### 2. 16GB MicroSD Kart Modülü (6-Pin SPI - HSPI Veriyolu)
-* **VCC** $\rightarrow$ `5V (5U)` *(Dahili 3.3V regülatör için 5V şarttır)*
-* **GND** $\rightarrow$ `GND`
-* **CS**  $\rightarrow$ `GPIO 10`
-* **MOSI** $\rightarrow$ `GPIO 11`
-* **SCK** $\rightarrow$ `GPIO 12`
-* **MISO** $\rightarrow$ `GPIO 13`
+#### 2. MicroSD Kart Modülü (Paylaşımlı Donanımsal SPI)
+* **VCC** $\rightarrow$ `5V` (Sol Sıra 1 - Modül üstü 3.3V regülatör için 5V şarttır)
+* **GND** $\rightarrow$ `GND` (Sol Sıra 2)
+* **CS**  $\rightarrow$ `GPIO 20 (RX)` (Sağ Sıra 15 - SD Seçim Pini)
+* **MOSI** $\rightarrow$ `GPIO 6` (Sağ Sıra 10 - Ekran SDA ile ortak)
+* **SCK**  $\rightarrow$ `GPIO 4` (Sol Sıra 8 - Ekran SCL ile ortak)
+* **MISO** $\rightarrow$ `GPIO 5` (Sağ Sıra 9 - Veri Okuma)
 
 #### 3. MAX98357A I2S 3W Ses Amfisi (7-Pin)
-* **1. LRC**  $\rightarrow$ `GPIO 8` *(Word Select Clock)*
-* **2. BCLK** $\rightarrow$ `GPIO 7` *(Bit Clock)*
-* **3. DIN**  $\rightarrow$ `GPIO 9` *(Data In)*
-* **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz!)**
-* **5. SD**   $\rightarrow$ **BOŞ (Bağlanmaz!)**
-* **6. GND**  $\rightarrow$ `GND`
-* **7. VIN**  $\rightarrow$ `5V (5U)` *(Tam 3W ses gücü için 5V besleme)*
+* **1. LRC**  $\rightarrow$ `GPIO 10` (Sağ Sıra 14 - Word Select)
+* **2. BCLK** $\rightarrow$ `GPIO 0` (Sol Sıra 4 - Bit Clock)
+* **3. DIN**  $\rightarrow$ `GPIO 21 (TX)` (Sağ Sıra 16 - Data In)
+* **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz! 9dB)**
+* **5. SD**   $\rightarrow$ **BOŞ (Bağlanmaz! Köprü yapmayın)**
+* **6. GND**  $\rightarrow$ `GND` (Sol Sıra 2)
+* **7. VIN**  $\rightarrow$ `5V` (Sol Sıra 1 - Tam 3W ses gücü için 5V)
 * **Hoparlör Klemensleri (`+` / `−`)** $\rightarrow$ 8Ω 1W Mini Hoparlör
 
-#### 4. Güç & Şarj Katı
+#### 4. Çok Fonksiyonlu Buton (Dahili & Kasa Butonu)
+* **1. Bacak** $\rightarrow$ `GPIO 9 (BOOT)` (Sağ Sıra 13)
+* **2. Bacak** $\rightarrow$ `GND` (Sol Sıra 2)
+* *Yazılımda dahili pull-up direnci aktiftir; harici direnç gerekmez.*
+
+#### 5. Güç & Şarj Katı
 * **Li-Po Pil $\rightarrow$ TP4056 (B+ / B-)**
 * **TP4056 Çıkışı (OUT+ / OUT-) $\rightarrow$ 5V Boost Girişi (IN+ / IN-)**
-* **5V Boost Çıkışı (OUT+) $\rightarrow$ ESP32-S3 `5V (5U)` & MicroSD & Amfi** *(Trimpottan multimetreyle 5.0V'a ayarlayın)*
+* **5V Boost Çıkışı (OUT+) $\rightarrow$ ESP32-C3 `5V` & MicroSD & Amfi** *(Trimpottan multimetreyle 5.0V'a ayarlayın)*
 * **5V Boost Çıkışı (OUT-) $\rightarrow$ Sistem Ortak `GND`**
 
 ---
@@ -163,17 +170,25 @@ Tüm parçalar standart FDM 3D yazıcılarda (Bambu Lab, Creality Ender 3, Prusa
 ## 4. 💻 Firmware & Kod Yükleme Rehberi (Arduino IDE)
 
 ### 1. Kart Yöneticisi ve FQBN
-Arduino IDE `Boards Manager` üzerinden **esp32 by Espressif Systems** paketini (v2.0.11 veya üzeri) yükleyin.
+Arduino IDE `Boards Manager` üzerinden **esp32 by Espressif Systems** paketini (v3.0+ veya üzeri) yükleyin.
 
-* **Seçilecek Kart:** `ESP32S3 Dev Module`
-* **FQBN:** `esp32:esp32:esp32s3`
+* **Seçilecek Kart:** `ESP32C3 Dev Module`
+* **FQBN:** `esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=no_ota`
 
 ### 2. Arduino IDE Menü Ayarları
-* **USB CDC On Boot:** `Enabled` *(Seri port çıktısını ve otomatik yüklemeyi aktif eder)*
-* **Flash Size:** `4MB` (veya `8MB` / `16MB`)
-* **Partition Scheme:** `Huge APP (3MB No OTA / 1MB SPIFFS)`
-* **PSRAM:** `OPI PSRAM` (Kartınızda PSRAM varsa) veya `Disabled`
+* **Board:** `ESP32C3 Dev Module`
+* **USB CDC On Boot:** `Enabled` *(Çok önemli! Seri port çıktısını ve otomatik yüklemeyi aktif eder)*
+* **CPU Frequency:** `160MHz (WiFi)`
+* **Flash Size:** `4MB`
+* **Partition Scheme:** `Minimal SPIFFS (Large APPS with OTA)` veya `No OTA (2MB APP/2MB SPIFFS)`
 * **Upload Speed:** `921600`
+
+### 3. ESP32-C3 Bootloader Moduna Alma (Zorunlu Kurtarma)
+Eğer Arduino IDE karta bağlanamazsa:
+1. Kartın üzerindeki **`BOOT` (`B`)** butonuna basılı tutun.
+2. Basılı tutarken **`RESET` (`R`)** butonuna 1 kez basıp bırakın (veya USB kablosunu takın).
+3. 1 saniye sonra `BOOT` butonunu bırakın.
+4. Arduino IDE'den ilgili COM portunu seçip **Yükle (Upload)** butonuna basın.
 
 ### 3. Gerekli Kütüphaneler
 Arduino Kütüphane Yöneticisi'nden aşağıdaki kütüphanelerin güncel sürümlerini kurun:
