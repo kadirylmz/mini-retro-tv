@@ -563,7 +563,6 @@ h1 {
 
 <footer style="text-align:center;padding:20px 0 10px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:20px;">
   <div style="font-weight:bold;color:var(--text);margin-bottom:4px;">🎬 COLLECTIBLE DISPLAY</div>
-  <div>1.3" IPS Retro Televizyon &bull; Özel Koleksiyon Tasarımı</div>
   <div style="margin-top:8px;">
     Resmi Sayfa: <a href="https://www.instagram.com/collectible_display/" target="_blank" style="color:#e1306c;font-weight:bold;text-decoration:none;">@collectible_display 📸</a>
   </div>
