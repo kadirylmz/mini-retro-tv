@@ -28,7 +28,7 @@
 #define TFT_RES     2   // Ekran RES (Yeşil)
 #define TFT_DC      3   // Ekran DC  (Mor)
 #define TFT_BL      1   // Ekran BLK (Sarı)
-#define SPI_SPEED   24000000  // 24 MHz Kararlı Donanımsal SPI
+#define SPI_SPEED   40000000  // 24 MHz Kararlı Donanımsal SPI
 
 // ---- SD Kart Pinleri (HSPI - Doğrulanan ve Çalışan Pinler) ----
 #define SD_SCK     12   // Sağ sıra 12
@@ -43,7 +43,7 @@
 #define PIN_I2S_LRC        8       // I2S Word Select (LRC / WS)
 #define PIN_I2S_DIN        9       // I2S Data Out (DIN)
 #define AUDIO_RATE         16000   // 16 kHz Mono 16-bit PCM
-#define DEFAULT_VOLUME     45      // Pilde tasarruf ve temiz ses için %45 (Amfi akımını yarıya indirir)
+#define DEFAULT_VOLUME     75      // Pilde tasarruf ve temiz ses için %45 (Amfi akımını yarıya indirir)
 
 // ---- Buton Pini ----
 #define PIN_BUTTON  0   // Tek tık: Sonraki video | Çift tık: Sesi Kapat/Aç (Mute) | Uzun bas: Ses Seviyesi
