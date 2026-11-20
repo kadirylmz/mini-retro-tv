@@ -19,16 +19,16 @@
 
 part = "preview"; // [preview, body, back, knobs, legs, antenna, plate]
 
-/* [Elektronik - 1.3" ST7789 Ekran + ESP32-S3 + MicroSD] */
-pcb_w   = 59.0;  // 10 mm (1 cm) genişletildi: 1.3" ekran ve sol kenardaki kablo/pin geçişi için
-pcb_h   = 32.0;  // Ekran PCB yüksekliği
-pcb_t   = 16.0;  // ekran + ESP32-S3 + MicroSD kart modülü derinliği
-win_w   = 27.5;  // 1.3" IPS 240x240 aktif ekran penceresi
-win_h   = 26.5;
-win_r   = 3.5;   // retro tüplü TV köşe yuvarlaklığı
+/* [Elektronik - Voltaj 1.69" 240x280 ST7789 Ekran + ESP32 + 1200mAh Pil + MicroSD] */
+pcb_w   = 59.0;  // 10 mm (1 cm) genişletilmiş: 1.69" ekran ve sol kenardaki 8-pin kablo geçişi için
+pcb_h   = 32.2;  // Ekran PCB yüksekliği
+pcb_t   = 16.0;  // ekran + ESP32 + MicroSD kart modülü derinliği
+win_w   = 32.8;  // Voltaj 1.69" IPS 240x280 aktif ekran penceresi (32.6 x 28.0 mm)
+win_h   = 28.2;  // dikey yükseklik (240 piksel)
+win_r   = 4.0;   // 1.69" kavisli/oval ekran camı köşe yuvarlaklığı (Round Corners)
 win_dx  = -8.0;  // sol tarafa 1 cm montaj payı bırakıldı
 win_dz  = 0;     // (+yukarı)
-bat_t   = 6.5;   // LiPo pil payı
+bat_t   = 7.5;   // Powermaster 703048 1200mAh LiPo pil payı (7.0 mm + montaj payı)
 
 /* [TP4056 USB-C, MicroSD Yuvası ve Buton Delikleri] */
 usb_side = "left";  // [left, right, bottom, top]

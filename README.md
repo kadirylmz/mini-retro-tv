@@ -1,6 +1,6 @@
-# 📺 Mini Retro TV (16GB MicroSD, Wi-Fi Otomatik Medya Yüklemeli, 25 FPS)
+# 📺 Mini Retro TV (Voltaj 1.69" IPS ST7789, 16GB MicroSD, Wi-Fi Otomatik Medya Yüklemeli, 25 FPS)
 
-Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS canlı ekranlı**, **16GB MicroSD kart destekli**, **25 FPS akıcı video oynatıcılı**, kablosuz web panelli retro televizyon projesi.
+Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **Voltaj 1.69" 240×280 IPS canlı oval ekranlı**, **16GB MicroSD kart destekli**, **25 FPS akıcı video oynatıcılı**, kablosuz web panelli retro televizyon projesi.
 
 <p align="center">
   <img src="enclosure/preview.png" alt="Mini Retro TV Ön Görünüm" width="48%">
@@ -12,7 +12,7 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 ## 🌟 Öne Çıkan Özellikler
 
 1. **🎬 Çift SPI & 25 FPS Akıcı Video Motoru:**
-   - Ekran `FSPI` (GPIO 4, 6, 2, 3, 1) veriyolunda 30 MHz hızında çalışır.
+   - Ekran `FSPI` (GPIO 4, 6, 2, 3, 5, 1) veriyolunda 30 MHz hızında çalışır.
    - 16GB MicroSD modülü bağımsız `HSPI` (GPIO 10, 11, 12, 13) veriyolunda çalışır; CS çakışması sıfıra indirilmiştir.
    - 4096 baytlık RAM tamponlu (chunk-buffered) okuma motoru sayesinde takılma olmadan pürüzsüz 25 FPS oynatım sağlar.
 
@@ -29,7 +29,7 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
    - Herhangi bir ek programa veya FFmpeg komutlarına ihtiyaç yoktur!
    - **Kopmayan Parçalı Yükleme Motoru (Chunked Upload):** Büyük videolar (10-50 MB) 128 KB'lık parçalara ayrılarak yüklenir; Wi-Fi sinyali dalgalansa bile otomatik olarak kaldığı parçadan devam eder, bağlantı kopmaz ve SD kartta 0 bayt bozuk dosya kalmaz.
    - Ekran uykusunu engelleyici (WakeLock) sayesinde telefon veya bilgisayarın ekranı kapansa dahi dönüştürme ve yükleme duraksamaz.
-   - MP4, MOV, WEBM seçildiğinde tarayıcı Web Audio API ile videonun sesini 16 kHz mono PCM formatına ayıklar, görüntüyü 240×240 MJPEG yapar ve ikisini senkronize şekilde SD karta aktarır.
+   - MP4, MOV, WEBM seçildiğinde tarayıcı Web Audio API ile videonun sesini 16 kHz mono PCM formatına ayıklar, görüntüyü 280×240 MJPEG yapar ve ikisini senkronize şekilde SD karta aktarır.
 
 4. **📶 Wi-Fi Yönetimi, Ev Ağına Bağlanma ve Fabrika Ayarları:**
    - **Cihaz Hotspot Şifresi Değiştirme:** Panel üzerinden cihazın AP şifresi kolayca değiştirilebilir (Kalıcı NVS hafızada saklanır).
@@ -37,9 +37,10 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
    - **mDNS Desteği:** Ev ağınıza bağlandığınızda telefonunuzun Wi-Fi'ını değiştirmeden doğrudan `http://collectibletv.local` adresinden televizyon paneline ulaşabilirsiniz.
    - **Fabrika Ayarlarına Sıfırlama:** İstenildiğinde tek tıkla tüm Wi-Fi şifreleri ve ayarlar varsayılana sıfırlanabilir.
 
-5. **🖨️ Yenilenen 3D Kasa (1.3" Ekran ve Kablo Montajı İçin Genişletildi):**
-   - 1.3" ST7789 ekranın sol kenarındaki 7-pin header ve dişi DuPont kablolar için sol taraftan **1 cm (10 mm) genişletildi** (`pcb_w = 59.0 mm`, toplam dış genişlik `65.9 mm`).
-   - Ekran penceresi 1.3" kare aktif alan için `27.5 × 26.5 mm` olarak hassas ayarlandı.
+5. **🖨️ Yenilenen 3D Kasa (1.69" Oval Ekran ve 1200 mAh Pil Uyumlu):**
+   - Voltaj 1.69" ST7789 ekranın 8-pin header ve kablo dönüşleri için sol taraftan **1 cm (10 mm) genişletildi** (`pcb_w = 59.0 mm`, toplam dış genişlik `65.9 mm`).
+   - Ekran penceresi 1.69" oval ekran için `32.8 × 28.2 mm` ve `r = 4.0 mm` kavisli/oval köşe olarak hassas ayarlandı.
+   - Arka kapak derinliği 1200 mAh Powermaster 703048 LiPo pil için optimize edildi.
    - Geçmeli kapak tasarımı sayesinde vidaya ihtiyaç duymaz.
 
 ---
@@ -48,31 +49,35 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 
 | Parça | Model | Görevi / Açıklama |
 |---|---|---|
-| **Ekran** | **1.3" 240×240 SPI IPS TFT LCD (ST7789, 7-pin)** | 240×240 piksel, geniş açılı IPS panel |
-| **İşlemci Kartı** | **ESP32-S3 Mini / ESP32-C3** | Çift çekirdek / Wi-Fi / Bluetooth, çift donanımsal SPI desteği |
+| **Ekran** | **Voltaj 1.69" 240×280 SPI IPS TFT (ST7789, 8-pin)** | 240×280 piksel, oval / kavisli cam, geniş açılı IPS panel |
+| **İşlemci Kartı** | **ESP32-S3 Mini / ESP32-C3 SuperMini** | Çift çekirdek / Wi-Fi / Bluetooth, çift donanımsal SPI desteği |
+| **Ses Amfisi** | **MAX98357A I2S 3W Class-D (7-pin)** | Dahili DAC, 16 kHz kristal netliğinde mono ses çıkışı |
+| **Hoparlör** | **8Ω 1W 20mm Mini Hoparlör** | Ön ızgara arkasına tam oturan minyatür hoparlör |
+| **Pil & Güç** | **1200 mAh Li-Po (703048) + TP4056 + MT3608 (5V Boost)** | ~3.5 – 4 saat kesintisiz video oynatım süresi |
 | **Depolama** | **16GB MicroSD Kart Modülü (SPI)** | Onlarca saat video ve yüzlerce fotoğraf hafızası |
-| **Kasa** | **3D Baskı (OpenSCAD Parametrik)** | 1 cm kablo geçiş paylı, 65.9 × 36.4 × 28.8 mm |
+| **Kasa** | **3D Baskı (OpenSCAD Parametrik)** | 1 cm kablo paylı, 65.9 × 36.6 × 29.8 mm |
 
-👉 **Orijinal Satın Alma Listesi:** [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md) *(Değiştirilmeden korunmuştur)*  
+👉 **Orijinal Satın Alma Listesi:** [SATIN_ALMA_LISTESI.md](SATIN_ALMA_LISTESI.md) *(Doğrudan Hepsiburada sepet bağlantıları)*  
 👉 **Ayrıntılı Pin Bağlantı Tablosu:** [BAGLANTI_SEMASI.md](BAGLANTI_SEMASI.md)  
 👉 **Görsel Montaj ve Bağlantı Rehberi:** [MONTAJ_VE_BAGLANTI_REHBERI.md](MONTAJ_VE_BAGLANTI_REHBERI.md)
 
 ---
 
-## 2. 🔌 Doğrulanmış Çalışan Pin Bağlantıları (1.3" ST7789 + ESP32-S3)
+## 2. 🔌 Doğrulanmış Çalışan Pin Bağlantıları (Voltaj 1.69" ST7789 + ESP32-S3)
 
 <p align="center">
-  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
+  <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.69 inç Doğrulanmış Görsel Devre Şeması" width="100%">
 </p>
 
-### Ekran (FSPI Veriyolu - Sol Pin Sırası)
-* **GND** $\rightarrow$ `GND`
-* **VCC** $\rightarrow$ `3.3V` *(⚠️ Asla 5V vermeyin!)*
-* **SCL** $\rightarrow$ `GPIO 4`
-* **SDA** $\rightarrow$ `GPIO 6`
-* **RES** $\rightarrow$ `GPIO 2`
-* **DC**  $\rightarrow$ `GPIO 3`
-* **BLK** $\rightarrow$ `GPIO 1` *(PWM Parlaklık Kontrolü)*
+### Ekran (Voltaj 1.69" ST7789 8-Pin - FSPI Veriyolu - Sol Pin Sırası)
+* **1. GND** $\rightarrow$ `GND`
+* **2. VCC** $\rightarrow$ `3.3V` *(⚠️ Asla 5V vermeyin!)*
+* **3. SCL** $\rightarrow$ `GPIO 4`
+* **4. SDA** $\rightarrow$ `GPIO 6`
+* **5. RES** $\rightarrow$ `GPIO 2`
+* **6. DC**  $\rightarrow$ `GPIO 3`
+* **7. CS**  $\rightarrow$ `GPIO 5` *(veya GND)*
+* **8. BLK** $\rightarrow$ `GPIO 1` *(PWM Parlaklık Kontrolü)*
 
 ### 16GB MicroSD Kart Modülü (HSPI Veriyolu - Sağ Pin Sırası)
 * **VCC** $\rightarrow$ **`5V (5U)`** *(Dahili AMS1117 regülatörün sağlıklı çalışması için 5V şarttır)*

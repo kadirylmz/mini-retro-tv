@@ -41,7 +41,7 @@
   <!-- Header Banner -->
   <rect x="30" y="22" width="1740" height="76" rx="14" fill="#1c2230" stroke="#2f3a4f" stroke-width="2"/>
   <text x="56" y="57" fill="#38bdf8" font-size="28" font-weight="800" letter-spacing="0.5">📺 MINI RETRO TV — DOĞRULANMIŞ GÖRSEL DEVRE &amp; KABLO ŞEMASI</text>
-  <text x="56" y="83" fill="#94a3b8" font-size="16" font-weight="500">ESP32-S3 Mini  •  1.3" 240×240 ST7789 IPS (FSPI)  •  16GB MicroSD (HSPI)  •  MAX98357A I2S Amfi + Hoparlör  •  TP4056 + 5V Boost Modülü</text>
+  <text x="56" y="83" fill="#94a3b8" font-size="16" font-weight="500">ESP32-S3 Mini  •  Voltaj 1.69" 240×280 ST7789 IPS (FSPI)  •  16GB MicroSD (HSPI)  •  MAX98357A I2S Amfi + Hoparlör  •  TP4056 + 5V Boost Modülü</text>
   <rect x="1450" y="38" width="295" height="44" rx="10" fill="#291d1c" stroke="#ef4444" stroke-width="1.5"/>
   <text x="1597" y="65" fill="#fca5a5" font-size="14" font-weight="700" text-anchor="middle">⚠️ EKRAN = 3.3V  |  SD &amp; AMFİ = 5V</text>
 
@@ -78,6 +78,9 @@
     <!-- 4. EKRAN 3.3V (ESP32 Sol 3V3 -> Screen VCC) -->
     <path d="M 790 310 L 710 310 L 710 135 L 1140 135 L 1140 260 L 1250 260" stroke="#f97316" stroke-width="4"/>
 
+    
+    <!-- CS: ESP32 GPIO 5 (790, 535) -> Screen CS (1250, 451) -->
+    <path d="M 790 535 L 755 535 L 755 451 L 1250 451" stroke="#ec4899" stroke-width="4"/>
     <!-- 5. EKRAN SPI HATLARI (FSPI: Sol Sıra Pinleri) -->
     <!-- SCL: ESP32 GPIO 4 (790, 490) -> Screen SCL (1250, 305) -->
     <path d="M 790 490 L 730 490 L 730 195 L 1160 195 L 1160 305 L 1250 305" stroke="#eab308" stroke-width="4"/>
@@ -213,7 +216,7 @@
       <text x="805" y="495" fill="#fde047">4 (SCL/CLK)</text>
 
       <circle cx="790" cy="535" r="7" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
-      <text x="805" y="540" fill="#64748b">5 (boş)</text>
+      <text x="805" y="540" fill="#64748b">5 (Ekran CS)</text>
 
       <circle cx="790" cy="580" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
       <text x="805" y="585" fill="#93c5fd">6 (SDA/MOSI)</text>
@@ -252,7 +255,7 @@
       <text x="995" y="585" fill="#64748b">14 (boş)</text>
 
       <circle cx="1010" cy="625" r="7" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
-      <text x="995" y="630" fill="#64748b">15 (boş)</text>
+      <text x="995" y="630" fill="#64748b">15 (Ekran CS)</text>
 
       <circle cx="1010" cy="670" r="7" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
       <text x="995" y="675" fill="#64748b">16 (boş)</text>
@@ -278,33 +281,36 @@
       <rect x="1661" y="210" width="49" height="190" fill="#3b82f6"/>
       <rect x="1385" y="400" width="325" height="82" fill="#090c12"/>
       <text x="1548" y="432" fill="#4ade80" font-size="22" font-family="Consolas" font-weight="900" text-anchor="middle">COLLECTIBLE TV</text>
-      <text x="1548" y="462" fill="#cbd5e1" font-size="14" font-family="Consolas" text-anchor="middle">1.3" 240×240 IPS • ST7789</text>
+      <text x="1548" y="462" fill="#cbd5e1" font-size="14" font-family="Consolas" text-anchor="middle">Voltaj 1.69" 240×280 IPS (Oval Cam) • ST7789</text>
     </g>
-    <text x="1548" y="545" fill="#f8fafc" font-size="18" font-weight="800" text-anchor="middle">1.3" ST7789 SPI IPS Ekran</text>
-    <text x="1548" y="566" fill="#fde047" font-size="13" font-weight="700" text-anchor="middle">(7-Pin Header — Sadece 3.3V Besleme!)</text>
+    <text x="1548" y="545" fill="#f8fafc" font-size="18" font-weight="800" text-anchor="middle">Voltaj 1.69" ST7789 SPI IPS Ekran (Oval Cam)</text>
+    <text x="1548" y="566" fill="#fde047" font-size="13" font-weight="700" text-anchor="middle">(8-Pin Header — Oval / Kavisli Cam — Sadece 3.3V Besleme!)</text>
 
     <!-- 7 Pins on left of screen board -->
     <g font-family="Consolas" font-size="14" font-weight="800">
-      <circle cx="1250" cy="215" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="220" fill="#e2e8f0">GND</text>
+            <circle cx="1250" cy="205" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="210" fill="#e2e8f0">1. GND</text>
 
-      <circle cx="1250" cy="260" r="7" fill="#f97316" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="265" fill="#fdba74">VCC (3.3V)</text>
+      <circle cx="1250" cy="246" r="7" fill="#f97316" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="251" fill="#fdba74">2. VCC (3.3V)</text>
 
-      <circle cx="1250" cy="305" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="310" fill="#fde047">SCL (CLK)</text>
+      <circle cx="1250" cy="287" r="7" fill="#eab308" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="292" fill="#fde047">3. SCL (GPIO 4)</text>
 
-      <circle cx="1250" cy="350" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="355" fill="#93c5fd">SDA (MOSI)</text>
+      <circle cx="1250" cy="328" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="333" fill="#93c5fd">4. SDA (GPIO 6)</text>
 
-      <circle cx="1250" cy="395" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="400" fill="#86efac">RES (RST)</text>
+      <circle cx="1250" cy="369" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="374" fill="#86efac">5. RES (GPIO 2)</text>
 
-      <circle cx="1250" cy="440" r="7" fill="#a855f7" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="445" fill="#d8b4fe">DC</text>
+      <circle cx="1250" cy="410" r="7" fill="#a855f7" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="415" fill="#d8b4fe">6. DC (GPIO 3)</text>
 
-      <circle cx="1250" cy="485" r="7" fill="#fde047" stroke="#fff" stroke-width="2"/>
-      <text x="1266" y="490" fill="#fef08a">BLK (PWM)</text>
+      <circle cx="1250" cy="451" r="7" fill="#ec4899" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="456" fill="#f472b6">7. CS (GPIO 5 / GND)</text>
+
+      <circle cx="1250" cy="492" r="7" fill="#fde047" stroke="#fff" stroke-width="2"/>
+      <text x="1266" y="497" fill="#fef08a">8. BLK (GPIO 1 PWM)</text>
     </g>
   </g>
 
@@ -411,7 +417,7 @@
 
   <!-- Col 1: Independent SPI Busses -->
   <text x="58" y="1040" fill="#38bdf8" font-size="16" font-weight="800">⚡ BAĞIMSIZ ÇİFT SPI VERİYOLU (Sıfır Çakışma - 25 FPS)</text>
-  <text x="58" y="1066" fill="#cbd5e1" font-size="14" font-family="Consolas">FSPI (Ekran)  → SCL: GPIO 4  |  SDA: GPIO 6  |  RES: 2  |  DC: 3  |  BLK: 1</text>
+  <text x="58" y="1066" fill="#cbd5e1" font-size="14" font-family="Consolas">FSPI (Ekran 1.69") → SCL: 4 | SDA: 6 | RES: 2 | DC: 3 | CS: 5 | BLK: 1 (Sadece 3.3V!)</text>
   <text x="58" y="1089" fill="#cbd5e1" font-size="14" font-family="Consolas">HSPI (MicroSD) → CS: GPIO 10  |  MOSI: 11  |  SCK: 12  |  MISO: 13 (5V Besleme)</text>
   <text x="58" y="1110" fill="#94a3b8" font-size="13">4096 Bayt Chunk Buffer ile kesintisiz MJPEG video akışı</text>
 

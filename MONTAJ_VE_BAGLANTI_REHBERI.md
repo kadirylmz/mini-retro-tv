@@ -1,38 +1,30 @@
 # 📺 Mini Retro TV — Montaj ve Çizim Rehberi
 
-Bu rehberde hem **1.3" ST7789 ekran + ESP32-S3 ile yapılan çalışan test montajının** hem de 16GB MicroSD, amfi, hoparlör ve voltaj yükseltici şarj kartını içeren **nihai tam donanım montajının** detaylı çizimleri ve 3D kasa yerleşimleri yer almaktadır.
+Bu rehberde **Voltaj 1.69" 240×280 ST7789 IPS oval ekran**, ESP32-S3 / C3, 16GB MicroSD, MAX98357A 7-pin I2S amfi, hoparlör ve voltaj yükseltici şarj kartını içeren **nihai tam donanım montajının** detaylı çizimleri ve 3D kasa yerleşimleri yer almaktadır.
 
 ---
 
-## 1. ⚡ Şu Anki Prototip Test Montajı (1.3" IPS + ESP32-S3 Mini)
+## 1. ⚡ Voltaj 1.69" ST7789 IPS (8-Pin) + ESP32-S3 Mini Montajı
 
-Elinizdeki parçalarla lehim yapmadan veya breadboard/jumper kablo ile doğrudan test edebilmeniz için hazırlanan bağlantı çizimi:
+Kablo geçişlerini kolaylaştırmak ve karmaşayı önlemek için ekranın tüm pinleri **ESP32-S3'ün sol kenarındaki pin sırasına (GPIO 1 – 9)** birebir 1'e 1 eşleştirilmiştir:
 
-<p align="center">
-  <img src="docs/test_baglanti_semasi_13inch.png" alt="1.3 inç Test Şeması" width="95%">
-</p>
-
-### 📌 Montaj ve Bağlantı Tablosu
-
-Kablo geçişlerini kolaylaştırmak ve karmaşayı önlemek için ekranın tüm pinleri **ESP32-S3'ün sol kenarındaki pin sırasına** birebir eşleştirilmiştir:
-
-| Ekran Pini (1.3" IPS) | ESP32-S3 Mini Pini | Kablo | Açıklama |
-| :--- | :--- | :--- | :--- |
-| **GND** | **GND** | Siyah | Ortak toprak hattı |
-| **VCC** | **3V3** (3.3V) | Kırmızı | ⚠️ **Sadece 3.3V'a bağlayın. Asla 5V vermeyin!** |
-| **SCL** | **GPIO 4** | Turuncu | SPI Clock (Saat) |
-| **SDA** | **GPIO 6** | Mavi | SPI MOSI (Görüntü verisi) |
-| **RES** | **GPIO 2** | Yeşil | Reset pini |
-| **DC** | **GPIO 3** | Mor | Data/Command pini |
-| **BLK** | **GPIO 1** | Sarı | PWM Arka Aydınlatma Kontrolü (%70 Varsayılan) |
-| *(CS Pini)* | *(Yok)* | — | 7 pinli modüllerde CS pini PCB üzerinde GND'ye bağlıdır. |
+| # | Ekran Pini (1.69" IPS) | ESP32-S3 Mini Pini | Kablo | Açıklama / Görevi |
+|:---:|:---|:---|:---:|:---|
+| **1** | **GND** | **GND** | Siyah | Ortak toprak hattı |
+| **2** | **VCC** | **3V3 (3.3V)** | Kırmızı | ⚠️ **Sadece 3.3V'a bağlayın. Asla 5V vermeyin!** |
+| **3** | **SCL** | **GPIO 4** | Turuncu | SPI Clock (Saat) |
+| **4** | **SDA** | **GPIO 6** | Mavi | SPI MOSI (Görüntü verisi) |
+| **5** | **RES** | **GPIO 2** | Yeşil | Reset pini |
+| **6** | **DC** | **GPIO 3** | Mor | Data/Command pini |
+| **7** | **CS** | **GPIO 5** *(veya GND)* | Pembe | Chip Select (Ekran Seçimi) |
+| **8** | **BLK** | **GPIO 1** | Sarı | PWM Arka Aydınlatma & Parlaklık Kontrolü |
 
 > [!TIP]
-> **Buton Montajı Gerekmez:** ESP32-S3 Mini kartının sağ üst köşesinde bulunan dahili **BOOT** butonu (`GPIO 0`) yazılımda doğrudan kanal değiştirme / ses kapatma butonu olarak tanımlanmıştır. Test aşamasında harici bir buton lehimlemenize gerek yoktur.
+> **Dahili Buton:** ESP32-S3 Mini kartının sağ üst köşesindeki dahili **BOOT** butonu (`GPIO 0`) doğrudan kanal değiştirme, çift tıkla sesi kapatma (MUTE) ve uzun basışla ses seviyesi döngüsü için programlanmıştır. Harici buton takmaya gerek kalmadan kullanılabilir.
 
 ---
 
-## 2. 🔌 Nihai Tam Donanım Şeması (1.3" Ekran + MicroSD + Amfi + Boost Şarj)
+## 2. 🔌 Nihai Tam Donanım Şeması (Voltaj 1.69" Ekran + MicroSD + Amfi + Boost Şarj)
 
 Tüm donanım bir araya getirildiğinde (1.3" ST7789 Ekran + ESP32-S3 + 16GB MicroSD + MAX98357A I2S Amfi + TP4056 5V Boost Kartı + Hoparlör + 3.7V Li-Po Pil) kullanılacak tam montaj şeması:
 

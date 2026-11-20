@@ -1,15 +1,15 @@
 #pragma once
 // =============================================================
-//  Collectible Display - 1.3" ST7789 + ESP32-S3 + 16GB MicroSD
+//  Collectible Display - Voltaj 1.69" 240x280 ST7789 + ESP32-S3 + 16GB MicroSD
 // =============================================================
 
-// ---- Ekran Pinleri (FSPI) ----
+// ---- Ekran Pinleri (FSPI - Voltaj 1.69" 240x280 ST7789 8-Pin) ----
 #define TFT_SCLK    4   // Ekran SCL (Turuncu)
 #define TFT_MOSI    6   // Ekran SDA (Mavi)
 #define TFT_RES     2   // Ekran RES (Yeşil)
 #define TFT_DC      3   // Ekran DC  (Mor)
 #define TFT_BL      1   // Ekran BLK (Sarı)
-#define TFT_CS     -1   // CS pini yok (Dahili GND)
+#define TFT_CS      5   // Ekran CS  (Pembe - GPIO 5 veya doğrudan GND'ye köprülenebilir)
 
 // ---- SD Kart Pinleri (HSPI - Doğrulanan ve Çalışan Pinler) ----
 #define SD_SCK     12   // Sağ sıra 12
@@ -29,10 +29,11 @@
 #define PIN_BUTTON  0   // Tek tık: Sonraki video | Çift tık: Sesi Kapat/Aç (Mute) | Uzun bas: Ses Seviyesi
 
 // ---- Ekran & SPI Performans Ayarları ----
+// Voltaj 1.69" 240x280 ST7789 SPI IPS Ekran (Oval Cam)
 #define SCREEN_W    240
-#define SCREEN_H    240
-#define LCD_ROTATION 1  // Yatay kullanım
-#define SPI_SPEED   24000000  // 24 MHz Kararlı Donanımsal SPI (Jumper kablolar için güvenilir sinyal)
+#define SCREEN_H    280
+#define LCD_ROTATION 1  // Yatay kullanım (280x240 piksel)
+#define SPI_SPEED   24000000  // 24 MHz Kararlı Donanımsal SPI
 
 // ---- Wi-Fi Ayarları ----
 #define AP_SSID     "CollectibleDisplay"

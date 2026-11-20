@@ -14,22 +14,22 @@ Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD
   <img src="docs/baglanti_semasi_13inch.png" alt="Mini Retro TV 1.3 inç Doğrulanmış Görsel Devre Şeması" width="100%">
 </p>
 
-### A. 1.3" ST7789 IPS Ekran ↔ ESP32-S3 (FSPI Veriyolu - Sol Sıra)
+### A. Voltaj 1.69" 240×280 ST7789 IPS Ekran (8-Pin) ↔ ESP32-S3 (FSPI Veriyolu - Sol Sıra)
 
 <p align="center">
-  <img src="docs/test_baglanti_semasi_13inch.png" alt="1.3 inç ST7789 ve ESP32-S3 Prototip Bağlantı Şeması" width="90%">
+  <img src="docs/baglanti_semasi_13inch.png" alt="Voltaj 1.69 inç ST7789 ve ESP32-S3 Bağlantı Şeması" width="100%">
 </p>
 
-| Ekran Pini | Ekran Kablo Rengi | ESP32-S3 Pini | Görevi / Not |
-| :--- | :--- | :--- | :--- |
-| **GND** | Siyah | **GND** | Ortak Toprak |
-| **VCC** | Kırmızı | **3.3V** | Ekran Lojik ve LED Gücü |
-| **SCL (CLK)** | Turuncu | **GPIO 4** | Donanımsal FSPI Saat Sinyali |
-| **SDA (MOSI)**| Mavi | **GPIO 6** | Donanımsal FSPI Veri Hattı |
-| **RES** | Yeşil | **GPIO 2** | Donanımsal Ekran Sıfırlama (Reset) |
-| **DC** | Mor | **GPIO 3** | Veri / Komut Seçimi (Data/Command) |
-| **BLK** | Sarı | **GPIO 1** | Arka Işık (Backlight) Açma |
-| *(CS)* | *(Dahili)* | *(Yok)* | Bu ekranda CS pini dahili olarak GND'ye bağlıdır |
+| # | Ekran Pini (1.69") | ESP32-S3 Pini | ESP32-C3 Pini | Görevi / Açıklama |
+|:---:|:---|:---|:---|:---|
+| **1** | **GND** | **GND** | **GND** | Ortak Toprak |
+| **2** | **VCC** | **3.3V (3V3)** | **3.3V (3V3)** | ⚠️ **Sadece 3.3V! Asla 5V vermeyin!** |
+| **3** | **SCL (CLK)** | **GPIO 4** | **GPIO 4** | Donanımsal FSPI Saat Sinyali |
+| **4** | **SDA (MOSI)**| **GPIO 6** | **GPIO 6** | Donanımsal FSPI Veri Hattı |
+| **5** | **RES (RST)** | **GPIO 2** | **GPIO 2** | Donanımsal Ekran Sıfırlama |
+| **6** | **DC** | **GPIO 3** | **GPIO 3** | Veri / Komut Seçimi (Data/Command) |
+| **7** | **CS** | **GPIO 5** *(veya GND)* | **GPIO 7** | Chip Select (Ekran Seçim Hattı) |
+| **8** | **BLK (BL)** | **GPIO 1** | **GPIO 1** | PWM Arka Aydınlatma & Parlaklık Kontrolü |
 
 ---
 
