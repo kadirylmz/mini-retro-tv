@@ -280,14 +280,30 @@
       <text x="0" y="38" fill="#94a3b8" font-size="9" text-anchor="middle">16GB SD + I2S</text>
     </g>
 
-    <!-- BOOT & RESET Buttons -->
-    <rect x="885" y="360" width="40" height="26" rx="5" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
-    <circle cx="905" cy="373" r="6" fill="#0284c7"/>
-    <text x="905" y="400" fill="#94a3b8" font-size="9" font-weight="700" text-anchor="middle">BOOT</text>
+    <!-- BOOT & RESET Buttons / Harici Buton Bağlantı Şeması -->
+    <g transform="translate(825, 305)">
+      <!-- External Button Enclosure Card -->
+      <rect x="0" y="0" width="270" height="150" rx="12" fill="#0c1222" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 3"/>
+      
+      <!-- Card Title -->
+      <text x="135" y="22" fill="#38bdf8" font-size="11" font-weight="900" text-anchor="middle">🔘 KANAL / MUTE / SES BUTONU</text>
+      
+      <!-- 6x6 mm Tactile Button Illustration -->
+      <rect x="25" y="38" width="55" height="55" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+      <circle cx="52.5" cy="65.5" r="16" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+      <circle cx="52.5" cy="65.5" r="7" fill="#f8fafc"/>
+      <text x="52.5" y="108" fill="#94a3b8" font-size="9" font-weight="700" text-anchor="middle">6×6mm Buton</text>
 
-    <rect x="995" y="360" width="40" height="26" rx="5" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
-    <circle cx="1015" cy="373" r="6" fill="#dc2626"/>
-    <text x="1015" y="400" fill="#94a3b8" font-size="9" font-weight="700" text-anchor="middle">RST</text>
+      <!-- Pinout text & Wiring -->
+      <text x="95" y="52" fill="#f8fafc" font-size="11" font-weight="800">1. Bacak → GPIO 0 (BOOT)</text>
+      <text x="95" y="70" fill="#cbd5e1" font-size="11" font-weight="700">2. Bacak → GND (Toprak)</text>
+      <text x="95" y="88" fill="#34d399" font-size="10" font-weight="700">✓ Direnç Yok (Dahili Pull-up)</text>
+      <text x="95" y="104" fill="#a5b4fc" font-size="9">Kasa üstü delik için 3D pimlidir</text>
+
+      <!-- Action summary pill -->
+      <rect x="15" y="118" width="240" height="24" rx="6" fill="#1e293b" stroke="#334155"/>
+      <text x="135" y="134" fill="#facc15" font-size="9.5" font-weight="800" text-anchor="middle">Tek tık: Kanal | Çift tık: Mute | Uzun: Ses</text>
+    </g>
 
     <!-- Bottom Status Text -->
     <text x="960" y="780" fill="#a5b4fc" font-size="12" font-weight="800" text-anchor="middle">⚡ Çift Bağımsız Donanımsal SPI (FSPI + HSPI)</text>
@@ -694,6 +710,10 @@
   <div class="tip-box info">
     <div class="tip-title">🔋 Pil ve Trimpot Kalibrasyonu</div>
     <div class="tip-desc">TP4056 + 5V Boost kartı fabrikadan 9V-12V ayarlı gelebilir. ESP32'ye bağlamadan önce multimetre ile trimpottan ölçerek <strong>tam 5.0V</strong>'a ayarlayın.</div>
+  </div>
+  <div class="tip-box success">
+    <div class="tip-title">🔘 Fiziksel Kanal / Mute Butonu Montajı</div>
+    <div class="tip-desc">Kasanın üstündeki delik altına <strong>6×6 mm mini tactile switch</strong> yapıştırılır. Bir bacağı <strong>GPIO 0 (BOOT)</strong>'a, diğer bacağı <strong>GND</strong>'ye bağlanır. Yazılımda dahili pull-up aktiftir (direnç gerekmez). Üzerine 3D basılan <strong>button_cap.stl</strong> pimi takılarak çıt-çıt mekanik basım sağlanır.</div>
   </div>
 </div>
 

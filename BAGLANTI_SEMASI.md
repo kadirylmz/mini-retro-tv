@@ -65,11 +65,22 @@ Fiziksel kart üzerindeki 7 pinin sırasıyla bağlantı durumu:
 
 ---
 
-### D. Çok Fonksiyonlu Kontrol Butonu (`GPIO 0` - BOOT Butonu)
+### D. Çok Fonksiyonlu Kontrol Butonu (`GPIO 0` / Harici 6×6mm Mikro Tactile Buton)
 
-* **Tek Kısa Basış:** Sonraki video / kanala geçiş (`nextChannel()`).
-* **Çift Tıklama (Hızlı 2 Basış):** **SESİ AÇ / KAPAT (MUTE TOGGLE)!** Ekranda anında kırmızı `[ SES KAPALI (MUTE) ]` veya yeşil `[ SES: %70 ]` OSD'si çıkar.
-* **Uzun Basış (> 1.2 saniye):** Ses kademesi döngüsü (`%25` $\rightarrow$ `%50` $\rightarrow$ `%75` $\rightarrow$ `%100` $\rightarrow$ `%0`). Ekranda canlı seviye çubuğu gösterilir.
+> 💡 **Fiziksel Montaj Tavsiyesi:**  
+> ESP32 kartı üzerindeki lehimli minik SMD butonu kasanın üst deliğine milimetrik denk getirmeye çalışmak kart oynadığında takılı kalmasına veya ıskalamasına sebep olabilir. Bunun yerine kasanın üst deliğinin hemen altına **standart 2 bacaklı 6×6 mm mini tactile push buton** yapıştırıp iki ince kabloyla karta bağlamak en temiz ve taş gibi sağlam yöntemdir.
+
+| Buton Bacağı | ESP32-S3 Bağlantısı | Notlar |
+|:---:|:---|:---|
+| **1. Bacak** | **GPIO 0 (BOOT Pini)** | Sinyal hattı (Basıldığında GND'ye çeker) |
+| **2. Bacak** | **GND (Ortak Toprak)** | Toprak hattı |
+
+* **Direnç Gerekmez:** Yazılımda ESP32'nin dahili çekme direnci (`pinMode(PIN_BUTTON, INPUT_PULLUP)`) aktiftir.
+* **3D Buton Pimi (`button_cap.stl`):** Baskı tablasından çıkan T-şekilli şapkalı buton pimi, kasanın üstündeki 3.6 mm delikten içeri bırakılır. Flanşı sayesinde dışarı fırlamaz ve altındaki mikro butona parmakla basıldığında çıt-çıt mekanik basım sağlar.
+* **Buton Fonksiyonları:**
+  * **Tek Kısa Basış:** Sonraki video / kanala geçiş (`nextChannel()`).
+  * **Çift Tıklama (Hızlı 2 Basış):** **SESİ AÇ / KAPAT (MUTE TOGGLE)!** Ekranda anında `[ 🔇 SES KAPALI (MUTE) ]` veya `[ 🔊 SES: %... ]` OSD'si çıkar.
+  * **Uzun Basış (> 1.2 saniye):** Ses kademesi döngüsü (`%0` $\rightarrow$ `%25` $\rightarrow$ `%50` $\rightarrow$ `%75` $\rightarrow$ `%100`).
 
 ---
 

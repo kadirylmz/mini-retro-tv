@@ -10,17 +10,18 @@
 //    - Güç:   TP4056 Type-C Korumalı Şarj Devresi + LiPo Pil
 //
 //  Baskı Parçaları (part değişkeni):
-//    "preview"       : Montajlı TV görünümü (Yekpare V-Anten ile)
+//    "preview"       : Montajlı TV görünümü (Yekpare V-Anten ve Buton Pimi ile)
 //    "body"          : Ana TV gövdesi (ön yüz tablaya düz basar, destek gerekmez)
 //    "back"          : Arka kapak (tırnaklı geçme, vidasız)
 //    "knobs"         : 2 adet dekoratif ön çevirme düğmesi
 //    "legs"          : 4 adet retro konik TV ayağı
+//    "button_cap"    : Üst kanal/ses butonu basma pimi (T-şekilli, delikten düşmez)
 //    "antenna_solid" : Yekpare 3D basılabilir V-Anten (Desteksiz)
 //    "antenna"       : Geleneksel tel/ataş yuvası + 2 boncuk
-//    "plate"         : TÜM PARÇALAR TEK TABLADA (Gövde+Kapak+Düğmeler+Ayaklar+Yekpare V-Anten)
+//    "plate"         : TÜM PARÇALAR TEK TABLADA (Gövde+Kapak+Düğmeler+Ayaklar+Anten+Buton Pimi)
 // =============================================================
 
-part = "preview"; // [preview, body, back, knobs, legs, antenna_solid, antenna, plate]
+part = "preview"; // [preview, body, back, knobs, legs, button_cap, antenna_solid, antenna, plate]
 
 /* [Ekran Modeli Seçimi] */
 display_type = "1.3"; // [1.3, 1.69]
@@ -54,7 +55,7 @@ btn_hole = true;    // Kanal / Wi-Fi / Sessize Alma butonu deliği
 btn_side = "top";   // [left, right, bottom, top]
 btn_off  = 8;
 btn_y    = 8.0;
-btn_dia  = 2.6;
+btn_dia  = 3.6;     // Standart 6x6mm mikro buton ve 3D basılabilir buton pimi için 3.6 mm optimize delik
 
 /* [Gövde Yapısı] */
 wall     = 1.8;  // Duvar kalınlığı
@@ -210,6 +211,18 @@ module leg() {
     translate([0, 0, leg_h - 0.01]) cylinder(d = peg_d - 0.1, h = wall - 0.3);
 }
 
+// ---------- 4b. ÜST KANAL/SES BUTON PİMİ (T-ŞEKİLLİ, %100 DESTEKSİZ) ----------
+module button_cap() {
+    union() {
+        // Alt tutucu flanş (delikten dışarı fırlamasını engeller)
+        cylinder(d = btn_dia + 2.4, h = 1.0);
+        // Delikten dışarı çıkan basma şaftı
+        translate([0, 0, 0.99]) cylinder(d = btn_dia - 0.5, h = wall + 2.2);
+        // Üst yuvarlatılmış parmak dokunma kubbesi
+        translate([0, 0, 1.0 + wall + 2.2]) scale([1, 1, 0.7]) sphere(d = btn_dia - 0.5);
+    }
+}
+
 // ---------- 5. YEKPARE V-ANTEN (3D BASKIYA UYGUN, %100 DESTEKSİZ) ----------
 module antenna_solid() {
     difference() {
@@ -260,6 +273,8 @@ module preview() {
         color("#f1e6cf") translate([px, -knob_h, zz]) rotate([-90, 0, 0]) knob();
     for (p = leg_pos) color("#6b4a2b") translate([p[0], p[1], -leg_h]) leg();
     color("#f1e6cf") translate([wx, out_d/2, out_h - 0.3]) antenna_solid();
+    // Üst Kanal/Ses Buton Pimi
+    color("#f1e6cf") translate([bx + btn_off, front + btn_y, out_h - wall - 1.0]) button_cap();
 }
 
 // ---------- ÇIKTI MODLARI ----------
@@ -268,6 +283,7 @@ else if (part == "body")            rotate([90, 0, 0]) body();      // Ön yüz 
 else if (part == "back")            back();
 else if (part == "knobs")           for (i = [0:1]) translate([i*11, 0, 0]) knob();
 else if (part == "legs")            for (i = [0:3]) translate([i*8, 0, 0]) leg();
+else if (part == "button_cap")      button_cap();
 else if (part == "antenna_solid")   antenna_solid();
 else if (part == "antenna")         { antenna_base(); for (i = [0:1]) translate([12 + i*6, 0, 1.6]) bead(); }
 else if (part == "plate") {
@@ -281,4 +297,6 @@ else if (part == "plate") {
     for (i = [0:3]) translate([30 + i*8, out_h + 10, 0]) leg();
     // 5. Yekpare V-Anten (Desteksiz, 100% 3D basılabilir)
     translate([out_w + 24, out_h + 16, 0]) antenna_solid();
+    // 6. Üst Kanal Buton Pimi (T-Şekilli)
+    translate([out_w + 40, out_h + 10, 0]) button_cap();
 }

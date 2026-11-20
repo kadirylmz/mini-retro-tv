@@ -140,9 +140,10 @@ Tüm parçalar standart FDM 3D yazıcılarda (Bambu Lab, Creality Ender 3, Prusa
 
 | Parça | STL Dosyası | Açıklama & Baskı Özellikleri |
 |---|---|---|
-| **Tek Tablada Hepsi** | [plate.stl](enclosure/stl/plate.stl) | **Tüm parçalar tek seferde baskı tablasında** (Gövde + Arka Kapak + Düğmeler + Ayaklar + **Yekpare V-Anten**). %100 Desteksiz! |
+| **Tek Tablada Hepsi** | [plate.stl](enclosure/stl/plate.stl) | **Tüm parçalar tek seferde baskı tablasında** (Gövde + Arka Kapak + Düğmeler + Ayaklar + **Yekpare V-Anten** + **Buton Pimi**). %100 Desteksiz! |
+| **Buton Basma Pimi** | [button_cap.stl](enclosure/stl/button_cap.stl) | Kasa üstü 3.6 mm delikten dışarı düşmeyen, parmakla basılan T-şekilli buton başlığı. |
 | **Yekpare V-Anten** | [antenna_solid.stl](enclosure/stl/antenna_solid.stl) | Tel/ataş gerektirmeyen, doğrudan 3D basılabilen desteksiz sağlam V-anten. |
-| **Ana Gövde** | [body.stl](enclosure/stl/body.stl) | Ön yüzü tablaya basar. Sol tarafta 1 cm kablo dönüş payı ve ön hoparlör ızgarası bulunur. |
+| **Ana Gövde** | [body.stl](enclosure/stl/body.stl) | Ön yüzü tablaya basar. Sol tarafta 1 cm kablo dönüş payı, hoparlör ızgarası ve 3.6 mm buton deliği bulunur. |
 | **Arka Kapak** | [back.stl](enclosure/stl/back.stl) | Vidasız tırnaklı kilit, Type-C şarj girişi ve soğutma kanalları. |
 | **Düğmeler (2 Adet)**| [knobs.stl](enclosure/stl/knobs.stl) | Ön panel dekoratif retro çevirme düğmeleri. |
 | **Ayaklar (4 Adet)** | [legs.stl](enclosure/stl/legs.stl) | TV'yi yukarı açılı tutan retro konik ayaklar. |
@@ -202,7 +203,12 @@ Arduino Kütüphane Yöneticisi'nden aşağıdaki kütüphanelerin güncel sür�
 
 ## 6. 🎮 Fiziksel Buton & OSD Kontrolleri
 
-ESP32 üzerindeki `BOOT` butonu veya harici fiziksel buton (`GPIO 0`) ile tam kontrol:
+> [!TIP]
+> **Fiziksel Buton Montaj Rehberi:**  
+> ESP32 kartı üzerindeki lehimli minik SMD butonu kasanın üst deliğine milimetrik denk getirmek zordur ve kart kayarsa takılı kalabilir. Bunun yerine kasanın üstündeki 3.6 mm deliğin hemen altına **6×6 mm mini mikro tactile buton** yerleştirilip karta 2 ince kabloyla bağlanır:
+> * **1. Bacak** $\rightarrow$ **ESP32-S3 `GPIO 0`** (BOOT pini)
+> * **2. Bacak** $\rightarrow$ **ESP32-S3 `GND`** (Ortak toprak)
+> * **Direnç Gerekmez:** Yazılımda dahili pull-up (`INPUT_PULLUP`) devrededir. Üzerine 3D basılan **`button_cap.stl`** pimi takılarak çıt-çıt parmakla rahatça basılır.
 
 | Buton Hareketi | Tetiklenen Eylem | Ekran Göstergesi (OSD) |
 |---|---|---|
