@@ -412,21 +412,25 @@ h1 {
     <span id="wifi-status-badge" style="font-size:11px;color:var(--text-dim);">Kontrol ediliyor...</span>
   </h2>
 
-  <!-- 1. Hotspot Şifresi Değiştirme -->
+  <!-- 1. Hotspot Şifresi Değiştirme & Kolay Bağlantı -->
   <div style="background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;margin-bottom:12px;border:1px solid var(--border);">
-    <div style="font-weight:600;font-size:13px;color:var(--accent2);margin-bottom:8px;">📡 Cihaz Erişim Noktası (Hotspot)</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-weight:600;font-size:13px;color:var(--accent2);">📡 Mini TV Hotspot (Direkt Bağlantı)</div>
+      <span style="font-size:11px;background:#23273a;padding:2px 8px;border-radius:12px;color:var(--text-dim);">Kanal 6 (Temiz)</span>
+    </div>
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
-      <span style="color:var(--text-dim);">Ağ Adı (SSID):</span>
-      <span id="disp-ap-ssid" style="font-weight:bold;">CollectibleDisplay</span>
+      <span style="color:var(--text-dim);">Wi-Fi Adı (SSID):</span>
+      <span id="disp-ap-ssid" style="font-weight:bold;color:#fff;">CollectibleDisplay</span>
     </div>
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;">
-      <span style="color:var(--text-dim);">Mevcut Şifre:</span>
-      <span id="disp-ap-pass" style="font-family:monospace;color:var(--warning);">display1234</span>
+      <span style="color:var(--text-dim);">Güvenlik / Şifre:</span>
+      <span id="disp-ap-pass" style="font-family:monospace;font-weight:bold;color:var(--success);">Şifresiz (Tek Tıkla Bağlan)</span>
     </div>
-    <div style="display:flex;gap:8px;">
-      <input type="text" id="input-new-ap-pass" placeholder="Yeni Şifre (En az 8 hane)" style="flex:1;background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
-      <button class="btn btn-small" onclick="changeApPassword()" style="margin:0;">Şifreyi Kaydet</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="text" id="input-new-ap-pass" placeholder="Şifre koymak isterseniz yazın (en az 8 hane)" style="flex:1;background:#0d0f17;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">
+      <button class="btn btn-small" onclick="changeApPassword()" style="margin:0;">Şifre Koy</button>
     </div>
+    <button class="btn btn-small" onclick="makeApOpen()" style="width:100%;background:#23273a;color:var(--accent2);font-size:11px;margin:0;">🔓 Şifresiz / Açık Ağ Yap (Tek Tıkla Kolay Bağlan)</button>
   </div>
 
   <!-- 2. Ev / Ofis Wi-Fi Ağına Bağlanma -->
@@ -667,20 +671,28 @@ function onSelectSsid(val) {
   }
 }
 
+function makeApOpen() {
+  if (!confirm('Hotspot şifresiz (açık ağ) yapılsın mı?\nBöylece herhangi bir cihaz şifre girmeden tek tıkla kolayca bağlanabilir.')) return;
+  saveApPass('');
+}
+
 async function changeApPassword() {
   const newPass = document.getElementById('input-new-ap-pass').value.trim();
   if (newPass.length < 8) {
-    alert('Hotspot şifresi en az 8 karakter olmalıdır!');
+    alert('Hotspot şifresi en az 8 karakter olmalıdır!\n(Şifreyi kaldırmak için "Şifresiz / Açık Ağ Yap" düğmesini kullanabilirsiniz)');
     return;
   }
-  if (!confirm('Hotspot şifresini "' + newPass + '" olarak değiştirmek istediğinize emin misiniz?\nCihaz yeniden başlayacaktır.')) return;
+  if (!confirm('Hotspot şifresi "' + newPass + '" yapılsın mı?\nCihaz yeniden başlayacaktır.')) return;
+  saveApPass(newPass);
+}
 
+async function saveApPass(pass) {
   try {
     const formData = new FormData();
-    formData.append('ap_pass', newPass);
+    formData.append('ap_pass', pass);
     const res = await fetch('/save_wifi', { method: 'POST', body: formData });
     const data = await res.json();
-    alert(data.message || 'Şifre güncellendi. Yeni şifreyle bağlanın.');
+    alert(data.message || 'Ayarlar kaydedildi. Cihaz yeniden başlıyor...');
   } catch(e) {
     alert('Ayarlar gönderildi. Cihaz yeniden başlıyor...');
   }
@@ -752,7 +764,12 @@ async function loadVideos() {
 
     if (data.wifi) {
       document.getElementById('disp-ap-ssid').innerText = data.wifi.ap_ssid || 'CollectibleDisplay';
-      document.getElementById('disp-ap-pass').innerText = data.wifi.ap_pass || 'display1234';
+      const apPassEl = document.getElementById('disp-ap-pass');
+      if (!data.wifi.ap_pass || data.wifi.ap_pass.length === 0) {
+        apPassEl.innerHTML = '<span style="color:var(--success);">🔓 ŞİFRESİZ (Kolay Bağlantı)</span>';
+      } else {
+        apPassEl.innerHTML = `<span style="color:var(--warning);">${data.wifi.ap_pass}</span>`;
+      }
 
       const staStatus = document.getElementById('disp-sta-status');
       const wifiBadge = document.getElementById('wifi-status-badge');

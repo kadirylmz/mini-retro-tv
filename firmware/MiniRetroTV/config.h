@@ -36,7 +36,7 @@
 
 // ---- Wi-Fi Ayarları ----
 #define AP_SSID     "CollectibleDisplay"
-#define AP_PASS     "display1234"
+#define AP_PASS     ""   // Boş bırakıldığında ŞİFRESİZ (Açık Ağ / Kolay Bağlantı)
 #define STA_SSID    ""
 #define STA_PASS    ""
 

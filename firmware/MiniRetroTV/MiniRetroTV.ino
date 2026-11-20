@@ -14,7 +14,6 @@
 #include <SD.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <vector>
@@ -35,8 +34,6 @@ Adafruit_ST7789 tft(&SPI, TFT_CS, TFT_DC, TFT_RES);
 SPIClass sdSPI(HSPI);
 JPEGDEC jpeg;
 WebServer server(80);
-DNSServer dnsServer;
-const byte DNS_PORT = 53;
 Preferences prefs;
 
 // Depolama Aygıtı (SD Kart veya Dahili Flash Yedek)
@@ -261,9 +258,9 @@ void drawStandbyScreen() {
   tft.setTextColor(0xFD20);
   tft.setCursor(12, 126);
   tft.print("Sifre  :");
-  tft.setTextColor(ST77XX_WHITE);
+  tft.setTextColor(currentApPass.length() > 0 ? ST77XX_WHITE : 0x07E0);
   tft.setCursor(68, 126);
-  tft.println(currentApPass);
+  tft.println(currentApPass.length() > 0 ? currentApPass : "SIFRESIZ (KOLAY)");
 
   // Ev Wi-Fi Durumu
   if (WiFi.status() == WL_CONNECTED) {
@@ -561,7 +558,8 @@ void setupWebServer() {
     bool changed = false;
     if (server.hasArg("ap_pass")) {
       String newAp = server.arg("ap_pass");
-      if (newAp.length() >= 8) {
+      newAp.trim();
+      if (newAp.length() == 0 || newAp.length() >= 8) {
         prefs.putString("ap_pass", newAp);
         currentApPass = newAp;
         changed = true;
@@ -889,8 +887,11 @@ void setup() {
   photoDurationMs = prefs.getULong("photo_dur", 5000);
 
   currentApSsid = prefs.getString("ap_ssid", AP_SSID);
-  currentApPass = prefs.getString("ap_pass", AP_PASS);
-  if (currentApPass.length() < 8) currentApPass = AP_PASS;
+  currentApPass = prefs.getString("ap_pass", "");
+  if (currentApPass == "display1234") {
+    currentApPass = "";
+    prefs.putString("ap_pass", "");
+  }
   currentStaSsid = prefs.getString("sta_ssid", "");
   currentStaPass = prefs.getString("sta_pass", "");
 
@@ -933,21 +934,35 @@ void setup() {
     isSDActive = false;
   }
 
-  // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
+  // 4. Wi-Fi Başlat (Kararlı ve Kolay Bağlantı Mimarisi)
   WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
     if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
       Serial.println("[Wi-Fi] Ev Wi-Fi bağlantısı koptu! Otomatik yeniden bağlanılıyor...");
       WiFi.reconnect();
     } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
       Serial.printf("[Wi-Fi] Ev Wi-Fi IP Adresi Alındı: %s\n", WiFi.localIP().toString().c_str());
+    } else if (event == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
+      Serial.println("[Wi-Fi Hotspot] Yeni cihaz bağlandı.");
+    } else if (event == ARDUINO_EVENT_WIFI_AP_STADISCONNECTED) {
+      Serial.println("[Wi-Fi Hotspot] Bir cihaz ayrıldı.");
     }
   });
 
   WiFi.setAutoReconnect(true);
 
+  // Kararlı IP & Alt Ağ Yapılandırması (Telefonların 'IP alınıyor'da takılmasını önler)
+  IPAddress apIP(192, 168, 4, 1);
+  IPAddress gateway(192, 168, 4, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  WiFi.softAPConfig(apIP, gateway, subnet);
+
+  // Kolay Bağlantı: Şifre boşsa şifresiz açık ağ başlatılır, 8+ hane ise WPA2
+  const char* apPass = (currentApPass.length() >= 8) ? currentApPass.c_str() : NULL;
+  const int apChannel = 6; // Temiz ve çakışmasız kanal (Kanal 1'deki yoğun parazitten kaçınır)
+
   if (currentStaSsid.length() > 0) {
     WiFi.mode(WIFI_AP_STA);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
+    WiFi.softAP(currentApSsid.c_str(), apPass, apChannel, 0, 4);
     Serial.printf("Ev Wi-Fi agina baglaniliyor: %s ...\n", currentStaSsid.c_str());
     WiFi.begin(currentStaSsid.c_str(), currentStaPass.c_str());
     unsigned long startConn = millis();
@@ -961,19 +976,14 @@ void setup() {
     }
   } else {
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
+    WiFi.softAP(currentApSsid.c_str(), apPass, apChannel, 0, 4);
   }
 
-  WiFi.setSleep(false);                 // Modem uykusunu kapat (sinyal gucunu ve hizi tavan yapar)
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Maksimum donanımsal sinyal gücü (19.5 dBm)
-  Serial.print("Wi-Fi Hotspot: ");
-  Serial.print(currentApSsid);
-  Serial.print(" - IP: ");
-  Serial.println(WiFi.softAPIP());
-
-  // DNS Server (Captive Portal - Telefonda otomatik giriş sayfasını tetikler)
-  dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
-  Serial.println("DNS Sunucu (Captive Portal) aktif edildi.");
+  WiFi.setSleep(false);                 // Modem uykusunu kapat
+  WiFi.setTxPower(WIFI_POWER_15dBm);    // Kararlı 15 dBm (voltaj düşüşü ve RF parazitini önler)
+  Serial.printf("Wi-Fi Hotspot Aktif: [%s] (%s) - IP: %s [Kanal %d]\n", 
+                currentApSsid.c_str(), apPass ? "Şifreli (WPA2)" : "ŞİFRESİZ / AÇIK AĞ (Kolay Bağlantı)", 
+                WiFi.softAPIP().toString().c_str(), apChannel);
 
   // mDNS Başlat (http://collectibletv.local)
   if (MDNS.begin("collectibletv")) {
@@ -1072,7 +1082,6 @@ void handleSerialCommands() {
 //  LOOP
 // =========================================================================
 void loop() {
-  dnsServer.processNextRequest();
   server.handleClient();
   handleButton();
   handleSerialCommands();
@@ -1093,7 +1102,8 @@ void loop() {
     lastApCheck = millis();
     if (WiFi.softAPIP() == IPAddress(0, 0, 0, 0)) {
       Serial.println("[Wi-Fi] Hotspot IP geçersiz, yeniden başlatılıyor...");
-      WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
+      const char* apPass = (currentApPass.length() >= 8) ? currentApPass.c_str() : NULL;
+      WiFi.softAP(currentApSsid.c_str(), apPass, 6, 0, 4);
     }
   }
 
@@ -1159,6 +1169,7 @@ void loop() {
 #endif
 
   // 2. Video Kare Çizimi
+  server.handleClient(); // Web ve Wi-Fi isteklerini anında işle
   size_t frameSize = 0;
   if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
     if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
