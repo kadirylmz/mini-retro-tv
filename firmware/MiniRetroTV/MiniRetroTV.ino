@@ -27,8 +27,6 @@
 I2SClass i2s;
 bool audioReady = false;
 File audioFile;
-size_t audioBytesSent = 0;
-void feedAudioStream();
 
 void playBootTone() {
   if (!audioReady) return;
@@ -116,49 +114,6 @@ uint8_t currentVolume = DEFAULT_VOLUME;
 bool isMuted = false;
 uint8_t lastUnmutedVolume = DEFAULT_VOLUME;
 unsigned long osdUntil = 0;
-#define OSD_W 160
-#define OSD_H 26
-#define OSD_X ((SCREEN_W - OSD_W) / 2)
-#define OSD_Y 12
-
-GFXcanvas16 osdCanvas(OSD_W, OSD_H);
-volatile bool osdActive = false;
-
-#if USE_AUDIO
-void feedAudioStream() {
-  if (!audioReady || !audioFile || !audioFile.available()) return;
-
-  unsigned long elapsedMs = millis() - mediaStartTime;
-  // 16 kHz mono 16-bit = 32 bayt / milisaniye (16000 ornek/sn * 2 bayt)
-  size_t targetBytes = (size_t)(elapsedMs * 32);
-  // DMA tamponunda her an ~120 ms (3840 bayt) onbellek tutulur, ses asla ac kalmaz
-  size_t desiredBytes = targetBytes + 3840;
-
-  if (audioBytesSent < desiredBytes) {
-    size_t needed = desiredBytes - audioBytesSent;
-    if (needed > 2048) needed = 2048;
-
-    int16_t audioBuf[1024];
-    size_t toRead = min(needed, (size_t)sizeof(audioBuf));
-    int nBytes = audioFile.read((uint8_t *)audioBuf, toRead);
-    if (nBytes > 0) {
-      int samples = nBytes / 2;
-      // 1.6x dinamik headroom kazanci: net, tok ve gur ses saglar
-      int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 410 / 100);
-      for (int i = 0; i < samples; i++) {
-        int32_t val = ((int32_t)audioBuf[i] * gain) >> 8;
-        if (val > 32767) val = 32767;
-        else if (val < -32768) val = -32768;
-        audioBuf[i] = (int16_t)val;
-      }
-      i2s.write((uint8_t *)audioBuf, nBytes);
-      audioBytesSent += nBytes;
-    }
-  }
-}
-#else
-void feedAudioStream() {}
-#endif
 
 // Ekran Parlaklığı (LEDC PWM - Pil Tasarrufu: %70 varsayılan)
 uint8_t currentBrightness = 180;
@@ -168,7 +123,7 @@ uint8_t *frameBuffer = nullptr;
 size_t frameBufferSize = MAX_FRAME_SIZE;
 
 // Hızlı Okuma Tamponu (RAM Chunk Buffer - 100 kat hızlı dosya okuma)
-static uint8_t fileReadBuf[8192];
+static uint8_t fileReadBuf[4096];
 static size_t fileReadLen = 0;
 static size_t fileReadPos = 0;
 
@@ -209,79 +164,7 @@ static bool longPressHandled = false;
 // =========================================================================
 //  JPEGDEC Çizim Geri Çağrısı
 // =========================================================================
-//  FLICKER-FREE OSD RENDERER & EMBEDDED COMPOSITOR
-//  OSD doğrudan JPEG bloklarının üzerine bellekte bindirilir; video ile ekran
-//  arasında sıfır pırpır (flicker-free) dikişsiz görüntü elde edilir!
-// =========================================================================
-void renderOSDToCanvas() {
-#if ENABLE_VOLUME_OSD
-  if (isMuted || currentVolume == 0) {
-    osdCanvas.fillRoundRect(0, 0, OSD_W, OSD_H, 6, 0xF800); // Kırmızı
-    osdCanvas.drawRoundRect(0, 0, OSD_W, OSD_H, 6, 0xFFFF); // Beyaz kenarlık
-    osdCanvas.setTextSize(1);
-    osdCanvas.setTextColor(0xFFFF);
-    osdCanvas.setCursor(20, 9);
-    osdCanvas.print("SES KAPALI (MUTE)");
-  } else {
-    osdCanvas.fillRoundRect(0, 0, OSD_W, OSD_H, 6, 0x10A2); // Koyu retro lacivert
-    osdCanvas.drawRoundRect(0, 0, OSD_W, OSD_H, 6, 0x07E0); // Yeşil neon kenarlık
-    osdCanvas.setTextSize(1);
-    osdCanvas.setTextColor(0x07E0);
-    osdCanvas.setCursor(10, 9);
-    osdCanvas.printf("SES: %%%d", currentVolume);
-
-    // Ses İlerleme Çubuğu ve İmleç
-    int barX = 75;
-    int barY = 8;
-    int barMaxW = 75;
-    int barH = 10;
-    osdCanvas.drawRect(barX, barY, barMaxW, barH, 0xFFFF);
-    int fillW = map(currentVolume, 0, 100, 0, barMaxW - 2);
-    if (fillW > 0) {
-      osdCanvas.fillRect(barX + 1, barY + 1, fillW, barH - 2, 0x07E0);
-    }
-  }
-  osdUntil = millis() + 2200; // 2.2 saniye göster
-  osdActive = true;
-#endif
-}
-
-void triggerOSD() {
-  renderOSDToCanvas();
-}
-
 int JPEGDraw(JPEGDRAW *pDraw) {
-#if ENABLE_VOLUME_OSD
-  if (osdActive) {
-    if (millis() < osdUntil) {
-      int bx0 = pDraw->x;
-      int by0 = pDraw->y;
-      int bx1 = bx0 + pDraw->iWidth;
-      int by1 = by0 + pDraw->iHeight;
-
-      // OSD kutusuyla kesişim kontrolü (OSD_X=40, OSD_Y=12, W=160, H=26)
-      int ix0 = (bx0 > (int)OSD_X) ? bx0 : (int)OSD_X;
-      int ix1 = (bx1 < (int)(OSD_X + OSD_W)) ? bx1 : (int)(OSD_X + OSD_W);
-      int iy0 = (by0 > (int)OSD_Y) ? by0 : (int)OSD_Y;
-      int iy1 = (by1 < (int)(OSD_Y + OSD_H)) ? by1 : (int)(OSD_Y + OSD_H);
-
-      if (ix0 < ix1 && iy0 < iy1) {
-        uint16_t *pixels = (uint16_t *)pDraw->pPixels;
-        uint16_t *osdBuf = osdCanvas.getBuffer();
-        for (int y = iy0; y < iy1; y++) {
-          int dstRow = (y - by0) * pDraw->iWidth;
-          int srcRow = (y - OSD_Y) * OSD_W;
-          for (int x = ix0; x < ix1; x++) {
-            pixels[dstRow + (x - bx0)] = osdBuf[srcRow + (x - OSD_X)];
-          }
-        }
-      }
-    } else {
-      osdActive = false;
-    }
-  }
-#endif
-
   tft.drawRGBBitmap(pDraw->x, pDraw->y, pDraw->pPixels, pDraw->iWidth, pDraw->iHeight);
   return 1;
 }
@@ -290,7 +173,48 @@ int JPEGDraw(JPEGDRAW *pDraw) {
 //  Kanal Geçiş Efekti (Dikişsiz / Seamless Geçiş - Göz Kırpma Yok)
 // =========================================================================
 void drawCRTStatic(int ms) {
-  // Dikişsiz geçiş: ekran karartılmaz.
+  // Dikişsiz (seamless) geçiş için ekran temizlenmez, doğrudan yeni kare çizilir.
+}
+
+// =========================================================================
+//  OSD (On-Screen Display) Ses & Mute Göstergesi
+// =========================================================================
+void drawVolumeOSD() {
+  int boxW = 160;
+  int boxH = 26;
+  int boxX = (SCREEN_W - boxW) / 2;
+  int boxY = 10;
+
+  if (isMuted || currentVolume == 0) {
+    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_RED);
+    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_WHITE);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setCursor(boxX + 22, boxY + 9);
+    tft.print("SES KAPALI (MUTE)");
+  } else {
+    tft.fillRoundRect(boxX, boxY, boxW, boxH, 6, 0x10A2); // Koyu lacivert
+    tft.drawRoundRect(boxX, boxY, boxW, boxH, 6, ST77XX_GREEN);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_GREEN);
+    tft.setCursor(boxX + 10, boxY + 9);
+    tft.printf("SES: %%%d", currentVolume);
+
+    // Ses İlerleme Çubuğu
+    int barX = boxX + 75;
+    int barY = boxY + 8;
+    int barMaxW = 75;
+    int barH = 10;
+    tft.drawRect(barX, barY, barMaxW, barH, ST77XX_WHITE);
+    int fillW = map(currentVolume, 0, 100, 0, barMaxW - 2);
+    if (fillW > 0) {
+      tft.fillRect(barX + 1, barY + 1, fillW, barH - 2, ST77XX_GREEN);
+    }
+  }
+}
+
+void triggerOSD() {
+  osdUntil = millis() + 1800; // 1.8 saniye göster
 }
 
 void setVolume(uint8_t vol) {
@@ -535,12 +459,9 @@ void playVideoByIndex(int idx) {
     String pcmPath = fullPath.substring(0, fullPath.lastIndexOf('.')) + ".pcm";
     if (storage->exists(pcmPath)) {
       audioFile = storage->open(pcmPath, "r");
-      audioBytesSent = 0;
       Serial.printf("Eşleşen PCM Ses Dosyası Açıldı: %s (%u bayt)\n", pcmPath.c_str(), audioFile.size());
-      feedAudioStream(); // Ilk kare decode edilmeden once DMA'yi sesle doldur
     } else {
       audioFile = File();
-      audioBytesSent = 0;
       Serial.println("Bu videoya ait ses dosyası yok (Sessiz mod)");
     }
 #endif
@@ -997,7 +918,7 @@ bool readNextMJPEGFrameFast(File &file, uint8_t *buf, size_t &frameSize, size_t 
 // =========================================================================
 void setup() {
   esp_brownout_disable(); // Pilde voltaj çöküşü resetlerini engeller
-  setCpuFrequencyMhz(240); // 240 MHz -> 160 MHz (%35 pil tasarrufu, serin çalışma ve voltaj stabilitesi)
+  setCpuFrequencyMhz(160); // 240 MHz -> 160 MHz (%35 pil tasarrufu, serin çalışma ve voltaj stabilitesi)
   Serial.begin(115200);
   Serial.setTimeout(10);
   delay(100);
@@ -1069,7 +990,7 @@ void setup() {
 
   bool sdOk = false;
   for (int r = 0; r < 3; r++) {
-    if (SD.begin(SD_CS, sdSPI, 20000000) || SD.begin(SD_CS, sdSPI, 16000000) || SD.begin(SD_CS, sdSPI, 10000000)) {
+    if (SD.begin(SD_CS, sdSPI, 10000000) || SD.begin(SD_CS, sdSPI, 4000000) || SD.begin(SD_CS, sdSPI, 1000000)) {
       sdOk = true;
       break;
     }
@@ -1312,11 +1233,8 @@ void loop() {
   }
   lastFrameTime = now;
 
-  // 1. Kesintisiz Ses & Video Koordinasyonu
+  // 1. Video Kare Çizimi
   server.handleClient(); // Web ve Wi-Fi isteklerini anında işle
-#if USE_AUDIO
-  feedAudioStream(); // Kare baslamadan once DMA'yi besle
-#endif
   size_t frameSize = 0;
   if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
     if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
@@ -1335,9 +1253,30 @@ void loop() {
       jpeg.close();
       currentMediaFrames++;
 
-      // 2. Kesintisiz Ses Besleme (Kare sonrasi DMA'yi tazele)
+#if ENABLE_VOLUME_OSD
+      // OSD Gösterimi (Sadece etkinse gösterilir - pırpır ve göz kırpmayı önler)
+      if (millis() < osdUntil) {
+        drawVolumeOSD();
+      }
+#endif
+
+      // 2. Ses Çalma (20 FPS @ 16 kHz = Kare başına TAM 800 örnek / 50 ms)
+      // Görüntü ekrana çizildiği an ses gönderilerek sesin görüntünün önüne geçmesi (audio lead) engellenir!
 #if USE_AUDIO
-      feedAudioStream();
+      if (audioReady && audioFile && audioFile.available()) {
+        int16_t audioBuf[800]; // 50 ms @ 16 kHz = 800 örnek (20 FPS ile %100 tam senkron)
+        int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
+        if (nBytes > 0) {
+          int samples = nBytes / 2;
+          int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
+          for (int i = 0; i < samples; i++) {
+            audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
+          }
+          i2s.write((uint8_t *)audioBuf, nBytes);
+        }
+      } else if (audioFile && !loopAll) {
+        audioFile.seek(0);
+      }
 #endif
     } else {
       static int consecutiveOpenErrors = 0;
@@ -1373,14 +1312,11 @@ void loop() {
       mediaStartTime = millis();
       currentMediaFrames = 0;
 #if USE_AUDIO
-      if (audioFile) {
-        audioFile.seek(0);
-        audioBytesSent = 0;
-        feedAudioStream();
-      }
+      if (audioFile) audioFile.seek(0);
 #endif
     }
   }
 
-  yield();
+  // Her kare sonrasında Wi-Fi ve Web Sunucusuna nefes aldır
+  delay(10);
 }
