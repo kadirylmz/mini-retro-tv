@@ -48,18 +48,20 @@ Bu bağlantı bizzat fiziksel olarak test edilmiş ve **15.193 MB (16GB) MicroSD
 
 ---
 
-### C. MAX98357A I2S 3W Ses Amfisi + Hoparlör ↔ ESP32-S3
+### C. MAX98357A I2S 3W Ses Amfisi (7-Pin Header) + Hoparlör ↔ ESP32-S3
 
-| MAX98357A Pini | ESP32-S3 Pini | Açıklama / Not |
-| :--- | :--- | :--- |
-| **VIN** | **5V (5U)** | 2.5V–5.5V besleme (ESP32 3.3V hattını yormaz, temiz ve gür ses verir) |
-| **GND** | **GND** | Ortak Toprak |
-| **BCLK** | **GPIO 7** | I2S Bit Clock (Saat) |
-| **LRC** | **GPIO 8** | I2S Word Select (Sol/Sağ Kanal) |
-| **DIN** | **GPIO 9** | I2S Data In (Ses Verisi) |
-| **`+` / `-`** | **Mini Hoparlör** | 8Ω 1W mini hoparlör uçlarına bağlanır |
+Fiziksel kart üzerindeki 7 pinin sırasıyla bağlantı durumu:
 
-*(Not: Amfi üzerindeki `SD` ve `GAIN` pinleri boş bırakılır; varsayılan 9 dB ses kazancında çalışır).*
+| # | MAX98357A Pini | ESP32-S3 Pini | Durum | Açıklama / Görevi |
+|:---:|:---|:---|:---:|:---|
+| **1** | **LRC** | **GPIO 8** | Bağlı | I2S Word Select / Sol-Sağ Kanal Sinyali |
+| **2** | **BCLK** | **GPIO 7** | Bağlı | I2S Bit Clock (Ses Saat Sinyali) |
+| **3** | **DIN** | **GPIO 9** | Bağlı | I2S Data In (Sayısal Ses Verisi) |
+| **4** | **GAIN** | *(Boş)* | **BOŞ** | **Bağlanmaz!** Boş bırakıldığında varsayılan 9 dB temiz kazançta çalışır |
+| **5** | **SD** | *(Boş)* | **BOŞ** | **Bağlanmaz!** Boş bırakıldığında amfi açık kalır ve stereo sesi mono olarak birleştirir `(L+R)/2` |
+| **6** | **GND** | **GND** | Bağlı | Ortak Toprak Hattı |
+| **7** | **VIN** | **5V (5U)** | Bağlı | 5V Güç Beslemesi (Hoparlörden 3W tam ve net güç almak için) |
+| — | **`+` / `−`** | **Hoparlör** | Bağlı | 8Ω 1W mini hoparlör uçlarına lehimlenir (+ Kırmızı, − Siyah) |
 
 ---
 

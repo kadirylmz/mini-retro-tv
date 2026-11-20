@@ -40,6 +40,17 @@ Tüm donanım bir araya getirildiğinde (1.3" ST7789 Ekran + ESP32-S3 + 16GB Mic
   <img src="docs/baglanti_semasi_13inch.png" alt="Tam Proje Şeması 1.3 inç" width="100%">
 </p>
 
+### 🔊 MAX98357A I2S Amfi 7-Pin Bağlantı Tablosu:
+Kart üzerinde yan yana dizili bulunan 7 pinin sırasıyla montaj durumu:
+* **1. LRC** $\rightarrow$ ESP32-S3 `GPIO 8` *(Left/Right Clock)*
+* **2. BCLK** $\rightarrow$ ESP32-S3 `GPIO 7` *(Bit Clock)*
+* **3. DIN** $\rightarrow$ ESP32-S3 `GPIO 9` *(Data In / Ses Verisi)*
+* **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz)** *(Varsayılan 9 dB temiz kazanç)*
+* **5. SD** $\rightarrow$ **BOŞ (Bağlanmaz)** *(Varsayılan Açık / Stereo-Mono birleştirme)*
+* **6. GND** $\rightarrow$ Ortak `GND`
+* **7. VIN** $\rightarrow$ **`5V (5U)`** *(3W ses gücü için 5V hattına bağlanır)*
+* **Hoparlör Klemensleri (`+` / `−`):** 8Ω 1W mini hoparlör uçlarına lehimlenir (+ Kırmızı, − Siyah).
+
 ### Alternatif 1.69" Kompakt Donanım Şeması (ESP32-C3 SuperMini)
 <p align="center">
   <img src="docs/baglanti_semasi.png" alt="Orijinal 1.69 inç Şema" width="100%">

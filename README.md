@@ -82,13 +82,15 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 * **SCK** $\rightarrow`GPIO 12`
 * **MISO** $\rightarrow`GPIO 13`
 
-### MAX98357A I2S 3W Ses Amfisi & Hoparlör
-* **VIN** $\rightarrow`5V (5U)`
-* **GND** $\rightarrow`GND`
-* **BCLK** $\rightarrow`GPIO 7`
-* **LRC** $\rightarrow`GPIO 8`
-* **DIN** $\rightarrow`GPIO 9`
-* **`+` / `-`** $\rightarrow$ 8Ω 1W-2W Mini Hoparlör
+### MAX98357A I2S 3W Ses Amfisi & Hoparlör (7-Pin Modül)
+* **1. LRC** $\rightarrow$ `GPIO 8` *(Left/Right Word Clock)*
+* **2. BCLK** $\rightarrow$ `GPIO 7` *(Bit Clock)*
+* **3. DIN** $\rightarrow$ `GPIO 9` *(Data In / Ses Verisi)*
+* **4. GAIN** $\rightarrow$ **BOŞ (Bağlanmaz)** *(Varsayılan 9 dB temiz kazanç)*
+* **5. SD** $\rightarrow$ **BOŞ (Bağlanmaz)** *(Varsayılan Açık / Mono birleştirme)*
+* **6. GND** $\rightarrow$ `GND`
+* **7. VIN** $\rightarrow$ **`5V (5U)`** *(3W tam ses çıkış gücü için 5V besleme)*
+* **`+` / `−` (Hoparlör Klemens)** $\rightarrow$ 8Ω 1W Mini Hoparlör (+ Kırmızı, − Siyah)
 
 ### TP4056 + 5V Boost Voltaj Yükseltici & Li-Po Pil
 * **BAT+ / BAT-** $\rightarrow$ 3.7V Li-Po Pil (603035 / 703048)

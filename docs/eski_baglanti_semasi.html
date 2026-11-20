@@ -55,8 +55,8 @@
     <!-- TP4056 OUT+ (5V/BAT) -> ESP32 5V & MAX98357A VIN -->
     <!-- TP4056 OUT+ is at (590, 215). Route to ESP32 right-side 5V (1010, 310) via top bus -->
     <path d="M 590 215 L 650 215 L 650 155 L 1110 155 L 1110 310 L 1010 310" stroke="#ef4444" stroke-width="4.5"/>
-    <!-- Branch down from 5V rail to MAX98357A VIN (1220, 745) -->
-    <path d="M 1110 310 L 1110 745 L 1220 745" stroke="#ef4444" stroke-width="4.5"/>
+    <!-- Branch down from 5V rail to MAX98357A VIN (1220, 946) -->
+    <path d="M 1110 310 L 1110 946 L 1220 946" stroke="#ef4444" stroke-width="4.5"/>
     <circle cx="1110" cy="310" r="6" fill="#ef4444"/>
 
     <!-- TP4056 OUT- (GND) -> Common GND rail -->
@@ -65,8 +65,8 @@
     <!-- GND branch to Screen GND (1250, 215) -->
     <path d="M 1090 215 L 1250 215" stroke="#94a3b8" stroke-width="4"/>
     <circle cx="1090" cy="215" r="5.5" fill="#94a3b8"/>
-    <!-- GND branch to MAX98357A GND (1220, 790) -->
-    <path d="M 1090 355 L 1090 790 L 1220 790" stroke="#94a3b8" stroke-width="4"/>
+    <!-- GND branch to MAX98357A GND (1220, 910) -->
+    <path d="M 1090 355 L 1090 910 L 1220 910" stroke="#94a3b8" stroke-width="4"/>
     <circle cx="1090" cy="355" r="6" fill="#94a3b8"/>
     <!-- GND branch to MicroSD GND (420, 710) -->
     <path d="M 632 275 L 632 710 L 420 710" stroke="#94a3b8" stroke-width="4"/>
@@ -106,18 +106,18 @@
     <!-- MicroSD CS: ESP32 GPIO20 (790, 580) -> MicroSD CS (420, 935) -->
     <path d="M 790 580 L 732 580 L 732 935 L 420 935" stroke="#f59e0b" stroke-width="4"/>
 
-    <!-- I2S BCLK: ESP32 GPIO0 (1010, 625) -> MAX98357A BCLK (1220, 835) -->
-    <path d="M 1010 625 L 1035 625 L 1035 835 L 1220 835" stroke="#3b82f6" stroke-width="4"/>
+    <!-- I2S BCLK: ESP32 GPIO0 (1010, 625) -> MAX98357A BCLK (1220, 766) -->
+    <path d="M 1010 625 L 1035 625 L 1035 766 L 1220 766" stroke="#3b82f6" stroke-width="4"/>
 
-    <!-- I2S LRC: ESP32 GPIO10 (790, 535) -> MAX98357A LRC (1220, 880) -->
-    <path d="M 790 535 L 754 535 L 754 880 L 1220 880" stroke="#10b981" stroke-width="4"/>
+    <!-- I2S LRC: ESP32 GPIO10 (790, 535) -> MAX98357A LRC (1220, 730) -->
+    <path d="M 790 535 L 754 535 L 754 730 L 1220 730" stroke="#10b981" stroke-width="4"/>
 
-    <!-- I2S DIN: ESP32 GPIO21 (790, 625) -> MAX98357A DIN (1220, 925) -->
-    <path d="M 790 625 L 772 625 L 772 925 L 1220 925" stroke="#f43f5e" stroke-width="4"/>
+    <!-- I2S DIN: ESP32 GPIO21 (790, 625) -> MAX98357A DIN (1220, 802) -->
+    <path d="M 790 625 L 772 625 L 772 802 L 1220 802" stroke="#f43f5e" stroke-width="4"/>
 
     <!-- MAX98357A +/- -> SPEAKER -->
-    <path d="M 1455 815 L 1545 815" stroke="#ef4444" stroke-width="5"/>
-    <path d="M 1455 865 L 1545 865" stroke="#64748b" stroke-width="5"/>
+    <path d="M 1475 820 L 1555 820" stroke="#ef4444" stroke-width="5"/>
+    <path d="M 1475 870 L 1555 870" stroke="#64748b" stroke-width="5"/>
   </g>
 
   <!-- ==================== 1. POWERMASTER 603035 LiPo BATTERY ==================== -->
@@ -319,51 +319,67 @@
     </g>
   </g>
 
-  <!-- ==================== 6. MAX98357A I2S AMP + SPEAKER (BOTTOM-RIGHT) ==================== -->
+  <!-- ==================== 6. MAX98357A I2S AMP (7-PIN REAL) + SPEAKER ==================== -->
   <g filter="url(#shadow)">
-    <rect x="1220" y="700" width="235" height="270" rx="14" fill="#4c1d95" stroke="#a78bfa" stroke-width="2.5"/>
-    <text x="1342" y="732" fill="#ffffff" font-size="18" font-weight="800" text-anchor="middle">MAX98357A</text>
-    <text x="1342" y="752" fill="#ddd6fe" font-size="12" font-weight="600" text-anchor="middle">I2S 3W Dijital Ses Amfisi</text>
+    <rect x="1220" y="670" width="255" height="325" rx="14" fill="#4c1d95" stroke="#a78bfa" stroke-width="2.5"/>
+    <text x="1347" y="694" fill="#ffffff" font-size="16" font-weight="800" text-anchor="middle">MAX98357A (7-Pin)</text>
+    <text x="1347" y="710" fill="#ddd6fe" font-size="11" font-weight="600" text-anchor="middle">I2S 3W Dijital Ses Amfisi</text>
     <!-- Amp IC -->
-    <rect x="1325" y="800" width="55" height="55" rx="6" fill="#1e1b4b" stroke="#c4b5fd" stroke-width="1.5"/>
-    <text x="1352" y="832" fill="#e9d5ff" font-size="11" font-family="Consolas" font-weight="700" text-anchor="middle">98357</text>
-    <text x="1342" y="954" fill="#c4b5fd" font-size="11" text-anchor="middle">SD &amp; GAIN pinleri boş kalır</text>
+    <rect x="1380" y="775" width="45" height="45" rx="6" fill="#1e1b4b" stroke="#c4b5fd" stroke-width="1.5"/>
+    <text x="1402" y="802" fill="#e9d5ff" font-size="10" font-family="Consolas" font-weight="700" text-anchor="middle">98357</text>
 
-    <!-- Left 5 Pins -->
-    <g font-family="Consolas" font-size="14" font-weight="800">
-      <circle cx="1220" cy="745" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
-      <text x="1235" y="750" fill="#fca5a5">VIN (5V)</text>
+    <!-- Real 7 Physical Pins on Left Edge -->
+    <g font-family="Consolas" font-size="12" font-weight="800">
+      <!-- 1. LRC -->
+      <circle cx="1220" cy="730" r="7" fill="#10b981" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="734" fill="#6ee7b7">1. LRC <tspan fill="#a7f3d0" font-size="11">(GPIO 10)</tspan></text>
 
-      <circle cx="1220" cy="790" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
-      <text x="1235" y="795" fill="#e2e8f0">GND</text>
+      <!-- 2. BCLK -->
+      <circle cx="1220" cy="766" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="770" fill="#93c5fd">2. BCLK <tspan fill="#bfdbfe" font-size="11">(GPIO 0)</tspan></text>
 
-      <circle cx="1220" cy="835" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
-      <text x="1235" y="840" fill="#93c5fd">BCLK</text>
+      <!-- 3. DIN -->
+      <circle cx="1220" cy="802" r="7" fill="#f43f5e" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="806" fill="#fda4af">3. DIN <tspan fill="#fecdd3" font-size="11">(GPIO 21)</tspan></text>
 
-      <circle cx="1220" cy="880" r="7" fill="#10b981" stroke="#fff" stroke-width="2"/>
-      <text x="1235" y="885" fill="#6ee7b7">LRC</text>
+      <!-- 4. GAIN (EMPTY) -->
+      <circle cx="1220" cy="838" r="7" fill="#1e1b4b" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="1235" y="842" fill="#cbd5e1">4. GAIN <tspan fill="#fbbf24" font-size="11">[BOŞ / 9dB]</tspan></text>
 
-      <circle cx="1220" cy="925" r="7" fill="#f43f5e" stroke="#fff" stroke-width="2"/>
-      <text x="1235" y="930" fill="#fda4af">DIN</text>
+      <!-- 5. SD (EMPTY) -->
+      <circle cx="1220" cy="874" r="7" fill="#1e1b4b" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="1235" y="878" fill="#cbd5e1">5. SD <tspan fill="#fbbf24" font-size="11">[BOŞ / Açık]</tspan></text>
+
+      <!-- 6. GND -->
+      <circle cx="1220" cy="910" r="7" fill="#94a3b8" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="914" fill="#e2e8f0">6. GND <tspan fill="#cbd5e1" font-size="11">(GND)</tspan></text>
+
+      <!-- 7. VIN (5V) -->
+      <circle cx="1220" cy="946" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+      <text x="1235" y="950" fill="#fca5a5">7. VIN <tspan fill="#fecaca" font-size="11">(OUT+ / 5V)</tspan></text>
     </g>
 
+    <!-- Info Pill at bottom -->
+    <rect x="1232" y="966" width="230" height="22" rx="4" fill="#312e81" stroke="#6366f1" stroke-width="1"/>
+    <text x="1347" y="981" fill="#e0e7ff" font-size="10.5" font-weight="700" text-anchor="middle">⚠️ GAIN ve SD Pinleri Boş Bırakılır</text>
+
     <!-- Speaker output terminals -->
-    <circle cx="1455" cy="815" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
-    <text x="1442" y="820" fill="#fff" font-size="16" font-weight="900" text-anchor="end">+</text>
-    <circle cx="1455" cy="865" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
-    <text x="1442" y="870" fill="#fff" font-size="18" font-weight="900" text-anchor="end">−</text>
+    <circle cx="1475" cy="820" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <text x="1462" y="825" fill="#fff" font-size="16" font-weight="900" text-anchor="end">+</text>
+    <circle cx="1475" cy="870" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
+    <text x="1462" y="875" fill="#fff" font-size="18" font-weight="900" text-anchor="end">−</text>
   </g>
 
   <!-- Mini Speaker (8 Ohm 1W) -->
   <g filter="url(#shadow)">
-    <rect x="1545" y="730" width="215" height="220" rx="20" fill="#1f2937" stroke="#64748b" stroke-width="2.5"/>
-    <circle cx="1652" cy="825" r="68" fill="#111827" stroke="#9ca3af" stroke-width="4"/>
-    <circle cx="1652" cy="825" r="48" fill="#1f2937" stroke="#4b5563" stroke-width="2"/>
-    <circle cx="1652" cy="825" r="22" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
-    <text x="1652" y="920" fill="#f8fafc" font-size="16" font-weight="800" text-anchor="middle">🔊 Mini Hoparlör</text>
-    <text x="1652" y="940" fill="#94a3b8" font-size="13" text-anchor="middle">8Ω 1W (20mm / 14×20)</text>
-    <circle cx="1545" cy="815" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
-    <circle cx="1545" cy="865" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
+    <rect x="1555" y="725" width="210" height="225" rx="20" fill="#1f2937" stroke="#64748b" stroke-width="2.5"/>
+    <circle cx="1660" cy="820" r="65" fill="#111827" stroke="#9ca3af" stroke-width="4"/>
+    <circle cx="1660" cy="820" r="45" fill="#1f2937" stroke="#4b5563" stroke-width="2"/>
+    <circle cx="1660" cy="820" r="20" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+    <text x="1660" y="910" fill="#f8fafc" font-size="16" font-weight="800" text-anchor="middle">🔊 Mini Hoparlör</text>
+    <text x="1660" y="930" fill="#94a3b8" font-size="13" text-anchor="middle">8Ω 1W (20mm / 14×20)</text>
+    <circle cx="1555" cy="820" r="7" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+    <circle cx="1555" cy="870" r="7" fill="#64748b" stroke="#fff" stroke-width="2"/>
   </g>
 
   <!-- ==================== BOTTOM SUMMARY / SAFETY BAR ==================== -->
