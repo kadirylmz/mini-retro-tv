@@ -27,6 +27,44 @@
 I2SClass i2s;
 bool audioReady = false;
 File audioFile;
+
+void playBootTone() {
+  if (!audioReady) return;
+  Serial.println(">>> SES TESTI: Hoparlor test sinyali (Bip-Bip) caliniyor... <<<");
+  const int sampleRate = AUDIO_RATE;
+  int16_t buf[256];
+  
+  // 1. Ton: 659 Hz (E5) ~ 200 ms
+  int toneSamples = sampleRate / 5;
+  for (int i = 0; i < toneSamples; i += 256) {
+    int chunk = min(256, toneSamples - i);
+    for (int j = 0; j < chunk; j++) {
+      float t = (float)(i + j) / sampleRate;
+      buf[j] = (int16_t)(sin(2.0 * PI * 659.0 * t) * 22000.0);
+    }
+    i2s.write((uint8_t *)buf, chunk * sizeof(int16_t));
+  }
+  
+  // Kısa duraklama ~ 50 ms
+  memset(buf, 0, sizeof(buf));
+  int silenceSamples = sampleRate / 20;
+  for (int i = 0; i < silenceSamples; i += 256) {
+    int chunk = min(256, silenceSamples - i);
+    i2s.write((uint8_t *)buf, chunk * sizeof(int16_t));
+  }
+  
+  // 2. Ton: 880 Hz (A5) ~ 250 ms
+  toneSamples = sampleRate / 4;
+  for (int i = 0; i < toneSamples; i += 256) {
+    int chunk = min(256, toneSamples - i);
+    for (int j = 0; j < chunk; j++) {
+      float t = (float)(i + j) / sampleRate;
+      buf[j] = (int16_t)(sin(2.0 * PI * 880.0 * t) * 22000.0);
+    }
+    i2s.write((uint8_t *)buf, chunk * sizeof(int16_t));
+  }
+  Serial.println(">>> SES TESTI TAMAMLANDI! <<<");
+}
 #endif
 
 // Donanım Nesneleri (Çift Donanımsal SPI)
@@ -464,6 +502,16 @@ void setupWebServer() {
     toggleMute();
     String json = "{\"volume\":" + String(currentVolume) + ",\"muted\":" + (isMuted ? "true" : "false") + "}";
     server.send(200, "application/json", json);
+  });
+
+  server.on("/beep", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+#if USE_AUDIO
+    playBootTone();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"msg\":\"Bip sesi basariyla calindi!\"}");
+#else
+    server.send(200, "application/json", "{\"status\":\"error\",\"msg\":\"Ses donanimi pasif\"}");
+#endif
   });
 
   server.on("/brightness", HTTP_GET, []() {
@@ -931,10 +979,11 @@ void setup() {
 #if USE_AUDIO
   // 2. I2S Ses Başlat (MAX98357A: BCLK=7, LRC=8, DIN=9)
   i2s.setPins(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DIN);
-  if (i2s.begin(I2S_MODE_STD, AUDIO_RATE, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO)) {
+  if (i2s.begin(I2S_MODE_STD, AUDIO_RATE, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, I2S_STD_SLOT_BOTH)) {
     audioReady = true;
-    Serial.printf(">>> I2S SES AMFISI AKTIF (MAX98357A) - Ses: %%%d %s <<<\n", 
+    Serial.printf(">>> I2S SES AMFISI AKTIF (MAX98357A - CIFT KANAL BASMA) - Ses: %%%d %s <<<\n", 
                   currentVolume, isMuted ? "(MUTE)" : "");
+    playBootTone(); // Donanim test bip melodisi
   }
 #endif
 
@@ -1211,12 +1260,18 @@ void loop() {
   size_t frameSize = 0;
   if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
     if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
+      static int consecutiveDecodeErrors = 0;
       if (!jpeg.decode(0, 0, 0)) {
-        Serial.println("JPEG cozum hatasi! Sonraki medyaya geciliyor...");
+        consecutiveDecodeErrors++;
         jpeg.close();
-        nextChannel();
+        if (consecutiveDecodeErrors >= 5) {
+          Serial.println("Arka arkaya 5 JPEG cozum hatasi! Sonraki medyaya geciliyor...");
+          consecutiveDecodeErrors = 0;
+          nextChannel();
+        }
         return;
       }
+      consecutiveDecodeErrors = 0;
       jpeg.close();
       currentMediaFrames++;
 
@@ -1225,8 +1280,13 @@ void loop() {
         drawVolumeOSD();
       }
     } else {
-      Serial.println("JPEG openRAM hatasi (Gecersiz JPEG)! Sonraki medyaya geciliyor...");
-      nextChannel();
+      static int consecutiveOpenErrors = 0;
+      consecutiveOpenErrors++;
+      if (consecutiveOpenErrors >= 5) {
+        Serial.println("Arka arkaya 5 JPEG openRAM hatasi! Sonraki medyaya geciliyor...");
+        consecutiveOpenErrors = 0;
+        nextChannel();
+      }
       return;
     }
   } else {

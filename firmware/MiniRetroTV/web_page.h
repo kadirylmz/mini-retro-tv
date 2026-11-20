@@ -398,6 +398,12 @@ h1 {
     <button class="btn-vol" onclick="setQuickVol(100)">🔊 %100</button>
   </div>
 
+  <div style="margin-top:10px;">
+    <button class="btn-mute" style="background:rgba(52,152,219,0.15);border:1px solid #3498db;color:#3498db;font-weight:600;" onclick="testBeep()">
+      <span>🔔</span> <span>Hoparlör Donanımını Test Et (Bip Sesi Çal)</span>
+    </button>
+  </div>
+
   <!-- Ekran Parlaklığı (Pil Tasarruf Kontrolü) -->
   <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;">
@@ -644,6 +650,16 @@ async function toggleMute() {
     const data = await res.json();
     updateVolUI(data.volume, data.muted);
   } catch(e) { console.error(e); }
+}
+
+async function testBeep() {
+  try {
+    const res = await fetch('/beep');
+    const data = await res.json();
+    alert('🔔 Test sinyali (Bip-Bip) hoparlöre gönderildi!\n\nEğer ses duyamadıysan:\n1. MAX98357A LRC (GPIO 8) ve BCLK (GPIO 7) pinlerini kontrol et.\n2. SD pini BOŞta olmalı.\n3. VIN pini 5V\'a bağlı olmalı.\n4. Hoparlör klemens vidalarını kontrol et.');
+  } catch(e) {
+    alert('Hata: ' + e);
+  }
 }
 
 // ---- PARLAKLIK KONTROLÜ (PİL TASARRUFU) ----
