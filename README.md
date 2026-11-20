@@ -119,15 +119,31 @@ Figür ve diorama rafları için avuç içi / masaüstü boyutunda, **1.3" IPS c
 
 ---
 
-## 4. 🖨️ 3D Baskı Dosyaları (`enclosure/stl/`)
+## 4. 🖨️ 3D Baskı Dosyaları & Baskı Tablası (`enclosure/stl/`)
 
-* [body.stl](enclosure/stl/body.stl) — Ana TV gövdesi (Sol tarafta 1 cm kablo payı eklenmiş)
-* [back.stl](enclosure/stl/back.stl) — Geçmeli arka kapak
-* [plate.stl](enclosure/stl/plate.stl) — Tüm parçalar tek baskı tablasında (Gövde + Kapak + Düğmeler + Ayaklar + Anten)
-* [knobs.stl](enclosure/stl/knobs.stl) — Ön dekoratif çevirme düğmeleri
-* [legs.stl](enclosure/stl/legs.stl) — Retro konik TV ayakları
-* [antenna.stl](enclosure/stl/antenna.stl) — V anten tabanı ve boncukları
-* [mini_retro_tv.scad](enclosure/mini_retro_tv.scad) — Parametrik OpenSCAD kaynak kodu
+Tüm parçalar standart 3D yazıcı tablasında (Ender 3, Bambu Lab, Prusa vb.) tek seferde ve **destek (support) gerektirmeden** basılacak şekilde tasarlanmıştır:
+
+<p align="center">
+  <img src="docs/baski_tablasi.png" alt="Mini Retro TV 3D Yazıcı Baskı Tablası & Parça Düzeni" width="100%">
+</p>
+
+### 📦 STL Parça Listesi:
+| Parça | STL Dosyası | Açıklama & Montaj Rolü |
+|---|---|---|
+| **Ana Gövde** | [body.stl](enclosure/stl/body.stl) | Ön yüzü tablaya basar. Sol tarafta 1 cm kablo geçiş payı ve hoparlör ızgarası bulunur. |
+| **Arka Kapak** | [back.stl](enclosure/stl/back.stl) | Vidasız tırnaklı kilit sistemi, Type-C şarj girişi ve soğutma kanalları. |
+| **Tek Tablada Hepsi** | [plate.stl](enclosure/stl/plate.stl) | **Tüm parçalar tek seferde baskı tablasında** (Gövde + Kapak + Düğmeler + Ayaklar + Anten). |
+| **Düğmeler (2 Adet)** | [knobs.stl](enclosure/stl/knobs.stl) | Ön dekoratif retro çevirme düğmeleri. |
+| **Ayaklar (4 Adet)** | [legs.stl](enclosure/stl/legs.stl) | TV'yi hafif yukarı açılı tutan retro konik ayaklar. |
+| **Anten Yuvası & Boncuklar** | [antenna.stl](enclosure/stl/antenna.stl) | Ataş/tel takılarak gerçekçi retro TV anteni oluşturulur. |
+| **Kaynak CAD Kodu** | [mini_retro_tv.scad](enclosure/mini_retro_tv.scad) | Parametrik OpenSCAD kaynak modeli (+10 mm sol paylı). |
+
+### ⚙️ Önerilen Dilimleyici (Slicer) Ayarları:
+* **Katman Kalınlığı (Layer Height):** `0.16 mm` – `0.20 mm`
+* **İç Dolgu (Infill):** `%15` – `%20` (Gyroid veya Grid)
+* **Destek (Supports):** **KAPALI / Gerekmez** *(Tüm parçalar tabla düzlemine göre optimize edilmiştir)*
+* **Malzeme:** PLA / PLA+ veya PETG (~35 gram filament)
+* **Baskı Süresi:** Standart hızda yaklaşık 1.5 – 2 saat
 
 ---
 

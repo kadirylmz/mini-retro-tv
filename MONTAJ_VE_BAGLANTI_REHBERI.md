@@ -61,9 +61,9 @@ Tüm donanım bir araya getirildiğinde (1.3" ST7789 Ekran + ESP32-S3 + 16GB Mic
   <img src="enclosure/preview_back.png" alt="3D Kasa Arka Kapak" width="70%">
 </p>
 
-### İç Montaj Plakası (Modülleri Sabitleme Kızağı)
+### 🖨️ 3D Yazıcı Baskı Tablası & Parça Düzeni (Desteksiz Tek Tablada Baskı)
 <p align="center">
-  <img src="enclosure/preview_plate.png" alt="3D Montaj Plakası" width="70%">
+  <img src="docs/baski_tablasi.png" alt="3D Baskı Tablası ve Parçalar" width="100%">
 </p>
 
 ---
