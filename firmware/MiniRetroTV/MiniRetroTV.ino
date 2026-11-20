@@ -57,6 +57,12 @@ int nextVideoToPlay = -1;
 File videoFile;
 bool isUploading = false;
 
+// Sıralı Döngü ve Medya Yönetimi
+bool loopAll = true;                     // Tüm yüklü medyaları sırayla sürekli döngüde oynat
+unsigned long photoDurationMs = 5000;    // Tek kare fotoğrafların ekranda kalma süresi (5 sn)
+unsigned long mediaStartTime = 0;        // Mevcut medyanın başlama zamanı
+int currentMediaFrames = 0;              // Mevcut medyada çizilen kare sayısı
+
 // Wi-Fi Ayarları (NVS Kalıcı Hafıza)
 String currentApSsid = AP_SSID;
 String currentApPass = AP_PASS;
@@ -384,6 +390,9 @@ void playVideoByIndex(int idx) {
   }
 
   currentVideoIdx = idx;
+  mediaStartTime = millis();
+  currentMediaFrames = 0;
+
   String path = playlist[currentVideoIdx].name;
   String fullPath = path.startsWith("/") ? path : (String(VIDEO_DIR) + "/" + path);
   if (!storage->exists(fullPath)) {
@@ -401,13 +410,15 @@ void playVideoByIndex(int idx) {
     currentVideoIdx = -1;
     drawStandbyScreen();
   } else {
-    Serial.printf("Oynatılıyor: %s (%u bayt) [25 FPS Akıcı Mod]\n", fullPath.c_str(), videoFile.size());
+    Serial.printf("Oynatılıyor [%d/%d]: %s (%u bayt) [Döngü Modu: %s]\n", 
+                  currentVideoIdx + 1, playlist.size(), fullPath.c_str(), videoFile.size(), loopAll ? "Sırayla Hepsi" : "Tek Medya");
 #if USE_AUDIO
     String pcmPath = fullPath.substring(0, fullPath.lastIndexOf('.')) + ".pcm";
     if (storage->exists(pcmPath)) {
       audioFile = storage->open(pcmPath, "r");
       Serial.printf("Eşleşen PCM Ses Dosyası Açıldı: %s (%u bayt)\n", pcmPath.c_str(), audioFile.size());
     } else {
+      audioFile = File();
       Serial.println("Bu videoya ait ses dosyası yok (Sessiz mod)");
     }
 #endif
@@ -417,8 +428,7 @@ void playVideoByIndex(int idx) {
 
 void nextChannel() {
   if (playlist.empty()) return;
-  int next = (currentVideoIdx + 1) % playlist.size();
-  playVideoByIndex(next);
+  nextVideoToPlay = (currentVideoIdx + 1) % playlist.size();
 }
 
 // =========================================================================
@@ -460,6 +470,8 @@ void setupWebServer() {
                   ",\"used\":" + String(cachedUsedBytes) + 
                   ",\"volume\":" + String(currentVolume) + 
                   ",\"muted\":" + (isMuted ? "true" : "false") + 
+                  ",\"loop_all\":" + (loopAll ? "true" : "false") + 
+                  ",\"photo_duration\":" + String(photoDurationMs / 1000) + 
                   ",\"active\":\"" + (currentVideoIdx >= 0 && currentVideoIdx < (int)playlist.size() ? playlist[currentVideoIdx].name : "") + "\"" +
                   ",\"wifi\":{" +
                     "\"ap_ssid\":\"" + currentApSsid + "\"," +
@@ -477,6 +489,14 @@ void setupWebServer() {
     }
     json += "]}";
     server.send(200, "application/json", json);
+  });
+
+  server.on("/toggle_loop", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    loopAll = !loopAll;
+    prefs.putBool("loop_all", loopAll);
+    Serial.printf("Oynatma Modu Değiştirildi: %s\n", loopAll ? "Sırayla Döngü (Tümü)" : "Tek Medya Tekrarı");
+    server.send(200, "application/json", "{\"status\":\"ok\",\"loop_all\":" + String(loopAll ? "true" : "false") + "}");
   });
 
   server.on("/play", HTTP_GET, []() {
@@ -860,11 +880,13 @@ void setup() {
 
   frameBuffer = (uint8_t *)malloc(frameBufferSize);
 
-  // Hafızadan son ses, mute ve Wi-Fi ayarlarını yükle
+  // Hafızadan son ses, mute, oynatma modu ve Wi-Fi ayarlarını yükle
   prefs.begin("retro_tv", false);
   currentVolume = prefs.getUChar("vol", DEFAULT_VOLUME);
   isMuted = prefs.getBool("muted", false);
   lastUnmutedVolume = (currentVolume > 0) ? currentVolume : DEFAULT_VOLUME;
+  loopAll = prefs.getBool("loop_all", true);
+  photoDurationMs = prefs.getULong("photo_dur", 5000);
 
   currentApSsid = prefs.getString("ap_ssid", AP_SSID);
   currentApPass = prefs.getString("ap_pass", AP_PASS);
@@ -912,6 +934,17 @@ void setup() {
   }
 
   // 4. Wi-Fi Başlat (Maksimum Donanımsal Güç ve Güvenilir Erişim Noktası)
+  WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+    if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+      Serial.println("[Wi-Fi] Ev Wi-Fi bağlantısı koptu! Otomatik yeniden bağlanılıyor...");
+      WiFi.reconnect();
+    } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
+      Serial.printf("[Wi-Fi] Ev Wi-Fi IP Adresi Alındı: %s\n", WiFi.localIP().toString().c_str());
+    }
+  });
+
+  WiFi.setAutoReconnect(true);
+
   if (currentStaSsid.length() > 0) {
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
@@ -1044,11 +1077,31 @@ void loop() {
   handleButton();
   handleSerialCommands();
 
+  // Wi-Fi STA Otomatik Yeniden Bağlanma Takibi
+  static unsigned long lastWifiCheck = 0;
+  if (currentStaSsid.length() > 0 && (millis() - lastWifiCheck > 5000)) {
+    lastWifiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.printf("[Wi-Fi] Ev Wi-Fi (%s) koptu, otomatik yeniden baglaniliyor...\n", currentStaSsid.c_str());
+      WiFi.reconnect();
+    }
+  }
+
+  // Wi-Fi AP (Hotspot) Canlılık Takibi
+  static unsigned long lastApCheck = 0;
+  if (millis() - lastApCheck > 15000) {
+    lastApCheck = millis();
+    if (WiFi.softAPIP() == IPAddress(0, 0, 0, 0)) {
+      Serial.println("[Wi-Fi] Hotspot IP geçersiz, yeniden başlatılıyor...");
+      WiFi.softAP(currentApSsid.c_str(), currentApPass.c_str(), 1, 0, 4);
+    }
+  }
+
   static unsigned long lastDbg = 0;
   if (millis() - lastDbg > 1000) {
     lastDbg = millis();
-    Serial.printf("[HEARTBEAT] Uptime: %lu s | VideoIdx: %d | FreeHeap: %u | Wi-Fi Clients: %d\n", 
-                  millis() / 1000, currentVideoIdx, ESP.getFreeHeap(), WiFi.softAPgetStationNum());
+    Serial.printf("[HEARTBEAT] Uptime: %lu s | VideoIdx: %d | FreeHeap: %u | Wi-Fi Clients: %d | LoopAll: %d\n", 
+                  millis() / 1000, currentVideoIdx, ESP.getFreeHeap(), WiFi.softAPgetStationNum(), loopAll ? 1 : 0);
   }
 
   // Yükleme Zaman Aşımı Emniyeti (30 sn sessizlik olursa yarıda kalan yüklemeyi temizle)
@@ -1087,56 +1140,78 @@ void loop() {
   }
   lastFrameTime = now;
 
-    // 1. Ses Çalma (16 kHz Mono PCM Senkronizasyonu)
+  // 1. Ses Çalma (16 kHz Mono PCM Senkronizasyonu)
 #if USE_AUDIO
-    if (audioReady && audioFile && audioFile.available()) {
-      int16_t audioBuf[640]; // 40 ms @ 16 kHz = 640 örnek
-      int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
-      if (nBytes > 0) {
-        int samples = nBytes / 2;
-        int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
-        for (int i = 0; i < samples; i++) {
-          audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
-        }
-        i2s.write((uint8_t *)audioBuf, nBytes);
+  if (audioReady && audioFile && audioFile.available()) {
+    int16_t audioBuf[640]; // 40 ms @ 16 kHz = 640 örnek
+    int nBytes = audioFile.read((uint8_t *)audioBuf, sizeof(audioBuf));
+    if (nBytes > 0) {
+      int samples = nBytes / 2;
+      int32_t gain = (isMuted || currentVolume == 0) ? 0 : ((int32_t)currentVolume * 256 / 100);
+      for (int i = 0; i < samples; i++) {
+        audioBuf[i] = (int16_t)(((int32_t)audioBuf[i] * gain) >> 8);
       }
-    } else if (audioFile) {
-      audioFile.seek(0); // Ses bittiğinde video ile birlikte başa sar
+      i2s.write((uint8_t *)audioBuf, nBytes);
     }
+  } else if (audioFile && !loopAll) {
+    audioFile.seek(0); // Tek medya tekrar modundaysa ses başa sarar
+  }
 #endif
 
-    // 2. Video Kare Çizimi
-    size_t frameSize = 0;
-    if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
-      if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
-        if (!jpeg.decode(0, 0, 0)) {
-          Serial.println("JPEG cozum hatasi! Sonraki videoya geciliyor...");
-          jpeg.close();
-          nextChannel();
-          return;
-        }
+  // 2. Video Kare Çizimi
+  size_t frameSize = 0;
+  if (readNextMJPEGFrameFast(videoFile, frameBuffer, frameSize, frameBufferSize)) {
+    if (jpeg.openRAM(frameBuffer, frameSize, JPEGDraw)) {
+      if (!jpeg.decode(0, 0, 0)) {
+        Serial.println("JPEG cozum hatasi! Sonraki medyaya geciliyor...");
         jpeg.close();
-
-        // OSD Gösterimi (Ses değiştirildiğinde veya Mute yapıldığında)
-        if (millis() < osdUntil) {
-          drawVolumeOSD();
-        }
-      } else {
-        Serial.println("JPEG openRAM hatasi (Gecersiz JPEG)! Sonraki videoya geciliyor...");
         nextChannel();
         return;
       }
+      jpeg.close();
+      currentMediaFrames++;
+
+      // OSD Gösterimi (Ses değiştirildiğinde veya Mute yapıldığında)
+      if (millis() < osdUntil) {
+        drawVolumeOSD();
+      }
     } else {
+      Serial.println("JPEG openRAM hatasi (Gecersiz JPEG)! Sonraki medyaya geciliyor...");
+      nextChannel();
+      return;
+    }
+  } else {
+    // EOF - Dosya sonu!
+    // Durum A: Tek kareli fotoğraf (veya 1 kareden az)
+    if (currentMediaFrames <= 1) {
+      if (millis() - mediaStartTime < photoDurationMs) {
+        // Fotoğraf süresi dolana kadar ekranda sabit tut, CPU & Wi-Fi nefes alsın
+        delay(30);
+        return;
+      }
+    }
+
+    // Süresi dolan fotoğraf veya biten video:
+    if (loopAll && playlist.size() > 1) {
+      Serial.printf("Medya tamamlandı [%d/%d] -> Sıradaki medyaya geçiliyor...\n", 
+                    currentVideoIdx + 1, playlist.size());
+      nextChannel();
+      return;
+    } else {
+      // Tek medya tekrar modundaysa veya listede tek dosya varsa başa sar
       videoFile.seek(0);
       resetFastReader();
+      mediaStartTime = millis();
+      currentMediaFrames = 0;
       if (videoFile.size() < 100000) {
-        delay(300); // Küçük dosya/fotoğraf ise döngüyü yavaşlatıp Wi-Fi ve CPU'yu rahatlat
+        delay(200);
       }
 #if USE_AUDIO
       if (audioFile) audioFile.seek(0);
 #endif
     }
+  }
 
-    // Her kare sonrasında Wi-Fi ve Web Sunucusuna nefes aldır
-    delay(10);
+  // Her kare sonrasında Wi-Fi ve Web Sunucusuna nefes aldır
+  delay(10);
 }

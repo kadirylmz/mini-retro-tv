@@ -531,7 +531,13 @@ h1 {
 
 <!-- MEDYA LİSTESİ KARTI -->
 <div class="card">
-  <h2><span>Yüklü Medyalar</span><button class="btn btn-small" onclick="loadVideos()" style="background:#23273a">Yenile</button></h2>
+  <h2>
+    <span>Yüklü Medyalar</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-small" id="btn-loop-mode" onclick="toggleLoopMode()" style="background:var(--accent);color:#fff;">🔁 Sırayla Döngü: AÇIK</button>
+      <button class="btn btn-small" onclick="loadVideos()" style="background:#23273a">Yenile</button>
+    </div>
+  </h2>
   <div id="video-list">
     <div style="text-align:center;color:var(--text-dim);padding:16px;">Yükleniyor...</div>
   </div>
@@ -740,6 +746,9 @@ async function loadVideos() {
     if (data.volume !== undefined) {
       updateVolUI(data.volume, data.muted);
     }
+    if (data.loop_all !== undefined) {
+      updateLoopModeUI(data.loop_all);
+    }
 
     if (data.wifi) {
       document.getElementById('disp-ap-ssid').innerText = data.wifi.ap_ssid || 'CollectibleDisplay';
@@ -811,6 +820,30 @@ async function deleteVideo(name) {
     const res = await fetch('/delete?file=' + encodeURIComponent(name));
     loadVideos();
   } catch(e) { alert('Silinemedi: ' + e); }
+}
+
+async function toggleLoopMode() {
+  try {
+    const res = await fetch('/toggle_loop', { method: 'POST' });
+    const data = await res.json();
+    updateLoopModeUI(data.loop_all);
+    showStatus(data.loop_all ? 'Sırayla Döngü Modu Aktif (Tüm Medyalar Sırayla Döner)' : 'Tek Medya Tekrar Modu Aktif (Yalnızca Seçili Medya)', 'info');
+    setTimeout(hideStatus, 2500);
+  } catch(e) { console.error('Toggle loop error:', e); }
+}
+
+function updateLoopModeUI(loopAll) {
+  const btn = document.getElementById('btn-loop-mode');
+  if (!btn) return;
+  if (loopAll) {
+    btn.innerHTML = '🔁 Sırayla Döngü: AÇIK';
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#fff';
+  } else {
+    btn.innerHTML = '🔂 Tekrar: TEK MEDYA';
+    btn.style.background = '#23273a';
+    btn.style.color = 'var(--text-dim)';
+  }
 }
 
 // Drag & Drop
@@ -1125,8 +1158,34 @@ async function convertAndUploadVideo(file) {
   }
 }
 
+// Wi-Fi Bağlantı Takipçisi ve Otomatik Yeniden Bağlanma
+let isDeviceOnline = true;
+async function checkConnection() {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
+  try {
+    const res = await fetch('/ping', { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      if (!isDeviceOnline) {
+        isDeviceOnline = true;
+        showStatus('Wi-Fi Bağlantısı Yeniden Kuruldu! 🟢', 'ok');
+        loadVideos();
+        setTimeout(hideStatus, 2500);
+      }
+    }
+  } catch(e) {
+    clearTimeout(timeoutId);
+    if (isDeviceOnline) {
+      isDeviceOnline = false;
+      showStatus('Wi-Fi Bağlantısı Koptu! Otomatik yeniden bağlanılıyor... ⚠️', 'err', true);
+    }
+  }
+}
+
 loadVideos();
-setInterval(loadVideos, 10000);
+setInterval(loadVideos, 4000);
+setInterval(checkConnection, 3000);
 </script>
 </body>
 </html>
